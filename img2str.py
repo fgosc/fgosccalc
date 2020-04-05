@@ -3,11 +3,6 @@ import sys
 import cv2
 from pathlib import Path
 import numpy as np
-import requests
-import re
-import argparse
-import os
-import csv
 
 progname = "img2str"
 version = "0.0.1"
