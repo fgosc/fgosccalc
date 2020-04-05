@@ -208,7 +208,7 @@ class DropItems:
 
     def __init__(self):
         if not DropItems.Item_dir.is_dir():
-            Item_dir.mkdir()
+            DropItems.Item_dir.mkdir()
 
         self.calc_dist_local()
 
