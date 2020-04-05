@@ -687,6 +687,8 @@ class Item:
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
             item = next(iter(itemfiles))
+            if isinstance(item[0], str):
+                return item[0]
             return item[0].stem
 
         return ""
