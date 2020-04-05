@@ -4,8 +4,10 @@ FGOのクエスト情報戦利品の周回前後のスクショを読み取り�
 ## 必要なソフトウェア
 Python 3.7以降
 
-## 必要なライブラリ
-OpenCV
+### 必要なPython ライブラリ
+* requests
+* opencv-python
+* opencv-contrib-python
 
 ## ファイル
 1. img2str.py : コマンドプロンプトでファイルを読み込みアイテムを出力
