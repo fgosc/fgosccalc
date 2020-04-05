@@ -3,11 +3,6 @@ import sys
 import cv2
 from pathlib import Path
 import numpy as np
-import requests
-import re
-import argparse
-import os
-import csv
 
 progname = "img2str"
 version = "0.0.1"
@@ -213,7 +208,7 @@ class DropItems:
 
     def __init__(self):
         if not DropItems.Item_dir.is_dir():
-            Item_dir.mkdir()
+            DropItems.Item_dir.mkdir()
 
         self.calc_dist_local()
 
@@ -692,6 +687,8 @@ class Item:
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
             item = next(iter(itemfiles))
+            if isinstance(item[0], str):
+                return item[0]
             return item[0].stem
 
         return ""

@@ -1,3 +1,4 @@
-*.xml
+__pycache__/
 item/
+*.xml
 *.csv
