@@ -838,7 +838,11 @@ def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
         return None
         
 if __name__ == '__main__':
-    dropitems = DropItems()        
+    dropitems = DropItems()
+    if training.exists() == False:
+        print("[エラー]property.xml が存在しません")
+        print("python makeprop.py を実行してください")
+        sys.exit(1) 
     svm = cv2.ml.SVM_load(str(training))
     file = Path(sys.argv[1])
     img_rgb = imread(str(file))
