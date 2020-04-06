@@ -3,11 +3,6 @@ import sys
 import cv2
 from pathlib import Path
 import numpy as np
-import requests
-import re
-import argparse
-import os
-import csv
 
 progname = "img2str"
 version = "0.0.1"
@@ -213,7 +208,7 @@ class DropItems:
 
     def __init__(self):
         if not DropItems.Item_dir.is_dir():
-            Item_dir.mkdir()
+            DropItems.Item_dir.mkdir()
 
         self.calc_dist_local()
 
@@ -327,7 +322,7 @@ class ScreenShot:
                 approx = cv2.approxPolyDP(cnt,epsilon,True)
                 if len(approx) >= 5:
         ##        if len(approx) > 5:
-                    cv2.drawContours(img_rgb, [approx], -1, (0,0,255), 3)
+##                    cv2.drawContourss(self.img_rgb, [approx], -1, (0,0,255), 3)
                     ret = cv2.boundingRect(cnt)
                     pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
                     item_pts.append(pts)            
@@ -354,7 +349,7 @@ class ScreenShot:
                 approx = cv2.approxPolyDP(cnt,epsilon,True)
                 if len(approx) >= 5:
         ##        if len(approx) > 5:
-                    cv2.drawContours(img_rgb, [approx], -1, (0,0,255), 3)
+##                    cv2.drawContours(img_rgb, [approx], -1, (0,0,255), 3)
                     ret = cv2.boundingRect(cnt)
                     pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
                     item_pts.append(pts)            
@@ -692,6 +687,8 @@ class Item:
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
             item = next(iter(itemfiles))
+            if isinstance(item[0], str):
+                return item[0]
             return item[0].stem
 
         return ""
