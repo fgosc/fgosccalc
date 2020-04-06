@@ -322,7 +322,7 @@ class ScreenShot:
                 approx = cv2.approxPolyDP(cnt,epsilon,True)
                 if len(approx) >= 5:
         ##        if len(approx) > 5:
-                    cv2.drawContours(img_rgb, [approx], -1, (0,0,255), 3)
+##                    cv2.drawContourss(self.img_rgb, [approx], -1, (0,0,255), 3)
                     ret = cv2.boundingRect(cnt)
                     pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
                     item_pts.append(pts)            
@@ -349,7 +349,7 @@ class ScreenShot:
                 approx = cv2.approxPolyDP(cnt,epsilon,True)
                 if len(approx) >= 5:
         ##        if len(approx) > 5:
-                    cv2.drawContours(img_rgb, [approx], -1, (0,0,255), 3)
+##                    cv2.drawContours(img_rgb, [approx], -1, (0,0,255), 3)
                     ret = cv2.boundingRect(cnt)
                     pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
                     item_pts.append(pts)            

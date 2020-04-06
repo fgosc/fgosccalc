@@ -1,4 +1,5 @@
 __pycache__/
-item/
 *.xml
+item/
 *.csv
+setting.ini
