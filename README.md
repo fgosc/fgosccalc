@@ -12,7 +12,6 @@ calctweet.py を使用する場合は以下のものが必要
 * tweepy
 * requests
 
-
 ## ファイル
 1. img2str.py : コマンドプロンプトでファイルを読み込みアイテムを出力
 2. fgosccalc.py　: コマンドプロンプトでファイル2つを読み込み差分を出力
