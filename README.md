@@ -7,14 +7,6 @@ FGOのクエスト情報戦利品の周回前後のスクショを読み取り�
 ## 必要なソフトウェア
 Python 3.7以降
 
-### 必要なPython ライブラリ
-* opencv-python
-* opencv-contrib-python
-
-calctweet.py を使用する場合は以下のものが必要
-* tweepy
-* requests
-
 ## ファイル
 1. img2str.py : コマンドプロンプトでファイルを読み込みアイテムを出力
 2. fgosccalc.py　: コマンドプロンプトでファイル2つを読み込み差分を出力
@@ -30,6 +22,9 @@ calctweet.py を使用する場合は以下のものが必要
 
 ## インストール
 必要な Python ライブラリをインストールする
+
+    $ pip install -r requirements.txt
+
 makeprop.py を1度だけ実行
 
     $ python makeprop.py
