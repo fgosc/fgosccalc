@@ -32,14 +32,19 @@ calctweet.py を使用する場合は以下のものが必要
 必要な Python ライブラリをインストールする
 makeprop.py を1度だけ実行
 
+    $ python makeprop.py
+
 ### calctweet.py のインストールは以下の手順が必要
 1. setting-dst.ini をコピーして setting.ini を作成
-2. consumer_key　と　consumer_secret を手に入れる
-基本的に一般配布はしないので、https://developer.twitter.com/ からアプリケーション登録をして手に入れてください
-ここでaccess_token と access_secret を入手すると4の手順がとばせます
-3. setting.ini の次の行に取得したconsumer_key と　consumer_secretを入力する
-consumer_key = 
-consumer_secret = 
+2. consumer_key　と　consumer_secret を手に入れる  
+基本的に一般配布はしないので、https://developer.twitter.com/ からアプリケーション登録をして手に入れる  
+※ここでaccess_token と access_secret を入手すると4の手順がとばせます
+3. setting.ini に取得したconsumer_key と consumer_secretを入力する  
+次のように入力します  
+
+    consumer_key = 入手したconsumer_key  
+    consumer_secret = 入手したconsumer_secret
+
 4. calctweet.py を起動するとブラウザが立ち上がり、アプリ連携画面になるのでアプリ連携し、表示された PIN を入力する
 
 ## 使い方
