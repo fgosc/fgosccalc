@@ -267,7 +267,11 @@ class ScreenShot:
         
         self.height, self.width = img_rgb.shape[:2]
         item_pts = []
-        item_pts = self.img2points()
+        self.error = ""
+        try:
+            item_pts = self.img2points()
+        except ValueError as e:
+            self.error = str(e)
 
         self.items = []
         for pt in item_pts:
@@ -505,8 +509,7 @@ class ScreenShot:
                        (64, 304, 150, 397), (158, 304, 243, 397), (253, 304, 338, 397), (347, 304, 432, 397),
                        (64, 401, 150, 494), (158, 401, 243, 494), (253, 401, 338, 494), (347, 401, 432, 494)]
         else:
-            print(str(self.width) + 'x' + str(self.height) +  ":未対応")
-            pts = []
+            raise ValueError(str(self.width) + 'x' + str(self.height) +  ":未対応")
 
         return pts
 
@@ -853,3 +856,5 @@ if __name__ == '__main__':
             result = result + item[0] + item[1] + '-'
     if len(result) > 0:
         print(result[:-1])
+    if  sc.error != "":
+        print(sc.error)
