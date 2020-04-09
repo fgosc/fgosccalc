@@ -43,8 +43,30 @@ makeprop.py を1度だけ実行
 4. calctweet.py を起動するとブラウザが立ち上がり、アプリ連携画面になるのでアプリ連携し、表示された PIN を入力する
 
 ## 使い方
-imgstr.py ファイル名
+### imgstr.py
 
-fgosccalc.py ファイル名 ファイル名
+    $ imgstr.py ファイル名
 
-calctweet.py TweetURL
+    スクショからアイテム数を抽出する
+
+### fgosccalc.py
+
+    $ fgosccalc.py ファイル名 ファイル名
+
+    スクショから差分を計算する
+
+### calctweet.py
+    usage: calctweet.py [-h] [-a] [-s] [-r] [--version]
+                        [tweet_url [tweet_url ...]]
+    
+    周回カウンタのスクショ付き報告をチェック
+    
+    positional arguments:
+      tweet_url       Tweet URL
+    
+    optional arguments:
+      -h, --help      show this help message and exit
+      -a, --auto      #FGO周回カウンタ ツイの自動取得で連増実行
+      -s, --suppress  差分のみ出力
+      -r, --resume    -a を前回実行した続きから出力
+      --version       show program's version number and exit
