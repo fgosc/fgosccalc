@@ -1,5 +1,8 @@
+![fgosccalc1](https://user-images.githubusercontent.com/62515228/78868001-0ca71a80-7a7d-11ea-84b2-087f6b2466fc.png)
 # fgosccalc
 FGOのクエスト情報戦利品の周回前後のスクショを読み取り差分を計算
+
+このプログラムをウェブ化したものをまっくすさんが公開しています https://fgosccalc.appspot.com/
 
 ## 必要なソフトウェア
 Python 3.7以降
