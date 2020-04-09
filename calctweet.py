@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import tweepy
 import img2str
 import cv2
@@ -14,13 +15,10 @@ import urllib
 import webbrowser
 
 progname = "FGOツイートスクショチェック"
-version = "0.0.1"
+version = "0.0.2"
 
-##CONSUMER_KEY        = 'BOxfvMp2SVGffWdelzn8jBsPZ'
-##CONSUMER_SECRET     = 'ycMSz4aI5RISlwNoG2uJ3ffZRyUoaWeIMxnoxMKAJ9P5DIkuCB'
-##ACCESS_TOKEN_KEY    = '1077831827530833921-8AGihdrG0MUMJuCKg3plqffYyZXhJC'
-##ACCESS_TOKEN_SECRET = 'hP9UuTdm3yu9DTy025LCidM3A006J8upW1zwYtYhd18gK'
-
+MAXSERCH = 100 # --auto オプションで1度の検索で取得するツイート
+MAX_LOOP = 5 # --auto オプションでMAXSERCH 件取得を何回行うか
 
 sozai = {}
 sozai_betsumei = {}
@@ -121,8 +119,9 @@ def make_data4tweet(report):
 
 def calc_iamge_diff(status):
     if not hasattr(status, 'extended_entities'):    
-        return []
+        return {}, {}
 
+    error_dic = {}
     if 'media' in status.extended_entities:
         # 思い処理なのでこのプログラム場合はエラー判定後に実行
         dropitems = img2str.DropItems()        
@@ -135,6 +134,8 @@ def calc_iamge_diff(status):
             img_buf = np.frombuffer(tmp, dtype='uint8')
             image = cv2.imdecode(img_buf, 1)
             sc = img2str.ScreenShot(image, svm, dropitems)
+            if sc.error != "":
+                error_dic["image" + str(i+1)] = sc.error
             itemlists.append(sc.itemlist)
         ## 通常素材が埋まって無い報告は無いと推測してそういう報告は無効と判断
             new_itemlists = []                    
@@ -158,23 +159,8 @@ def calc_iamge_diff(status):
     if sum < 0:
         for item in item_dic:
             item_dic[item] = item_dic[item] * -1
-
-
-#                new_list.append((after[0], int(after[1])-int(before[1])))
-
-#    new_dict = dict(new_list)
-    
-##    twitter_url = "https://twitter.com/" + tweet.user.screen_name + "/status/" + str(status)
-##    outresult = min(finalresult, key=key_func)
-##    output = []
-##    if result.endswith('-'):
-##        output.append(twitter_url)
-##        output.append(outresult[1][:-1])
-##    else:
-##        output.append(twitter_url)
-##        output.append(outresult[1])
                    
-    return item_dic
+    return item_dic, error_dic
 
 def dic2str(item_dic):
     """
@@ -191,7 +177,8 @@ def calc_diff(report_dic, image_dic):
     result_dic = {}
     for item in report_dic.keys():
         if item in image_dic.keys():
-            result_dic[item] = report_dic[item] - image_dic[item]
+            if str(report_dic[item]).isdigit():
+                result_dic[item] = report_dic[item] - image_dic[item]
     return result_dic
 
 def get_oauth_token(url:str)->str:
@@ -242,17 +229,132 @@ def create_access_key_secret(CONSUMER_KEY, CONSUMER_SECRET):
     settingfile = os.path.join(os.path.dirname(__file__), 'setting.ini')
     with open(settingfile, "w") as file:
         config.write(file)
+
+def meke_output(status):
+    if 'RT @' not in status.full_text \
+       and '#FGO販売' not in status.full_text \
+       and "#FGO買取"  not in status.full_text:
+        source = "https://twitter.com/" + status.user.screen_name + "/status/" + status.id_str
+        report_items = make_data4tweet(status.full_text)
+        image_items, error_dic = calc_iamge_diff(status)
+
+        #差分結果部分
+        report_diff = calc_diff(report_items, image_items)
+        sum = 0
+        for n in report_diff.values():
+            sum = sum + abs(n)
+        if sum == 0:
+            if len(error_dic.keys()) > 0:
+                print(source, end=",,")
+                for error in error_dic.keys():
+                    print(error, end=" ")
+                    print(error_dic[error], end= ",")                
+                print()
+            return
+        print(source, end=",")
+        print (dic2str(report_diff), end=",")
+        for error in error_dic.keys():
+            print(error, end=" ")
+            print(error_dic[error], end= ",")
+        print()
+    
+def get_one_tweet(args, api):
+    """
+    ツイートを一つ処理する
+    """
+    tweet_pattern = "https://twitter.com/.+?/status/"
+    tweet_id = re.sub(tweet_pattern, "", args.tweet_url[0])
+
+    if not tweet_id.isdigit():
+        print("URLが正しくありません")
+        sys.exit(1)
+
+    tweet_id = int(tweet_id)
+
+    try:
+        status = api.get_status(tweet_id, tweet_mode="extended")
+    except:
+        print("エラー: ツイート読み込みに失敗しました")
+        sys.exit(1)
+
+    read_item()
+
+    report_items = make_data4tweet(status.full_text)
+    image_items, error_dic = calc_iamge_diff(status)
+
+    #差分結果部分
+    report_diff = calc_diff(report_items, image_items)
+    print("【計算差分】", end="")
+    print(dic2str(report_diff))
+
+    if args.suppress == False:    
+        print()
+        #報告(文字)部分
+        print("【周回報告】", end="")
+        print(dic2str(report_items))
+
+        #報告(画像)部分
+        print("【画像差分】", end="")
+        print (dic2str(image_items))
+        for error in error_dic.keys():
+            print(error, end=" ")
+            print(error_dic[error], end= ",")
+    
+def get_tweet_auto(args, api, last_id):
+    """
+    検索で取得できる #FGO周回カウンタ　のツイートを全て処理する
+    """
+    status = None
+    max_id = 0
+    resume_id = last_id
+
+    for loop in range(MAX_LOOP):
+        if args.resume == True:
+            for status in api.search(q='#FGO周回カウンタ',
+                                     lang='ja',result_type='mixed',
+                                     count=MAXSERCH,
+                                     since_id=resume_id,
+                                     max_id=max_id -1,
+                                     tweet_mode="extended"):
+                meke_output(status)
+                # --resume　オプション用データ
+                if int(last_id) < int(status.id):
+                    last_id = int(status.id)               
+
+        else:
+            for status in api.search(q='#FGO周回カウンタ',
+                                     lang='ja',result_type='mixed',
+                                     count=MAXSERCH,
+                                     max_id=max_id -1,
+                                     tweet_mode="extended"):
+                meke_output(status)
+                # --resume　オプション用データ
+                if int(last_id) < int(status.id):
+                    last_id = int(status.id)               
+        if status != None:
+            max_id=status.id
+
+    return last_id           
+    
     
 if __name__ == '__main__':
+    last_id = -1
     settingfile = os.path.join(os.path.dirname(__file__), 'setting.ini')
     config = configparser.ConfigParser()
     try:
         config.read(settingfile)
+        section0 = "search"
         section1 = "auth_info"
         ACCESS_TOKEN = config.get(section1, "ACCESS_TOKEN")
         ACCESS_SECRET = config.get(section1, "ACCESS_SECRET")
         CONSUMER_KEY = config.get(section1, "CONSUMER_KEY")
         CONSUMER_SECRET = config.get(section1, "CONSUMER_SECRET")
+        if section0 not in config.sections():
+            config.add_section(section0)
+        section0cfg = config[section0]
+
+        last_id = section0cfg.get("last_id", last_id)
+
     except configparser.NoSectionError:
         print("[エラー] setting.iniに不備があります。")
         sys.exit(1)
@@ -271,43 +373,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='周回カウンタのスクショ付き報告をチェック')
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument('tweet_url', help='Tweet URL', nargs='*')    # 必須の引数を追加
+    parser.add_argument('-a', '--auto', help='#FGO周回カウンタ ツイの自動取得で連増実行', action='store_true')     
     parser.add_argument('-s', '--suppress', help='差分のみ出力', action='store_true')     
+    parser.add_argument('-r', '--resume', help='-a を前回実行した続きから出力', action='store_true')     
     parser.add_argument('--version', action='version', version=progname + " " + version)
 
     args = parser.parse_args()    # 引数を解析
 
-    tweet_pattern = "https://twitter.com/.+?/status/"
-    tweet_id = re.sub(tweet_pattern, "", args.tweet_url[0])
+    if args.auto == True:
+        last_id = get_tweet_auto(args, api, last_id)
+               
+        config.set(section0, "LAST_ID", str(last_id))
+        with open("setting.ini", "w") as file:
+            config.write(file)
+        sys.exit(0)
 
-    if not tweet_id.isdigit():
-        print("URLが正しくありません")
-        sys.exit(1)
-
-    tweet_id = int(tweet_id)
-
-    try:
-        status = api.get_status(tweet_id, tweet_mode="extended")
-    except:
-        print("エラー: ツイート読み込みに失敗しました")
-        sys.exit(1)
-
-
-    read_item()
-
-    report_items = make_data4tweet(status.full_text)
-    image_items = calc_iamge_diff(status)
-
-    #差分結果部分
-    report_diff = calc_diff(report_items, image_items)
-    print("【計算差分】", end="")
-    print(dic2str(report_diff))
-
-    if args.suppress == False:    
-        print()
-        #報告(文字)部分
-        print("【周回報告】", end="")
-        print(dic2str(report_items))
-
-        #報告(画像)部分
-        print("【画像差分】", end="")
-        print (dic2str(image_items))
+    # ここから個別ツイート取得用ルーチン
+    get_one_tweet(args, api)
