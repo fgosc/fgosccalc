@@ -64,9 +64,8 @@ makeprop.py を1度だけ実行
     スクショから差分を計算する
 
 ### calctweet.py
-    usage: calctweet.py [-h] [-a] [-s] [-r] [--version]
-                        [tweet_url [tweet_url ...]]
-    
+    usage: calctweet.py [-h] [-u URL] [-a] [-s] [-i] [-r] [-d] [--version]    
+
     周回カウンタのスクショ付き報告をチェック
     
     positional arguments:
