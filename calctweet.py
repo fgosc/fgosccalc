@@ -117,7 +117,7 @@ def make_data4tweet(report):
     items = re.sub(pattern, r"\g<items>", m.group())
     return (make_itemdic(items))
 
-def calc_iamge_diff(status, debug):
+def calc_iamge_diff(status, debug=False):
     if not hasattr(status, 'extended_entities'):    
         return {}, {}
 
@@ -183,7 +183,7 @@ def dic2str(item_dic):
         result = result[:-1]
     return result
 
-def calc_diff(report_dic, image_dic, inverse):
+def calc_diff(report_dic, image_dic, inverse=False):
     result_dic = {}
     for item in report_dic.keys():
         if item in image_dic.keys():
