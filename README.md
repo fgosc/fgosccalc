@@ -45,9 +45,17 @@ makeprop.py を1度だけ実行
 ## 使い方
 ### imgstr.py
 
-    $ imgstr.py ファイル名
-
-    スクショからアイテム数を抽出する
+    usage: img2str.py [-h] [-d] [--version] file
+    
+    戦利品画像を読み取る
+    
+    positional arguments:
+      file         FGOの戦利品スクショ
+    
+    optional arguments:
+      -h, --help   show this help message and exit
+      -d, --debug  デバッグ情報を出力
+      --version    show program's version number and exit
 
 ### fgosccalc.py
 
