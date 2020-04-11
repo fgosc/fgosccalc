@@ -3,6 +3,7 @@ import sys
 import cv2
 from pathlib import Path
 import numpy as np
+import argparse
 
 progname = "img2str"
 version = "0.0.1"
@@ -260,7 +261,7 @@ def has_intersect(a, b):
 class ScreenShot:
     unknown_item_count = 0
 
-    def __init__(self, img_rgb, svm, dropitems):
+    def __init__(self, img_rgb, svm, dropitems, debug="False"):
         threshold = 80
 
         self.img_rgb = img_rgb
@@ -279,8 +280,11 @@ class ScreenShot:
         for pt in item_pts:
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
-            item = Item(item_img_rgb, item_img_gray, svm, dropitems)
-            if item.name.endswith("火"):
+            item = Item(item_img_rgb, item_img_gray, svm, dropitems, debug)
+            if debug == True:
+                if item.name.endswith("種火") or item.name.endswith("灯火") or item.name.endswith("大火"):
+                    continue
+            elif item.name.endswith("火"):
                 break
             if item.name == "QP":
                 break
@@ -517,7 +521,7 @@ class ScreenShot:
 
 class Item:
     hasher = cv2.img_hash.PHash_create()
-    def __init__(self, img_rgb, img_gray, svm, dropitems):
+    def __init__(self, img_rgb, img_gray, svm, dropitems, debug=False):
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
@@ -526,6 +530,10 @@ class Item:
         self.dropitems = dropitems
         self.dropnum = self.ocr_digit()
         self.name = self.classify_item(img_rgb)
+        if debug == True:
+            if self.name not in DropItems.dist_item.keys() and not self.name.endswith("火"):
+                print('"' + self.name + '"', end="")
+                self.name = self.classify_item(img_rgb,debug)
 
     def conflictcheck(self, pts, pt):
         """
@@ -608,7 +616,7 @@ class Item:
 
         return erosion_rev
 
-    def classify_standard_item(self, img):
+    def classify_standard_item(self, img, debug=False):
         """
         imgとの距離を比較して近いアイテムを求める
         """
@@ -622,9 +630,21 @@ class Item:
         tanebifiles = sorted(tanebifiles.items(), key=lambda x:x[1])
 
         if len(tanebifiles) > 0:
-            return "種火"
+            tanebi = next(iter(tanebifiles))
+            hash_tanebi_class = self.compute_tanebi_class_hash(img)
+            tanebiclassfiles = {}
+            for i in self.dropitems.dist_tanebi_class.keys():
+                dtc = Item.hasher.compare(hash_tanebi_class, self.dropitems.dist_tanebi_class[i])
+                if dtc <= 19: #18離れることがあったので(Screenshot_20200318-140020.png)
+                    tanebiclassfiles[i] = dtc
+            tanebiclassfiles = sorted(tanebiclassfiles.items(), key=lambda x:x[1])
+            if len(tanebiclassfiles) > 0:
+                tanebiclass = next(iter(tanebiclassfiles))
+                return tanebiclass[0][0] + tanebi[0][1:]
         
         hash_item = self.compute_hash(img) #画像の距離
+        if debug == True:
+            print(":np.array([" + str(list(hash_item[0])) + "], dtype='uint8'),")
         itemfiles = {}
         # 既存のアイテムとの距離を比較
         for i in self.dropitems.dist_item.keys():
@@ -745,11 +765,11 @@ class Item:
                 break
         return itemname
 
-    def classify_item(self, img):
+    def classify_item(self, img, debug=False):
         """
         アイテム判別器
         """
-        item = self.classify_standard_item(img)
+        item = self.classify_standard_item(img, debug)
         if item == "":
             item = self.classify_local_item(img)
         if item == "":
@@ -843,15 +863,24 @@ def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
         return None
         
 if __name__ == '__main__':
+    ## オプションの解析
+    parser = argparse.ArgumentParser(description='戦利品画像を読み取る')
+    # 3. parser.add_argumentで受け取る引数を追加していく
+    parser.add_argument('file', help='FGOの戦利品スクショ')    # 必須の引数を追加
+    parser.add_argument('-d', '--debug', help='デバッグ情報を出力', action='store_true')     
+    parser.add_argument('--version', action='version', version=progname + " " + version)
+
+    args = parser.parse_args()    # 引数を解析
+
     dropitems = DropItems()
     if training.exists() == False:
         print("[エラー]property.xml が存在しません")
         print("python makeprop.py を実行してください")
         sys.exit(1) 
     svm = cv2.ml.SVM_load(str(training))
-    file = Path(sys.argv[1])
+    file = Path(args.file)
     img_rgb = imread(str(file))
-    sc = ScreenShot(img_rgb, svm, dropitems)
+    sc = ScreenShot(img_rgb, svm, dropitems, args.debug)
     result = ""
     for item in sc.itemlist:
         if not item[0].startswith("未ドロップ"):

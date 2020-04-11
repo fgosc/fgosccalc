@@ -117,7 +117,7 @@ def make_data4tweet(report):
     items = re.sub(pattern, r"\g<items>", m.group())
     return (make_itemdic(items))
 
-def calc_iamge_diff(status):
+def calc_iamge_diff(status, debug):
     if not hasattr(status, 'extended_entities'):    
         return {}, {}
 
@@ -133,10 +133,20 @@ def calc_iamge_diff(status):
             tmp = response.content
             img_buf = np.frombuffer(tmp, dtype='uint8')
             image = cv2.imdecode(img_buf, 1)
-            sc = img2str.ScreenShot(image, svm, dropitems)
+            sc = img2str.ScreenShot(image, svm, dropitems, debug)
             if sc.error != "":
                 error_dic["image" + str(i+1)] = sc.error
             itemlists.append(sc.itemlist)
+            if debug:
+                print("画像" + str(i + 1), end=",")
+                for j in sc.itemlist:
+                    print (j[0], end=",")
+                print()
+                print("画像" + str(i + 1), end=",")
+                for j in sc.itemlist:
+                    print (j[0], end=",")
+                    print (j[1], end=",")
+                print()
         ## 通常素材が埋まって無い報告は無いと推測してそういう報告は無効と判断
             new_itemlists = []                    
             for itemlist in itemlists:
@@ -173,12 +183,15 @@ def dic2str(item_dic):
         result = result[:-1]
     return result
 
-def calc_diff(report_dic, image_dic):
+def calc_diff(report_dic, image_dic, inverse):
     result_dic = {}
     for item in report_dic.keys():
         if item in image_dic.keys():
             if str(report_dic[item]).isdigit():
-                result_dic[item] = report_dic[item] - image_dic[item]
+                if inverse == False:
+                    result_dic[item] = report_dic[item] - image_dic[item]
+                else:
+                    result_dic[item] = report_dic[item] + image_dic[item]                    
     return result_dic
 
 def get_oauth_token(url:str)->str:
@@ -263,7 +276,7 @@ def get_one_tweet(args, api):
     ツイートを一つ処理する
     """
     tweet_pattern = "https://twitter.com/.+?/status/"
-    tweet_id = re.sub(tweet_pattern, "", args.tweet_url[0])
+    tweet_id = re.sub(tweet_pattern, "", args.url)
 
     if not tweet_id.isdigit():
         print("URLが正しくありません")
@@ -280,10 +293,10 @@ def get_one_tweet(args, api):
     read_item()
 
     report_items = make_data4tweet(status.full_text)
-    image_items, error_dic = calc_iamge_diff(status)
+    image_items, error_dic = calc_iamge_diff(status, args.debug)
 
     #差分結果部分
-    report_diff = calc_diff(report_items, image_items)
+    report_diff = calc_diff(report_items, image_items, args.inverse)
     print("【計算差分】", end="")
     print(dic2str(report_diff))
 
@@ -372,10 +385,12 @@ if __name__ == '__main__':
     ## オプションの解析
     parser = argparse.ArgumentParser(description='周回カウンタのスクショ付き報告をチェック')
     # 3. parser.add_argumentで受け取る引数を追加していく
-    parser.add_argument('tweet_url', help='Tweet URL', nargs='*')    # 必須の引数を追加
+    parser.add_argument('-u', '--url', help='Tweet URL')    # 必須の引数を追加
     parser.add_argument('-a', '--auto', help='#FGO周回カウンタ ツイの自動取得で連増実行', action='store_true')     
     parser.add_argument('-s', '--suppress', help='差分のみ出力', action='store_true')     
+    parser.add_argument('-i', '--inverse', help='差分計算を逆にする', action='store_true')     
     parser.add_argument('-r', '--resume', help='-a を前回実行した続きから出力', action='store_true')     
+    parser.add_argument('-d', '--debug', help='デバッグ情報を出力', action='store_true')     
     parser.add_argument('--version', action='version', version=progname + " " + version)
 
     args = parser.parse_args()    # 引数を解析
@@ -389,4 +404,8 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # ここから個別ツイート取得用ルーチン
-    get_one_tweet(args, api)
+    if args.url == None:
+        parser.print_help()
+    else:
+        get_one_tweet(args, api)
+        
