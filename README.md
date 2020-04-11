@@ -73,8 +73,11 @@ makeprop.py を1度だけ実行
       tweet_url       Tweet URL
     
     optional arguments:
-      -h, --help      show this help message and exit
-      -a, --auto      #FGO周回カウンタ ツイの自動取得で連増実行
-      -s, --suppress  差分のみ出力
-      -r, --resume    -a を前回実行した続きから出力
-      --version       show program's version number and exit
+      -h, --help         show this help message and exit
+      -u URL, --url URL  Tweet URL
+      -a, --auto         #FGO周回カウンタ ツイの自動取得で連増実行
+      -s, --suppress     差分のみ出力
+      -i, --inverse      差分計算を逆にする
+      -r, --resume       -a を前回実行した続きから出力
+      -d, --debug        デバッグ情報を出力
+      --version          show program's version number and exit
