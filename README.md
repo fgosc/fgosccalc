@@ -68,9 +68,6 @@ makeprop.py を1度だけ実行
 
     周回カウンタのスクショ付き報告をチェック
     
-    positional arguments:
-      tweet_url       Tweet URL
-    
     optional arguments:
       -h, --help         show this help message and exit
       -u URL, --url URL  Tweet URL
