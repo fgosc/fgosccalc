@@ -28,7 +28,7 @@ class FileSystemStorageTest(unittest.TestCase):
         (self.itemdir / 'item000002.png').replace(self.itemdir / 'test2.png')
 
         d = st.known_item_dict()
-        self.assertEqual(len(d), 2)
+        self.assertListEqual(sorted(d.keys()), ['test1', 'test2'])
         for v in d.values():
             self.assertTrue(isinstance(v, np.ndarray))
 
