@@ -3,3 +3,4 @@ __pycache__/
 item/
 *.csv
 setting.ini
+.mypy_cache/

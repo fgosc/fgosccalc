@@ -4,15 +4,17 @@ import cv2
 from pathlib import Path
 import numpy as np
 import argparse
+from storage.filesystem import FileSystemStorage
 
 progname = "img2str"
 version = "0.0.1"
 
 
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
+defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
+
 
 class DropItems:
-    Item_dir = Path(__file__).resolve().parent / Path("item/")
     hasher = cv2.img_hash.PHash_create()
 
 
@@ -209,20 +211,16 @@ class DropItems:
     }
 
 
-    def __init__(self):
-        if not DropItems.Item_dir.is_dir():
-            DropItems.Item_dir.mkdir()
-
+    def __init__(self, storage=defaultItemStorage):
+        self.storage = storage
         self.calc_dist_local()
 
     def calc_dist_local(self):
         """
         既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
         """
-        files = DropItems.Item_dir.glob('**/*.png')
-        for fname in files:
-            img = self.imread(fname)
-            DropItems.dist_local[fname] = self.compute_hash(img)
+        for itemname, img in self.storage.known_item_dict().items():
+            self.dist_local[itemname] = self.compute_hash(img)
 
     def imread(self, filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
         """
@@ -724,27 +722,32 @@ class Item:
 
     def make_new_file(self, img):
         """
-        ファイル名候補を探す
+            未知のアイテムを storage に登録する。
+            同時にハッシュ値を計算し dist_local に保存する。
+
+            ただしドロップカウントがない場合は「泥無しアイテム」として管理し
+            storage には登録しない。(ハッシュのみ計算し dist_local に保存)
+
+            いずれの場合も、アイテム名を返す。
+
+            TODO: 実装を抽象化したためメソッド名は make_new_item などに
+            変更するのがよさそうだが、既存のメソッドと衝突するためいったん
+            このままにする。
         """
         if self.dropnum == "":
             ScreenShot.unknown_item_count = ScreenShot.unknown_item_count + 1
             itemname = "泥無しアイテム" + str(ScreenShot.unknown_item_count)
             self.dropitems.dist_local[itemname] = self.compute_hash(img)
             return itemname
-        for i in range(99999):
-            itemfile = self.dropitems.Item_dir / ('item{:0=6}'.format(i + 1) + '.png')
-            if itemfile.is_file():
-                continue
-            else:
-                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                cv2.imwrite(itemfile.as_posix(), img_gray)
-                self.dropitems.dist_local[itemfile] = self.compute_hash(img)
-                break
-        return itemfile.stem
+
+        itemname = self.dropitems.storage.create_item(img)
+        self.dropitems.dist_local[itemname] = self.compute_hash(img)
+        return itemname
 
     def make_new_file2(self, img):
         """
         ファイル名候補を探す
+        TODO: どこからも呼び出されない。利用予定がなければ削除したほうがよい
         """
         for i in range(99999):
             itemfile = self.dropitems.Item_dir / ('item{:0=6}'.format(i + 1) + '.png')
@@ -759,6 +762,7 @@ class Item:
     def make_new_item(self, img):
         """
         アイテム名候補を探す
+        TODO: どこからも呼び出されない。利用予定がなければ削除したほうがよい
         """
         for i in range(58):
             itemname = (chr(i+65) + '泥')
