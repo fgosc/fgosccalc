@@ -123,7 +123,7 @@ def calc_iamge_diff(status, debug=False):
 
     error_dic = {}
     if 'media' in status.extended_entities:
-        # 思い処理なのでこのプログラム場合はエラー判定後に実行
+        # 重い処理なのでこのプログラム場合はエラー判定後に実行
         dropitems = img2str.DropItems()        
         svm = cv2.ml.SVM_load(str(img2str.training))
 
@@ -156,8 +156,14 @@ def calc_iamge_diff(status, debug=False):
                         break
 
     item_dic = {}
+    if debug:
+        print(new_itemlists)
     #戦利品スクショでないものはスキップして new_listを作成
-    if len(new_itemlists) >= 2:
+    if len(new_itemlists) == 4:
+        for before1, after1, before2, after2 in zip(new_itemlists[0], new_itemlists[1],new_itemlists[2], new_itemlists[3]):
+            if before1[1].isdigit() and after1[1].isdigit() and before2[1].isdigit() and after2[1].isdigit() and (not before1[0].startswith("未ドロップ") and not after1[0].startswith("未ドロップ") and not before2[0].startswith("未ドロップ") and not after2[0].startswith("未ドロップ")):
+                item_dic[normalize_item(after1[0])] = int(after1[1])-int(before1[1]) + int(after2[1])-int(before2[1])        
+    elif len(new_itemlists) >= 2:
         for before, after in zip(new_itemlists[0], new_itemlists[1]):
             if before[1].isdigit() and after[1].isdigit() and (not before[0].startswith("未ドロップ") and not after[0].startswith("未ドロップ")):
                 item_dic[normalize_item(after[0])] = int(after[1])-int(before[1])
@@ -243,11 +249,13 @@ def create_access_key_secret(CONSUMER_KEY, CONSUMER_SECRET):
     with open(settingfile, "w") as file:
         config.write(file)
 
-def meke_output(status):
+def meke_output(status, debug=False):
     if 'RT @' not in status.full_text \
        and '#FGO販売' not in status.full_text \
        and "#FGO買取"  not in status.full_text:
         source = "https://twitter.com/" + status.user.screen_name + "/status/" + status.id_str
+        if debug:
+            print(source)
         report_items = make_data4tweet(status.full_text)
         image_items, error_dic = calc_iamge_diff(status)
 
@@ -313,7 +321,7 @@ def get_one_tweet(args, api):
             print(error, end=" ")
             print(error_dic[error], end= ",")
     
-def get_tweet_auto(args, api, last_id):
+def get_tweet_auto(args, api, last_id, debug=False):
     """
     検索で取得できる #FGO周回カウンタ　のツイートを全て処理する
     """
@@ -329,7 +337,7 @@ def get_tweet_auto(args, api, last_id):
                                      since_id=resume_id,
                                      max_id=max_id -1,
                                      tweet_mode="extended"):
-                meke_output(status)
+                meke_output(status, debug)
                 # --resume　オプション用データ
                 if int(last_id) < int(status.id):
                     last_id = int(status.id)               
@@ -340,7 +348,7 @@ def get_tweet_auto(args, api, last_id):
                                      count=MAXSERCH,
                                      max_id=max_id -1,
                                      tweet_mode="extended"):
-                meke_output(status)
+                meke_output(status, debug)
                 # --resume　オプション用データ
                 if int(last_id) < int(status.id):
                     last_id = int(status.id)               
@@ -396,7 +404,7 @@ if __name__ == '__main__':
     args = parser.parse_args()    # 引数を解析
 
     if args.auto == True:
-        last_id = get_tweet_auto(args, api, last_id)
+        last_id = get_tweet_auto(args, api, last_id, args.debug)
                
         config.set(section0, "LAST_ID", str(last_id))
         with open("setting.ini", "w") as file:
