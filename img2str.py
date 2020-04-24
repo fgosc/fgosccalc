@@ -248,7 +248,7 @@ class DropItems:
 class ScreenShot:
     unknown_item_count = 0
 
-    def __init__(self, img_rgb, svm, dropitems, debug="False"):
+    def __init__(self, img_rgb, svm, dropitems, debug=False):
         # TRAINING_IMG_WIDTHは3840x2160の解像度をベースにしている
         TRAINING_IMG_WIDTH = 1514
         threshold = 80
