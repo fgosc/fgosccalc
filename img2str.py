@@ -5,10 +5,11 @@ from pathlib import Path
 import numpy as np
 import argparse
 from storage.filesystem import FileSystemStorage
+import csv
+import re
 
 progname = "img2str"
-version = "0.1.0"
-
+version = "0.2.0"
 
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
@@ -207,6 +208,29 @@ class DropItems:
     ##    '狂業火':np.array([[17, 103, 230, 122, 58, 27, 127, 32]], dtype='uint8'),
     }
 
+    #クエストを見分けるハッシュ値
+    dist_quest = {
+        '冬木':np.array([[ 81,  74,  74, 166, 182, 212, 158, 218]], dtype='uint8'),
+        'オルレアン':np.array([[129, 126, 122, 174, 158,  93, 236, 222]], dtype='uint8'),
+        'セプテム':np.array([[113,  58, 156, 198, 138, 117, 158, 174]], dtype='uint8'),
+        'オケアノス':np.array([[225, 154,  62,  30, 170,  92, 215, 151]], dtype='uint8'),
+        'ロンドン':np.array([[241, 158, 110, 170, 126, 124, 191, 186]], dtype='uint8'),
+        '北米':np.array([[  1, 174, 250, 222, 137, 174, 214, 141]], dtype='uint8'),
+        'キャメロット':np.array([[129, 242, 246,  60, 124, 238, 188, 124]], dtype='uint8'),
+        'バビロニア':np.array([[193, 227,  86, 218, 250, 170, 245,  59]], dtype='uint8'),
+        '新宿':np.array([[121,  58, 166, 174, 142, 102, 238, 221]], dtype='uint8'),
+        'アガルタ':np.array([[145, 206,  78,  58, 170, 243, 114, 235]], dtype='uint8'),
+        '下総国':np.array([[113, 122,  86, 102, 170, 154, 170, 115]], dtype='uint8'),
+        'セイレム':np.array([[241, 190, 198,  76, 158, 243, 206, 202]], dtype='uint8'),
+        'アナスタシア':np.array([[  1, 243, 246, 142,  10, 248, 190, 106]], dtype='uint8'),
+        'ゲッテルデメルング':np.array([[ 79, 126,  16, 175, 248,  23, 238, 115]], dtype='uint8'),
+        'シン':np.array([[185, 238, 110, 185, 114, 119, 202, 106]], dtype='uint8'),
+        'ユガ・クシェートラ':np.array([[  3,  30, 216, 186, 180, 212, 122,  71]], dtype='uint8'),
+        'アトランティス':np.array([[ 65,  30,  58, 242, 170, 250,  92, 231]], dtype='uint8'),
+        'オリュンポス':np.array([[225, 242,  26,  87,  42, 169, 181, 222]], dtype='uint8'),
+    }
+
+
     dist_local = {
     }
 
@@ -214,6 +238,101 @@ class DropItems:
     def __init__(self, storage=defaultItemStorage):
         self.storage = storage
         self.calc_dist_local()
+        self.sozai = {}
+        self.sozai_betsumei = {}
+        self.read_item()
+        self.freequest = {}
+        self.read_freequest()
+        self.syurenquest = {}
+        self.read_syurenquest()
+
+    def read_item(self):
+        """
+        CSV形式のアイテム変換データを読み込む
+        """
+        itemfile = Path(__file__).resolve().parent / Path("item.csv")
+        with open(itemfile, 'r' , encoding="utf_8") as f:
+            try:
+                reader = csv.reader(f)
+                header = next(reader)  # ヘッダーを読み飛ばしたい時
+
+                for row in reader:
+    ##                q = {}
+                    for item in row[2:]:
+                        if item == "":
+                            break
+                        self.sozai_betsumei[item] = row[1]
+                    self.sozai[row[1]] = row[0]
+            except UnicodeDecodeError:
+                print("[エラー]item.csv の文字コードがおかしいようです。UTF-8で保存してください。")
+                sys.exit()
+            except IndexError:
+                print("[エラー]item.csv がCSV形式でないようです。")
+                sys.exit()
+
+    def normalize_item(self, s):
+        for pattern in self.sozai_betsumei.keys():
+            if re.match(pattern, s):
+                s = re.sub("^" + s + "$", self.sozai_betsumei[pattern], s)
+                break
+        return s
+
+    def read_freequest(self):
+        """
+        CSV形式のフリークエストデータを読み込む
+        """
+        fqfile = Path(__file__).resolve().parent / Path("freequest.csv")
+
+        with open(fqfile, 'r', encoding="utf_8") as f:
+            try:
+                reader = csv.reader(f)
+                header = next(reader)  # ヘッダーを読み飛ばしたい時
+
+                for row in reader:
+                    q = {}
+                    q["ストーリー"] = row[0]
+                    q["特異点"] = row[1]
+                    q["場所"] = row[2]
+                    d = {}
+                    for item in row[4:]:
+                        if item == "":
+                            break
+                        d[self.normalize_item(item)] = []
+                    q["ドロップアイテム"] = d
+                    self.freequest[row[3]] = q
+            except UnicodeDecodeError:
+                print("[エラー]freequest.csv の文字コードがおかしいようです。UTF-8で保存してください。")
+                sys.exit()
+            except IndexError:
+                print("[エラー]freequest.csv がCSV形式でないようです。")
+                sys.exit()
+
+    def read_syurenquest(self):
+        """
+        CSV形式の修練クエストデータを読み込む
+        """
+        syurenfile = Path(__file__).resolve().parent / Path("syurenquest.csv")
+        with open(syurenfile, 'r', encoding="utf_8") as f:
+            try:
+                reader = csv.reader(f)
+                header = next(reader)  # ヘッダーを読み飛ばしたい時
+
+                for row in reader:
+                    q = {}
+                    q["周回数"] = []
+                    d = {}
+                    for item in row[1:]:
+                        if item == "":
+                            break
+                        d[self.normalize_item(item)] = []
+                    q["ドロップアイテム"] = d
+                    self.syurenquest[row[0]] = q
+            except UnicodeDecodeError:
+                print("[エラー]syurenquest.csv の文字コードがおかしいようです。UTF-8で保存してください。")
+                sys.exit()
+            except IndexError:
+                print("[エラー]syurenquest.csv がCSV形式でないようです。")
+                sys.exit()
 
     def calc_dist_local(self):
         """
@@ -252,13 +371,15 @@ class ScreenShot:
         # TRAINING_IMG_WIDTHは3840x2160の解像度をベースにしている
         TRAINING_IMG_WIDTH = 1514
         threshold = 80
-
+        self.dropitems = dropitems
         self.img_rgb_orig = img_rgb
+        self.img_hsv_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         th, self.img_th_orig = cv2.threshold(self.img_gray_orig, threshold, 255, cv2.THRESH_BINARY)
         self.height, self.width = img_rgb.shape[:2]
 
         self.error = ""
+        self.tokuiten = ""
         try:
             game_screen = self.extract_game_screen(debug)
         except ValueError as e:
@@ -269,6 +390,7 @@ class ScreenShot:
 
         if debug:
             cv2.imwrite('game_screen.png', game_screen)
+            print(self.tokuiten)
 
         height_g, width_g, _ = game_screen.shape
         if debug:
@@ -314,7 +436,52 @@ class ScreenShot:
 
         self.itemdic = self.makeitemdict()
         self.itemlist = self.makeitemlist()
+        self.deside_freequestname()
+        if self.quest_output == "":
+            self.deside_syurenquestname()
 
+    def deside_syurenquestname(self):
+        itemset = set([i[0] for i in self.itemlist])
+        self.quest = "" #クエスト名
+        self.place = "" #クエストの場所名
+        self.quest_output = "" #周回カウンタに合わせたクエスト名
+        for quest in self.dropitems.syurenquest:
+##            print(self.dropitems.syurenquest[quest])
+            dropset = set([i for i in self.dropitems.syurenquest[quest]["ドロップアイテム"].keys() if not i.endswith("火")])
+            if itemset == dropset:
+                self.quest_output = quest
+                self.droplist = [i for i in self.dropitems.syurenquest[quest]["ドロップアイテム"].keys()]
+                break
+        
+    def deside_freequestname(self):
+        """
+        クエスト名を決定
+        """
+        itemset = set([i[0] for i in self.itemlist if not i[0].startswith("泥無しアイテム")])
+        self.quest = "" #クエスト名
+        self.place = "" #クエストの場所名
+        self.quest_output = "" #周回カウンタに合わせたクエスト名
+        # reversed するのは 未確認座標X-Cを未確認座標X-Bより先に認識させるため
+        for quest in reversed(self.dropitems.freequest):
+            if self.dropitems.freequest[quest]["特異点"] == self.tokuiten:
+                dropset = set([i for i in self.dropitems.freequest[quest]["ドロップアイテム"].keys() if not i.endswith("火")])
+                if itemset == dropset:
+                    self.quest = quest
+                    self.place = self.dropitems.freequest[quest]["場所"]
+                    self.droplist = [i for i in self.dropitems.freequest[quest]["ドロップアイテム"].keys()]
+                    break
+        if self.place != "":
+            quest_list = [quest for quest in self.dropitems.freequest.keys() if self.dropitems.freequest[quest]["特異点"] == self.tokuiten and  self.dropitems.freequest[quest]["場所"] == self.place]
+            if self.tokuiten == "北米":
+                self.quest_output = self.place + self.quest
+            elif len(quest_list) == 1:
+                self.quest_output = self.tokuiten + " " + self.place
+            else:
+                # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
+                if quest_list.index(self.quest) == 0:
+                    self.quest_output = self.tokuiten + " " + self.place
+                else:
+                    self.quest_output = self.tokuiten + " " + self.quest            
 
     def detect_enemy_tab(self, debug=False):
         """
@@ -358,7 +525,9 @@ class ScreenShot:
             if area > 2:
                 ret = cv2.boundingRect(cnt)
                 pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-                if pts[0] < self.width/2 and pts[1] > self.height/2 and 4.5 < ret[2]/ret[3] < 4.7 and enemytab_pts[0] < pts[2] < enemytab_pts[2]:
+                if pts[0] < self.width/2 and pts[1] > self.height/2 \
+                   and 4.5 < ret[2]/ret[3] < 4.9 and enemytab_pts[0] < pts[2] < enemytab_pts[2] \
+                   and enemytab_pts[2] - enemytab_pts[0] > ret[2]:
                     closebutton_pts.append(pts)
         closebutton_pts.sort()
         if debug:
@@ -378,8 +547,8 @@ class ScreenShot:
         2. 「エネミー」タブの位置情報から「閉じる」ボタンの位置を探す
         3. 「エネミー」タブの右端と「閉じる」ボタンの中心からcut imageの左端を決める
         """
-        enemytab_pts = self.detect_enemy_tab()
-        closebutton_pts = self.detect_close_button(enemytab_pts)
+        enemytab_pts = self.detect_enemy_tab(debug)
+        closebutton_pts = self.detect_close_button(enemytab_pts, debug)
 
         right_x = enemytab_pts[2]
         center_x = closebutton_pts[0] + int((closebutton_pts[2] - closebutton_pts[0])/2)
@@ -388,7 +557,62 @@ class ScreenShot:
         upper_y = enemytab_pts[3]
         bottom_y = enemytab_pts[3] + int(1250*(enemytab_pts[3] - enemytab_pts[1])/175)
 
+        if debug:
+            print("game_screenの座標: [[", end ="")
+            print(left_x, end=", ")
+            print(upper_y, end=", ")
+            print(right_x, end=", ")
+            print(bottom_y, end="")
+            print("]]")
+
         game_screen = self.img_rgb_orig[upper_y:bottom_y,left_x:right_x]
+        # ここでクエスト名を認識する
+        # 左座標
+        quest_left = right_x + int((1983-1723)/(1723 - 209)*(right_x -left_x))
+        quest_right = right_x + int((3810-1723)/(1723 - 209)*(right_x -left_x))
+#        quest_right = right_x + int((3820-1723)/(1723 - 209)*(right_x -left_x))
+        quest_top = upper_y - int((631-21)/(1881 - 631)*(bottom_y - upper_y))
+#        quest_top = upper_y - int((631-10)/(1881 - 631)*(bottom_y - upper_y))
+        quest_bottom = upper_y - int((631-143)/(1881 - 631)*(bottom_y - upper_y))
+#        quest_bottom = upper_y - int((631-180)/(1881 - 631)*(bottom_y - upper_y))
+        # 有効な座標があるか
+        if quest_left > self.width or quest_right > self.width or quest_left < 0 or quest_top < 0:
+            return game_screen
+##        print(quest_right)
+##        print(quest_left)
+        if debug:
+            print("quest名切り出しの座標: [[", end ="")
+            print(quest_left, end=", ")
+            print(quest_top, end=", ")
+            print(quest_right, end=", ")
+            print(quest_bottom, end="")
+            print("]]")
+        quest = self.img_rgb_orig[quest_top:quest_bottom,quest_left:quest_right]
+        lower = np.array([100,100,100]) 
+        upper = np.array([255,255,255]) #ほぼ黒
+        img_mask = cv2.inRange(quest, lower, upper)
+
+##        cv2.imshow("img", cv2.resize(img_mask, dsize=None, fx=.5, fy=.5))
+##        cv2.waitKey(0)
+##        cv2.destroyAllWindows()
+        hash = self.compute_hash(quest)
+        if debug:
+            print(hash)
+        tokuitens = {}
+        for i in self.dropitems.dist_quest.keys():
+            d = Item.hasher.compare(hash, self.dropitems.dist_quest[i])
+            #同じアイテムでも14離れることあり(IMG_8785)
+            if d <= 20:
+                tokuitens[i] = d
+        tokuitens = sorted(tokuitens.items(), key=lambda x:x[1])
+
+        try:
+            tokuiten = next(iter(tokuitens))
+        except:
+            tokuiten = ""
+
+        if tokuiten != "":
+            self.tokuiten = tokuiten[0]
         return game_screen
 
     def makeitemdict(self):
@@ -457,6 +681,9 @@ class ScreenShot:
 
         return pts
 
+    def compute_hash(self, img_rgb):
+        return Item.hasher.compute(img_rgb)
+
 class Item:
     hasher = cv2.img_hash.PHash_create()
     def __init__(self, img_rgb, img_gray, svm, dropitems, cutimage_width, debug=False):
@@ -491,149 +718,69 @@ class Item:
         pts.reverse()
         return pts
 
-    def detect_syoji_height(self, debug=False):
-        """
-        「所持」の高さ
-        少なくとも1-5桁で[「所持」のフォントサイズは変わらない
-        """
-        syojiimg = self.img_gray[278:335,6:115]
-
-        dummy, syojiimg = cv2.threshold(syojiimg,100,255,cv2.THRESH_BINARY)
-        syojiimg = cv2.bitwise_not(syojiimg) #反転
-        sh, sw = syojiimg.shape[:2]
-
-        contours = cv2.findContours(syojiimg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
-        item_pts = []
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            if area > 1:
-                ret = cv2.boundingRect(cnt)
-                pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-                if ret[1] > 0 and ret[1] < sh/4 and pts[3] < sh and ret[2] < sw/2:
-                    item_pts.append(pts)
-        if len(item_pts) > 0:
-            syoji_height = min([pt[1] for pt in item_pts])
-        else:
-            syoji_height = 0
-
-        return syoji_height
-
-    def detect_syoji_height2(self, debug=False):
-        """
-        「所持」の高さ
-        少なくとも1-5桁で[「所持」のフォントサイズは変わらない
-        """
-        syojiimg = self.img_gray[278:330,80:105]
-
-        cv2.imshow("img", cv2.resize(syojiimg, dsize=None, fx=4., fy=4.))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-        dummy, syojiimg = cv2.threshold(syojiimg,100,255,cv2.THRESH_BINARY)
-        syojiimg = cv2.bitwise_not(syojiimg) #反転
-        sh, sw = syojiimg.shape[:2]
-        kernels = np.ones((1,sw),np.uint8)
-        #2回やらないと完璧に埋まらない
-        syojiimg = cv2.dilate(syojiimg,kernels,iterations = 1)
-        syojiimg = cv2.dilate(syojiimg,kernels,iterations = 1)
-
-        cv2.imshow("img", cv2.resize(syojiimg, dsize=None, fx=4., fy=4.))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-
-        syoji_height = sh
-        for y in range(sh):
-            if syojiimg[y, 0] == 255:
-                syoji_height = y
-                break
-        if debug:
-            print("syoji_height;",end="")
-            print(syoji_height)
-
-        return syoji_height
-
     def detect_first_digit_height(self, debug=False):
         """
         一桁目の文字の高さを測定
         """
-        tmpimg = self.img_gray[278:330,254:302]
+        tmpimg = self.img_gray[278:333,262:304]
         h, w = tmpimg.shape[:2]
-        dummy, tmpimg2 = cv2.threshold(tmpimg,100,255,cv2.THRESH_BINARY)
+        threshold = 140 # 140はtw46.jpg対応
+        dummy, tmpimg2 = cv2.threshold(tmpimg,threshold,255,cv2.THRESH_BINARY)
         tmpimg2 = cv2.bitwise_not(tmpimg2) #反転
-
-        kernel = np.ones((1,w),np.uint8)
-        #2回やらないと完璧に埋まらない
-        tmpimg2 = cv2.dilate(tmpimg2,kernel,iterations = 1)
-        tmpimg2 = cv2.dilate(tmpimg2,kernel,iterations = 1)
-
-        # baseiineを探す
-        baseine_offset = 0
+        # 左端に強制的に切れ目を作る
         for y in range(h):
-            if tmpimg2[h - y - 1, 0] == 255:
-                baseine_offset = y
-                break
+            tmpimg2[y, 0] = 0
 
-        first_digit_height = h
+        contours = cv2.findContours(tmpimg2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+        #オブジェクト検出(1回目)
+        new_contours = []
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            ret = cv2.boundingRect(cnt)
+            pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
+            if ret[1] + ret[3] > int(h/2) and ret[1] < int(h/2) and area > 1:
+                new_contours.append(cnt)
+
+        # 文字であると推定される部分以外の座標を白に
+        tmpimg3 = tmpimg2.copy()
         for y in range(h):
-            if tmpimg2[y, 0] == 255:
-                max_height = h - y - baseine_offset
-                first_digit_height = y
-                break
+            for x in range(w):
+                innerflag = False
+                for cnt in new_contours:
+                    if cv2.pointPolygonTest(cnt, (x, y), 0) > 0:
+                        innerflag = True
+                if innerflag == False:
+                    tmpimg3[y, x] = 255
+        tmpimg3 = cv2.bitwise_not(tmpimg3)
+
+        #オブジェクト検出(2回目)
+        contours = cv2.findContours(tmpimg3, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+        item_pts = []
+        for cnt in contours:
+            ret = cv2.boundingRect(cnt)
+            area = cv2.contourArea(cnt)
+            if ret[1] + ret[3] > int(h/2) and ret[1] < int(h/2) and ret[3] >= 34 and area > 1:
+                pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
+                item_pts.append(pt)
 
         if debug:
-            print("first_digit_height=",end="")
-            print(first_digit_height)
+            print(item_pts)
+        if len(item_pts) > 0:
+            first_digit_width = item_pts[0][2]-item_pts[0][0]
+            first_digit_height = item_pts[0][3] - item_pts[0][1] + 8
+            baseine_offset = h - item_pts[0][3] + 1
+            if first_digit_height/first_digit_width < 2.1:
+                margin_right = w - item_pts[0][2] + 5
+            else:
+                if debug:
+                    print("一桁目が1のためマージン変更")
+                margin_right = w - item_pts[0][2] -4               
+        else:
+            first_digit_height = 0
+            baseine_offset = 0
+            margin_right = 6
 
-        return baseine_offset, first_digit_height
-
-    def detect_margin_right(self, font_width, font_height, base_line, debug=False):
-        """
-        一桁目の文字の右マージンを測定
-        """
-        margin_right_tmp = 13
-        tmpimg = self.img_gray[278:330,254:303]
-
-        h, w = tmpimg.shape[:2]
-        dummy, tmpimg2 = cv2.threshold(tmpimg,100,255,cv2.THRESH_BINARY)
-        tmpimg2 = cv2.bitwise_not(tmpimg2) #反転
-
-        kernel = np.ones((h,1),np.uint8)
-        #2回やらないと完璧に埋まらない
-        tmpimg2 = cv2.dilate(tmpimg2,kernel,iterations = 1)
-        tmpimg2 = cv2.dilate(tmpimg2,kernel,iterations = 1)
-
-        # baseiineを探す
-        baseine_offset = 0
-        for y in range(h):
-            if tmpimg2[h - y - 1, 0] == 255:
-                baseine_offset = y
-                break
-
-        margin_right = w
-        for x in range(w):
-            if tmpimg2[0, w - x - 1] == 255:
-                margin_right = x + 10
-                break
-
-        pts = [[self.width - margin_right_tmp - font_width,
-               self.height - font_height-  base_line,
-               self.width - margin_right_tmp,
-               self.height-  base_line]]
-            
-        first_digit = self.read_item(self.img_gray, pts)
-        if debug:
-            print("first_digit; ", end="")
-            print(first_digit)
-
-        if debug:
-            print("margin_right=",end="")
-            print(margin_right)
-
-        if first_digit == "1":
-            margin_right =  margin_right - 9        
-
-        return margin_right
+        return margin_right, baseine_offset, first_digit_height
 
     def ocr_digit(self, debug=False):
         """
@@ -642,27 +789,24 @@ class Item:
         """
         # フォントサイズ測定
         max_height = 0
-        syoji_height = self.detect_syoji_height(debug)
-        baseine_offset, first_digit_height = self.detect_first_digit_height(debug)
-        diff = first_digit_height-syoji_height
         if debug:
-            print("「所持」と文字の差",end="")
-            print(diff)
+            print()
+        margin_right, baseine_offset, first_digit_height = self.detect_first_digit_height(debug)
 
-        if diff <= 3:
-            font_width = 34
+        if first_digit_height < 30:
+            return ""
+        if first_digit_height > 45: #tw52対応
+            font_width = 33
             font_height = 48
-            base_line = 10 + baseine_offset
+            base_line = 4 + baseine_offset
             comma_width = 15
-            margin_right = self.detect_margin_right(font_width, font_height, base_line, debug)
         else:
             if debug:
                 print("5桁判定")
-            font_width = 30
+            font_width = 31
             font_height = 43
-            base_line = 10 + baseine_offset
+            base_line = 4 + baseine_offset
             comma_width = 12
-            margin_right = self.detect_margin_right(font_width, font_height, base_line, debug)
         pts = self.generate_font_pts(margin_right, font_width, font_height, base_line, comma_width)
             
         line_lower_white = self.read_item(self.img_gray, pts)
@@ -800,7 +944,7 @@ class Item:
             item = self.classify_local_item(img)
         if item == "":
             item = self.make_new_item(img)
-        return item
+        return self.dropitems.normalize_item(item)
 
     def compute_tanebi_hash(self, img_rgb):
         """
@@ -904,11 +1048,15 @@ if __name__ == '__main__':
     file = Path(args.file)
     img_rgb = imread(str(file))
     sc = ScreenShot(img_rgb, svm, dropitems, args.debug)
-    result = ""
+    if sc.quest_output != "":
+        result = "【"+ sc.quest_output + "】"
+    else:
+        result = ""
     for item in sc.itemlist:
         if not item[0].startswith("未ドロップ"):
             result = result + item[0] + item[1] + '-'
     if len(result) > 0:
-        print(result[:-1])
+        result = result[:-1]
+    print(result)
     if  sc.error != "":
         print(sc.error)
