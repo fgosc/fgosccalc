@@ -13,6 +13,7 @@ import unicodedata
 import configparser
 import urllib
 import webbrowser
+from pathlib import Path
 
 progname = "FGOツイートスクショチェック"
 version = "0.0.2"
@@ -117,7 +118,7 @@ def make_data4tweet(report):
     items = re.sub(pattern, r"\g<items>", m.group())
     return (make_itemdic(items))
 
-def calc_iamge_diff(status, debug=False):
+def calc_iamge_diff(status, savelocal=False, debug=False):
     if not hasattr(status, 'extended_entities'):    
         return {}, {}
 
@@ -134,6 +135,12 @@ def calc_iamge_diff(status, debug=False):
             img_buf = np.frombuffer(tmp, dtype='uint8')
             image = cv2.imdecode(img_buf, 1)
             sc = img2str.ScreenShot(image, svm, dropitems, debug)
+            if savelocal:
+                Image_dir = Path(__file__).resolve().parent / Path("image/")
+                Image_file = Image_dir / Path(status.id_str + "_" + str(i) + ".jpg")
+                if not Image_dir.is_dir():
+                    Image_dir.mkdir()
+                cv2.imwrite(str(Image_file), image)
             if sc.error != "":
                 error_dic["image" + str(i+1)] = sc.error
             itemlists.append(sc.itemlist)
@@ -249,18 +256,18 @@ def create_access_key_secret(CONSUMER_KEY, CONSUMER_SECRET):
     with open(settingfile, "w") as file:
         config.write(file)
 
-def meke_output(status, debug=False):
+def meke_output(status, args):
     if 'RT @' not in status.full_text \
        and '#FGO販売' not in status.full_text \
        and "#FGO買取"  not in status.full_text:
         source = "https://twitter.com/" + status.user.screen_name + "/status/" + status.id_str
-        if debug:
+        if args.debug:
             print(source)
         report_items = make_data4tweet(status.full_text)
-        image_items, error_dic = calc_iamge_diff(status)
+        image_items, error_dic = calc_iamge_diff(status, savelocal=args.savelocal, debug=args.debug)
 
         #差分結果部分
-        report_diff = calc_diff(report_items, image_items)
+        report_diff = calc_diff(report_items, image_items, inverse=args.inverse)
         sum = 0
         for n in report_diff.values():
             sum = sum + abs(n)
@@ -301,7 +308,7 @@ def get_one_tweet(args, api):
     read_item()
 
     report_items = make_data4tweet(status.full_text)
-    image_items, error_dic = calc_iamge_diff(status, args.debug)
+    image_items, error_dic = calc_iamge_diff(status, savelocal=args.savelocal, debug=args.debug)
 
     #差分結果部分
     report_diff = calc_diff(report_items, image_items, args.inverse)
@@ -321,7 +328,7 @@ def get_one_tweet(args, api):
             print(error, end=" ")
             print(error_dic[error], end= ",")
     
-def get_tweet_auto(args, api, last_id, debug=False):
+def get_tweet_auto(args, api, last_id):
     """
     検索で取得できる #FGO周回カウンタ　のツイートを全て処理する
     """
@@ -337,7 +344,7 @@ def get_tweet_auto(args, api, last_id, debug=False):
                                      since_id=resume_id,
                                      max_id=max_id -1,
                                      tweet_mode="extended"):
-                meke_output(status, debug)
+                meke_output(status, args)
                 # --resume　オプション用データ
                 if int(last_id) < int(status.id):
                     last_id = int(status.id)               
@@ -348,7 +355,7 @@ def get_tweet_auto(args, api, last_id, debug=False):
                                      count=MAXSERCH,
                                      max_id=max_id -1,
                                      tweet_mode="extended"):
-                meke_output(status, debug)
+                meke_output(status, args)
                 # --resume　オプション用データ
                 if int(last_id) < int(status.id):
                     last_id = int(status.id)               
@@ -398,13 +405,14 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--suppress', help='差分のみ出力', action='store_true')     
     parser.add_argument('-i', '--inverse', help='差分計算を逆にする', action='store_true')     
     parser.add_argument('-r', '--resume', help='-a を前回実行した続きから出力', action='store_true')     
+    parser.add_argument('-l', '--savelocal', help='画像ファイルをローカルに保存', action='store_true')     
     parser.add_argument('-d', '--debug', help='デバッグ情報を出力', action='store_true')     
     parser.add_argument('--version', action='version', version=progname + " " + version)
 
     args = parser.parse_args()    # 引数を解析
 
     if args.auto == True:
-        last_id = get_tweet_auto(args, api, last_id, args.debug)
+        last_id = get_tweet_auto(args, api, last_id)
                
         config.set(section0, "LAST_ID", str(last_id))
         with open("setting.ini", "w") as file:
