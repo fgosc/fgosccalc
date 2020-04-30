@@ -131,6 +131,13 @@ def calc_iamge_diff(status, savelocal=False, debug=False):
         itemlists = []
         for i, media in enumerate(status.extended_entities['media']):
             response = requests.get(media['media_url'] + ':orig')
+            if response.status_code != requests.codes.ok:
+                url = media['media_url'].replace(".jpg", "") + "?format=jpg&name=4096x4096"
+                response = requests.get(url)
+                if response.status_code != requests.codes.ok:
+                    error_dic["image" + str(i+1)] = response.status_code
+                    break
+                    response.raise_for_status()
             tmp = response.content
             img_buf = np.frombuffer(tmp, dtype='uint8')
             image = cv2.imdecode(img_buf, 1)
