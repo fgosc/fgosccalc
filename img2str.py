@@ -525,7 +525,7 @@ class ScreenShot:
             if area > 2:
                 ret = cv2.boundingRect(cnt)
                 pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-                if pts[0] < self.width/2 and pts[1] > self.height/2 \
+                if pts[1] > self.height/2 \
                    and 4.5 < ret[2]/ret[3] < 4.9 and enemytab_pts[0] < pts[2] < enemytab_pts[2] \
                    and enemytab_pts[2] - enemytab_pts[0] > ret[2]:
                     closebutton_pts.append(pts)
