@@ -776,9 +776,33 @@ class Item:
                     print("一桁目が1のためマージン変更")
                 margin_right = w - item_pts[0][2] -4               
         else:
-            first_digit_height = 0
-            baseine_offset = 0
-            margin_right = 6
+            # 認識に失敗した
+            tmpimg4 = tmpimg2.copy()
+            # 左右端に強制的に切れ目を作る
+            for y in range(h):
+                tmpimg4[y, w -1] = 0
+                tmpimg4[y, 0] = 0
+            # 上下端に強制的に切れ目を作る
+            for x in range(w):
+                tmpimg4[0, x] = 0
+                tmpimg4[h -1, x] = 0
+            #オブジェクト検出(3回目)
+            contours = cv2.findContours(tmpimg4, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+            item_pts = []
+            for cnt in contours:
+                ret = cv2.boundingRect(cnt)
+                area = cv2.contourArea(cnt)
+                if ret[1] + ret[3] > int(h/2) and ret[1] < int(h/2) and ret[3] >= 34 and area > 1:
+                    pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
+                    item_pts.append(pt)
+            if len(item_pts) > 0:
+                first_digit_height = item_pts[0][2]-item_pts[0][0]
+                baseine_offset = h - item_pts[0][3] + 5
+                margin_right =  w - item_pts[0][2] + 9
+            else:
+                first_digit_height = 0
+                baseine_offset = 0
+                margin_right = 6                
 
         return margin_right, baseine_offset, first_digit_height
 
@@ -846,7 +870,8 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in self.dropitems.dist_item.keys():
             d = Item.hasher.compare(hash_item, self.dropitems.dist_item[i])
-            if d <= 15:
+            if d <= 14:
+            # #21 の修正のため15→14に変更して様子見
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
                 itemfiles[i] = d
