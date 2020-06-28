@@ -419,12 +419,13 @@ class ScreenShot:
             self.error = str(e)
 
         self.items = []
+        template = cv2.imread('syoji_silber.png',0) # Item内で使用
         for i, pt in enumerate(item_pts):
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
-            item = Item(item_img_rgb, item_img_gray, svm, dropitems, width_g, debug)
+            item = Item(item_img_rgb, item_img_gray, svm, dropitems, template, debug)
             if debug == True:
                 if item.name.endswith("種火") or item.name.endswith("灯火") or item.name.endswith("大火"):
                     continue
@@ -686,14 +687,14 @@ class ScreenShot:
 
 class Item:
     hasher = cv2.img_hash.PHash_create()
-    def __init__(self, img_rgb, img_gray, svm, dropitems, cutimage_width, debug=False):
+    def __init__(self, img_rgb, img_gray, svm, dropitems, template, debug=False):
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         self.height, self.width = img_rgb.shape[:2]
         self.svm = svm
         self.dropitems = dropitems
-        self.cutimage_width = cutimage_width
+        self.template = template
         self.dropnum = self.ocr_digit(debug)
         self.name = self.classify_item(img_rgb)
         if debug == True:
@@ -701,141 +702,78 @@ class Item:
                 print('"' + self.name + '"', end="")
                 self.name = self.classify_item(img_rgb,debug)
 
-    def generate_font_pts(self, margin_right, font_width, font_height, base_line, comma_width):
-        pts = []
-        for i in range(3):
-            pt = (self.width - margin_right - font_width * (i + 1),
-                  self.height - font_height - base_line,
-                  self.width - margin_right - font_width * i,
-                  self.height - base_line)
-            pts.append(pt)
-        for j in range(3):
-            pt = (self.width - margin_right - font_width * (i + j + 2) - comma_width,
-                  self.height - font_height - base_line,
-                  self.width - margin_right - font_width * (i + j + 1)  - comma_width,
-                  self.height - base_line)
-            pts.append(pt)
-        pts.reverse()
-        return pts
-
-    def detect_first_digit_height(self, debug=False):
-        """
-        一桁目の文字の高さを測定
-        """
-        tmpimg = self.img_gray[278:333,262:304]
-        h, w = tmpimg.shape[:2]
-        threshold = 140 # 140はtw46.jpg対応
-        dummy, tmpimg2 = cv2.threshold(tmpimg,threshold,255,cv2.THRESH_BINARY)
-        tmpimg2 = cv2.bitwise_not(tmpimg2) #反転
-        # 左端に強制的に切れ目を作る
-        for y in range(h):
-            tmpimg2[y, 0] = 0
-
-        contours = cv2.findContours(tmpimg2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-        #オブジェクト検出(1回目)
-        new_contours = []
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            ret = cv2.boundingRect(cnt)
-            pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-            if ret[1] + ret[3] > int(h/2) and ret[1] < int(h/2) and area > 1:
-                new_contours.append(cnt)
-
-        # 文字であると推定される部分以外の座標を白に
-        tmpimg3 = tmpimg2.copy()
-        for y in range(h):
-            for x in range(w):
-                innerflag = False
-                for cnt in new_contours:
-                    if cv2.pointPolygonTest(cnt, (x, y), 0) > 0:
-                        innerflag = True
-                if innerflag == False:
-                    tmpimg3[y, x] = 255
-        tmpimg3 = cv2.bitwise_not(tmpimg3)
-
-        #オブジェクト検出(2回目)
-        contours = cv2.findContours(tmpimg3, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
-        item_pts = []
-        for cnt in contours:
-            ret = cv2.boundingRect(cnt)
-            area = cv2.contourArea(cnt)
-            if ret[1] + ret[3] > int(h/2) and ret[1] < int(h/2) and ret[3] >= 34 and area > 1:
-                pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-                item_pts.append(pt)
-
-        if debug:
-            print(item_pts)
-        if len(item_pts) > 0:
-            first_digit_width = item_pts[0][2]-item_pts[0][0]
-            first_digit_height = item_pts[0][3] - item_pts[0][1] + 8
-            baseine_offset = h - item_pts[0][3] + 1
-            if first_digit_height/first_digit_width < 2.1:
-                margin_right = w - item_pts[0][2] + 5
-            else:
-                if debug:
-                    print("一桁目が1のためマージン変更")
-                margin_right = w - item_pts[0][2] -4               
-        else:
-            # 認識に失敗した
-            tmpimg4 = tmpimg2.copy()
-            # 左右端に強制的に切れ目を作る
-            for y in range(h):
-                tmpimg4[y, w -1] = 0
-                tmpimg4[y, 0] = 0
-            # 上下端に強制的に切れ目を作る
-            for x in range(w):
-                tmpimg4[0, x] = 0
-                tmpimg4[h -1, x] = 0
-            #オブジェクト検出(3回目)
-            contours = cv2.findContours(tmpimg4, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
-            item_pts = []
-            for cnt in contours:
-                ret = cv2.boundingRect(cnt)
-                area = cv2.contourArea(cnt)
-                if ret[1] + ret[3] > int(h/2) and ret[1] < int(h/2) and ret[3] >= 34 and area > 1:
-                    pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-                    item_pts.append(pt)
-            if len(item_pts) > 0:
-                first_digit_height = item_pts[0][2]-item_pts[0][0]
-                baseine_offset = h - item_pts[0][3] + 5
-                margin_right =  w - item_pts[0][2] + 9
-            else:
-                first_digit_height = 0
-                baseine_offset = 0
-                margin_right = 6                
-
-        return margin_right, baseine_offset, first_digit_height
-
     def ocr_digit(self, debug=False):
         """
         戦利品OCR
         「所持」の文字高と数字の文字数の高さの差からフォントサイズを判定
         """
-        # フォントサイズ測定
-        max_height = 0
-        if debug:
-            print()
-        margin_right, baseine_offset, first_digit_height = self.detect_first_digit_height(debug)
-
-        if first_digit_height < 30:
+        # 所持の座標を算出
+        w, h = self.template.shape[::-1]
+        res = cv2.matchTemplate(self.img_gray,self.template,cv2.TM_CCOEFF_NORMED)
+        threshold = 0.7
+        loc = np.where( res >= threshold)
+        syoji_pt = []
+        for pt in zip(*loc[::-1]):
+            syoji_pt = pt
+            break
+        if len(syoji_pt) == 0:
             return ""
-        if first_digit_height > 45: #tw52対応
-            font_width = 33
-            font_height = 48
-            base_line = 4 + baseine_offset
-            comma_width = 15
-        else:
-            if debug:
-                print("5桁判定")
-            font_width = 31
-            font_height = 43
-            base_line = 4 + baseine_offset
-            comma_width = 12
-        pts = self.generate_font_pts(margin_right, font_width, font_height, base_line, comma_width)
-            
-        line_lower_white = self.read_item(self.img_gray, pts)
+        offset_x = syoji_pt[0] -13
+        offset_y = syoji_pt[1] -281
 
-        return line_lower_white
+        # 7桁
+        pts7 = [[141, 303, 162, 335],
+                [169, 303, 193, 335],
+                [189, 303, 212, 335],
+                [210, 303, 232, 335],
+                [236, 303, 261, 335],
+                [258, 303, 280, 335],
+                [278, 303, 300, 335]]
+        pts = []
+        for pt in pts7:
+            pt = [pt[0] +offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
+            pts.append(pt)
+        line_lower_white = self.read_item(self.img_gray, pts)
+        if len(line_lower_white) == 7 and line_lower_white.isdecimal() == True:
+            return line_lower_white
+        # 6桁
+        pts6 = [[124, 292, 152, 333],
+                [151, 292, 182, 333],
+                [177, 292, 208, 333],
+                [216, 292, 248, 333],
+                [244, 292, 272, 333],
+                [270, 292, 300, 333]]
+        pts = []
+        for pt in pts6:
+            pt = [pt[0] +offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
+            pts.append(pt)
+        line_lower_white = self.read_item(self.img_gray, pts)
+        if len(line_lower_white) == 6 and line_lower_white.isdecimal() == True:
+            return line_lower_white
+        # 5桁
+        pts5 = [[135, 289, 167, 333],
+                [165, 289, 200, 333],
+                [207, 289, 240, 333],
+                [238, 289, 271, 333],
+                [269, 289, 300, 333]]
+        pts = []
+        for pt in pts5:
+            pt = [pt[0] +offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
+            pts.append(pt)
+        line_lower_white = self.read_item(self.img_gray, pts)
+        if len(line_lower_white) == 5 and line_lower_white.isdecimal() == True:
+            return line_lower_white
+        # 4桁以下
+        pts4 = [[149, 285, 186, 333],
+                [196, 285, 232, 333],
+                [230, 285, 265, 333],
+                [263, 285, 300, 333]]
+        pts = []
+        for pt in pts4:
+            pt = [pt[0] +offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
+            pts.append(pt)
+        line_lower_white = self.read_item(self.img_gray, pts)
+        return(line_lower_white)
             
     def classify_standard_item(self, img, debug=False):
         """
