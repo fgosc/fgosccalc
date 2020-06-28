@@ -420,7 +420,7 @@ class ScreenShot:
 
         self.items = []
         template = cv2.imread('syoji_silber.png',0) # Item内で使用
-        for i, pt in enumerate(item_pts[8:9]):
+        for i, pt in enumerate(item_pts):
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
             if debug:
