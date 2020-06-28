@@ -420,7 +420,7 @@ class ScreenShot:
 
         self.items = []
         template = cv2.imread('syoji_silber.png',0) # Item内で使用
-        for i, pt in enumerate(item_pts):
+        for i, pt in enumerate(item_pts[8:9]):
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
             if debug:
@@ -737,12 +737,12 @@ class Item:
         if len(line_lower_white) == 7 and line_lower_white.isdecimal() == True:
             return line_lower_white
         # 6桁
-        pts6 = [[124, 292, 152, 333],
-                [151, 292, 182, 333],
-                [177, 292, 208, 333],
-                [216, 292, 248, 333],
-                [244, 292, 272, 333],
-                [270, 292, 300, 333]]
+        pts6 = [[124, 292, 152, 335],
+                [151, 292, 182, 335],
+                [177, 292, 208, 335],
+                [216, 292, 248, 335],
+                [244, 292, 272, 335],
+                [270, 292, 300, 335]]
         pts = []
         for pt in pts6:
             pt = [pt[0] +offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
