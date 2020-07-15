@@ -375,7 +375,7 @@ class ScreenShot:
         self.img_rgb_orig = img_rgb
         self.img_hsv_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
-        th, self.img_th_orig = cv2.threshold(self.img_gray_orig, threshold, 255, cv2.THRESH_BINARY)
+        th, self.img_th_orig = cv2.threshold(self.img_gray_orig,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         self.height, self.width = img_rgb.shape[:2]
 
         self.error = ""
@@ -441,6 +441,32 @@ class ScreenShot:
         if self.quest_output == "":
             self.deside_syurenquestname()
 
+    def find_edge(self, img_th, reverse=False):
+        """
+        直線検出で検出されなかったフチ幅を検出
+        """
+        edge_width = 8
+        ## lx = rx = 0
+        height, width = img_th.shape[:2]
+        target_color = 255 if reverse else 0
+        for i in range(edge_width):
+            img_th_x = img_th[:,i:i+1]
+            hist = cv2.calcHist([img_th_x],[0],None,[256],[0,256]) #ヒストグラムを計算
+            # 最小値・最大値・最小値の位置・最大値の位置を取得
+            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist)
+            if maxLoc[1] == target_color:
+                break
+        lx = i
+        for j in range(edge_width):
+            img_th_x = img_th[:,width - j:width - j + 1]
+            hist = cv2.calcHist([img_th_x],[0],None,[256],[0,256]) #ヒストグラムを計算
+            # 最小値・最大値・最小値の位置・最大値の位置を取得
+            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist)
+            if maxLoc[1] == 0:
+                break
+        rx = i
+
+        return lx, rx
     def deside_syurenquestname(self):
         itemset = set([i[0] for i in self.itemlist])
         self.quest = "" #クエスト名
@@ -566,6 +592,11 @@ class ScreenShot:
             print(bottom_y, end="")
             print("]]")
 
+        thimg = self.img_th_orig[upper_y:bottom_y,left_x:right_x]
+        lx, rx = self.find_edge(thimg, reverse=True)
+        left_x = left_x + lx
+        right_x = right_x - rx
+
         game_screen = self.img_rgb_orig[upper_y:bottom_y,left_x:right_x]
         # ここでクエスト名を認識する
         # 左座標
@@ -671,14 +702,15 @@ class ScreenShot:
         戦利品が出現する12(4x3)の座標 [left, top, right, bottom]
         リサイズ後のgamescreenに合うよう設定
         """
-        criteria_left = 34
-        criteria_top = 155
-        item_width = 313
-        item_height = 341
-        margin_width = 40
-        margin_height = 19
-        pts = self.generate_item_pts(criteria_left, criteria_top,
-                                     item_width, item_height, margin_width, margin_height)
+        edge = 7
+        width = 300
+        pts = [[42-edge, 163-edge, 42+width+edge, 163+width+34],[395-edge, 163-edge, 395+width+edge, 163+width+34],
+               [747-edge, 163-edge, 747+width+edge, 163+width+34],[1100-edge, 163-edge, 1100+width+edge, 163+width+34],
+               [42-edge, 523-edge, 42+width+edge, 523+width+34],[395-edge, 523-edge, 395+width+edge, 523+width+34],
+               [747-edge, 523-edge, 747+width+edge, 523+width+34],[1100-edge, 523-edge, 1100+width+edge, 523+width+34],
+               [42-edge, 883-edge, 42+width+edge, 883+width+34],[395-edge, 883-edge, 395+width+edge, 883+width+34],
+               [747-edge, 883-edge, 747+width+edge, 883+width+34],[1100-edge, 883-edge, 1100+width+edge, 883+width+34],
+               ]
 
         return pts
 
@@ -722,6 +754,7 @@ class Item:
         offset_y = syoji_pt[1] -281
 
         # 7桁
+        if debug: print("7桁読み込み")
         pts7 = [[141, 303, 162, 335],
                 [169, 303, 193, 335],
                 [189, 303, 212, 335],
@@ -737,12 +770,14 @@ class Item:
         if len(line_lower_white) == 7 and line_lower_white.isdecimal() == True:
             return line_lower_white
         # 6桁
+        if debug: print("6桁読み込み")
         pts6 = [[124, 292, 152, 335],
                 [151, 292, 182, 335],
                 [177, 292, 208, 335],
                 [216, 292, 248, 335],
                 [244, 292, 272, 335],
                 [270, 292, 300, 335]]
+
         pts = []
         for pt in pts6:
             pt = [pt[0] +offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
@@ -751,6 +786,7 @@ class Item:
         if len(line_lower_white) == 6 and line_lower_white.isdecimal() == True:
             return line_lower_white
         # 5桁
+        if debug: print("5桁読み込み")
         pts5 = [[135, 289, 167, 333],
                 [165, 289, 200, 333],
                 [207, 289, 240, 333],
@@ -955,6 +991,9 @@ class Item:
         for pt in reversed(pts):
             char = []
             tmpimg = img_gray[pt[1]:pt[3], pt[0] - offset_x:pt[2] - offset_x]
+##            cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4., fy=4.))
+##            cv2.waitKey(0)
+##            cv2.destroyAllWindows()
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
             char.append(hog.compute(tmpimg))
