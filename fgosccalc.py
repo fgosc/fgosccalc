@@ -8,11 +8,14 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 from typing import Dict
+import csv
 
 import img2str
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
+CE_dist_file = Path(__file__).resolve().parent / Path("hash_ce.csv")
+Item_nickname_file = Path(__file__).resolve().parent / Path("item_nickname.csv")
 
 
 def make_diff(itemlist1, itemlist2):
@@ -20,17 +23,24 @@ def make_diff(itemlist1, itemlist2):
     for before, after in zip(itemlist1, itemlist2):
             if before[1].isdigit() and after[1].isdigit() and (not before[0].startswith("未ドロップ") and not after[0].startswith("未ドロップ")):
                 tmplist.append((after[0], int(after[1])-int(before[1])))
+            elif  not after[0].startswith("未ドロップ"):
+                tmplist.append((after[0], "NaN"))
+               
     result = ""
     sum = 0
     for item in tmplist:
-        sum = sum + item[1]
+        if str(item[1]).isdigit():
+            sum = sum + item[1]
     if sum < 0:
         n = -1
     else:
         n = 1
     newdic = {}
     for item in tmplist:
-        newdic[item[0]] = item[1] * n
+        if str(item[1]).isdigit():
+            newdic[item[0]] = item[1] * n
+        else:
+            newdic[item[0]] = item[1]            
 
     return newdic
 
@@ -76,6 +86,17 @@ tanebi_list = [ '全種火', '全灯火', '全大火', '"全猛火','全業火',
                 '殺種火', '殺灯火', '殺大火', '殺猛火', '殺業火',
                 '狂種火', '狂灯火', '狂大火', '狂猛火', '狂業火']
 
+craft_essence_list = []
+with open(CE_dist_file, encoding='UTF-8') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        craft_essence_list.append(row[0])
+
+nickname_dic = {}
+with open(Item_nickname_file, encoding='UTF-8') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        nickname_dic[row[0]] = row[1]
 
 def sorted_dict(d, key):
     keys = sorted(d, key=key)
@@ -84,6 +105,15 @@ def sorted_dict(d, key):
         nd[key] = d[key]
     return nd
 
+
+def out_name(d):
+    if d[-1] == '_':
+        d = d[:-1]
+    if d in nickname_dic.keys():
+        d = nickname_dic[d]
+    if d[-1].isdigit():
+        d = d + '_'
+    return d
 
 @dataclasses.dataclass
 class ParsedDropsDiff:
@@ -109,6 +139,7 @@ class ParsedDropsDiff:
         礼装とイベント素材を正しく並べるには、外部からアイテム名とソート順序を与えるしかない。
     """
     questname: str
+    craft_essence: Dict[str, int]
     materials: Dict[str, int]
     gems: Dict[str, int]
     pieces: Dict[str, int]
@@ -128,6 +159,7 @@ class ParsedDropsDiff:
                 lines.append(line)
 
         lines = []
+        add_line(self.craft_essence, lines)
         add_line(self.materials, lines)
         add_line(self.gems, lines)
         add_line(self.pieces, lines)
@@ -168,6 +200,7 @@ class DropsDiff:
         """
             素材、スキル石、モニュピ、種火に分解した結果を返す。
         """
+        craft_essence = {}
         non_standards = {}
         materials = {}
         gems = {}
@@ -175,8 +208,10 @@ class DropsDiff:
         wisdoms = {}
 
         for name, count in self.item_dict.items():
-            if name not in std_item:
-                non_standards[name] = count
+            if name in craft_essence_list:
+                craft_essence[out_name(name)] = count
+            elif name not in std_item:
+                non_standards[out_name(name)] = count
             elif name in skillstone_list:
                 gems[name] = count
             elif name in monyupi_list:
@@ -195,11 +230,17 @@ class DropsDiff:
 
         return ParsedDropsDiff(
             self.questname,
+            craft_essence,
+            materials,
+            gems,
+            pieces,
+            wisdoms,
+##            戦利品はすでに順番ルールになっているのでソートしなくてよい
+##            sorted_dict(materials, key=lambda s: std_item.index(s)),
+##            sorted_dict(gems, key=lambda s: skillstone_list.index(s)),
+##            sorted_dict(pieces, key=lambda s: monyupi_list.index(s)),
+##            sorted_dict(wisdoms, key=lambda s: tanebi_list.index(s)),
             non_standards,
-            sorted_dict(materials, key=lambda s: std_item.index(s)),
-            sorted_dict(gems, key=lambda s: skillstone_list.index(s)),
-            sorted_dict(pieces, key=lambda s: monyupi_list.index(s)),
-            sorted_dict(wisdoms, key=lambda s: tanebi_list.index(s)),
         )
 
 
@@ -274,6 +315,7 @@ def _print_as_syukai_counter(newdic, dropitems, sc1, sc2):
         output = output[:-1]
     print(output)
     print("#FGO周回カウンタ http://aoshirobo.net/fatego/rc/")
+
 
 
 def parse_args():
