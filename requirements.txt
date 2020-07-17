@@ -1,6 +1,12 @@
 opencv-contrib-python
 opencv-python
 
-# only use in calctweet.py
+
+# only use in calctweet.py and update.py
 requests
+
+# only use in calctweet.py
 tweepy
+
+# only use in update.py
+tqdm
