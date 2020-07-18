@@ -23,11 +23,11 @@ Python 3.7以降
 ## インストール
 必要な Python ライブラリをインストールする
 
-    $ pip install -r requirements.txt
+` pip install -r requirements.txt`
 
 makeprop.py を1度だけ実行
 
-    $ python makeprop.py
+`$ python makeprop.py`
 
 ### calctweet.py のインストールは以下の手順が必要
 1. setting-dst.ini をコピーして setting.ini を作成
@@ -37,50 +37,71 @@ makeprop.py を1度だけ実行
 3. setting.ini に取得したconsumer_key と consumer_secretを入力する  
 次のように入力します  
 
-    consumer_key = 入手したconsumer_key  
-    consumer_secret = 入手したconsumer_secret
-
+```
+ consumer_key = 入手したconsumer_key  
+ consumer_secret = 入手したconsumer_secret
+```
 4. calctweet.py を起動するとブラウザが立ち上がり、アプリ連携画面になるのでアプリ連携し、表示された PIN を入力する
 
 ## 使い方
-### imgstr.py
+### img2str.py
+```
+usage: img2str.py [-h] [-d] [--version] file
 
-    usage: img2str.py [-h] [-d] [--version] file
-    
-    戦利品画像を読み取る
-    
-    positional arguments:
-      file         FGOの戦利品スクショ
-    
-    optional arguments:
-      -h, --help   show this help message and exit
-      -d, --debug  デバッグ情報を出力
-      --version    show program's version number and exit
+戦利品画像を読み取る
+
+positional arguments:
+  file         FGOの戦利品スクショ
+
+optional arguments:
+  -h, --help   show this help message and exit
+  -d, --debug  デバッグ情報を出力
+  --version    show program's version number and exit
+```
 
 ### fgosccalc.py
+周回前後二枚の戦利品スクショのドロップ差分を計算する
+```
+usage: fgosccalc.py [-h] [--loglevel {DEBUG,INFO,WARNING}] [--output OUTPUT]
+                    [--future]
+                    sc1 sc2
 
-    $ fgosccalc.py ファイル名 ファイル名
+positional arguments:
+  sc1                   1st screenshot
+  sc2                   2nd screenshot
 
-    スクショから差分を計算する
-
+optional arguments:
+  -h, --help            show this help message and exit
+  --loglevel {DEBUG,INFO,WARNING}
+                        loglevel [default: INFO]
+  --output OUTPUT       output file [default: STDOUT]
+  --future
+```
 ### calctweet.py
-    usage: calctweet.py [-h] [-u URL] [-a] [-s] [-i] [-r] [-d] [--version]    
+```
+usage: calctweet.py [-h] [-u URL] [-a] [-s] [-i] [-r] [-l] [-d] [--version]
 
-    周回カウンタのスクショ付き報告をチェック
-    
-    optional arguments:
-      -h, --help         show this help message and exit
-      -u URL, --url URL  Tweet URL
-      -a, --auto         #FGO周回カウンタ ツイの自動取得で連増実行
-      -s, --suppress     差分のみ出力
-      -i, --inverse      差分計算を逆にする
-      -r, --resume       -a を前回実行した続きから出力
-      -d, --debug        デバッグ情報を出力
-      --version          show program's version number and exit
+周回カウンタのスクショ付き報告をチェック
+
+optional arguments:
+  -h, --help         show this help message and exit
+  -u URL, --url URL  Tweet URL
+  -a, --auto         #FGO周回カウンタ ツイの自動取得で連増実行
+  -s, --suppress     差分のみ出力
+  -i, --inverse      差分計算を逆にする
+  -r, --resume       -a を前回実行した続きから出力
+  -l, --savelocal    画像ファイルをローカルに保存
+  -d, --debug        デバッグ情報を出力
+  --version          show program's version number and exit
+ ```
+### update.py
+`$ udate.py`
+アイテムデータのアップデートを行う
 
 ## 制限
-* 6桁の所持数には対応していない
+* 8桁の所持数には対応していない
 * 縮小を行ったスクリーンショットではアイテムと文字の認識率が悪くなる。目安としては額縁を抜いて横サイズ1200以下に縮小を行うと著しく認識率が落ちる
 * トリミングを行った画像にも対応しているが、「エネミー」タブと「閉じる」ボタンが入っていないものには対応していない。また、右上の特異点表記を入れないと周回場所の自動認識には対応しない
-* 周回場所の自動認識で未確認座標X-Bは未確認座標X-Cと常に誤認識される
-* 周回場所の自動認識でセプテム ローマはセプテムメディオラヌムと常に誤認識される
+* 周回場所の自動認識で誤認識されるクエストがある
+  * 未確認座標X-Bを未確認座標X-Cに
+  * セプテム ローマをセプテムメディオラヌムに
