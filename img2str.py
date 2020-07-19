@@ -531,7 +531,6 @@ class ScreenShot:
         クエスト名を決定
         """
         itemset = set([i[0] for i in self.itemlist if not i[0].startswith("泥無しアイテム")])
-        print(itemset)
         self.quest = "" #クエスト名
         self.place = "" #クエストの場所名
         self.quest_output = "" #周回カウンタに合わせたクエスト名
