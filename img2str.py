@@ -455,6 +455,8 @@ class ScreenShot:
                 continue
             elif item.name.endswith("火"):
                 break
+            elif item.name.startswith("泥無し"):
+                continue
             elif item.name == "QP":
                 break
             self.items.append(item)
