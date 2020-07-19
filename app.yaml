@@ -1,0 +1,17 @@
+runtime: python38
+instance_class: F2
+
+# ドキュメントルートアクセス時の spin up を回避するため
+# あえて static html を返す
+handlers:
+- url: /
+  static_files: static/index.html
+  upload: static/index.html
+ 
+- url: /favicon.ico
+  static_files: static/favicon.ico
+  upload: static/favicon.ico
+
+- url: /static/style.css
+  static_files: static/style.css
+  upload: static/style.css

@@ -90,13 +90,18 @@ craft_essence_list = []
 with open(CE_dist_file, encoding='UTF-8') as f:
     reader = csv.reader(f)
     for row in reader:
+        if row[0].strip() == '':
+            continue
         craft_essence_list.append(row[0])
 
 nickname_dic = {}
 with open(Item_nickname_file, encoding='UTF-8') as f:
     reader = csv.reader(f)
     for row in reader:
+        if row[0].strip() == '' or row[1].strip() == '':
+            continue
         nickname_dic[row[0]] = row[1]
+
 
 def sorted_dict(d, key):
     keys = sorted(d, key=key)
@@ -107,12 +112,14 @@ def sorted_dict(d, key):
 
 
 def out_name(d):
+    logger.debug('out_name before: %s', d)
     if d[-1] == '_':
         d = d[:-1]
-    if d in nickname_dic.keys():
+    if d in nickname_dic:
         d = nickname_dic[d]
     if d[-1].isdigit():
         d = d + '_'
+    logger.debug('out_name after: %s', d)
     return d
 
 @dataclasses.dataclass
