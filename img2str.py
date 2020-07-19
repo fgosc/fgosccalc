@@ -450,11 +450,12 @@ class ScreenShot:
             if self.is_empty_box(item_img_hsv) == True: break
             item = Item(item_img_rgb, item_img_gray, svm, dropitems, template, debug)
             if debug == True:
-                if item.name.endswith("種火") or item.name.endswith("灯火") or item.name.endswith("大火"):
-                    continue
+                print(item.name)
+            if item.name.endswith("種火") or item.name.endswith("灯火") or item.name.endswith("大火"):
+                continue
             elif item.name.endswith("火"):
                 break
-            if item.name == "QP":
+            elif item.name == "QP":
                 break
             self.items.append(item)
                 
@@ -530,6 +531,7 @@ class ScreenShot:
         クエスト名を決定
         """
         itemset = set([i[0] for i in self.itemlist if not i[0].startswith("泥無しアイテム")])
+        print(itemset)
         self.quest = "" #クエスト名
         self.place = "" #クエストの場所名
         self.quest_output = "" #周回カウンタに合わせたクエスト名
