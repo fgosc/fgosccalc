@@ -56,7 +56,7 @@ for bg in bg_files.keys():
             saveFile.write(response.content)
     tmpimg = cv2.imread(str(filename))
     h, w = tmpimg.shape[:2]
-    bg_image[bg] = tmpimg[5:h-6,5:w-6]
+    bg_image[bg] = tmpimg[5:h-5,5:w-5]
 
 hasher = cv2.img_hash.PHash_create()
 
