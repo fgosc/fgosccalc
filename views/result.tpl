@@ -9,6 +9,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
         <title>FGOスクショ差分チェッカー</title>
+        <style type="text/css">
+        ul.note {
+            margin-bottom: 1rem;
+        }
+        ul.note li {
+            font-size: small;
+        }
+        </style>
     </head>
     <body>
         <header class="row">
@@ -19,15 +27,20 @@
             <div class="card fluid">
                 <h3 class="section">解析結果</h3>
                 <p>{{ result }}</p>
-                <p><pre>{{ formatted_output }}</pre></p>
+                <pre>{{ formatted_output }}</pre>
                 <p>
                     <a
                         class="twitter-share-button"
-                        href="https://twitter.com/intent/tweet?text={{ quoted_output }}&url="
+                        href="https://twitter.com/intent/tweet?text={{ quoted_output }}"
                         data-size="large">
                         Tweet
                     </a>
                 </p>
+                <ul class="note">
+                    <li>周回数 <code>000周</code> はおよびクエスト名はツイートボタンを押した後に Twttier の投稿画面上で書き換えてください。</li>
+                    <li>恒常フリクエについて、画像からクエスト名が判別できる場合は自動でクエスト名が挿入されます。投稿前に誤りがないか確認をお願いします。</li>
+                    <li>画像解析の結果は常に誤認識の可能性があります。周回前、周回後の数値が正しく拾えているか必ずチェックしてください。自動判定されたクエスト名についても同様です。</li>
+                </ul>
                 <table>
                     <thead>
                         <tr>
