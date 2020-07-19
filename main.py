@@ -1,6 +1,7 @@
 import base64
 import logging
 from pathlib import Path
+from urllib.parse import quote_plus
 
 import cv2
 import numpy as np
@@ -63,20 +64,37 @@ def upload_post():
 
     result_dict = fgosccalc.make_diff(sc1.itemlist, sc2.itemlist)
     logger.info('result_dict: %s', result_dict)
+
+    questname, questdrop = fgosccalc.get_questinfo(sc1, sc2)
+    logger.info('quest: %s', questname)
+    logger.info('questdrop: %s', questdrop)
+
+    drops_diff = fgosccalc.DropsDiff(result_dict, questname, questdrop)
+    is_known_freequest = drops_diff.validate_dropitems()
+    parsed_obj = drops_diff.parse()
+    formatted_output = parsed_obj.as_syukai_counter()
+
     before_after_pairs = make_before_after_pairs(sc1.itemlist, sc2.itemlist)
 
     ok, png1 = cv2.imencode('.png', im1)
     if ok:
         before_im = base64.b64encode(png1.tobytes())
+    else:
+        before_im = None
+
     ok, png2 = cv2.imencode('.png', im2)
     if ok:
         after_im = base64.b64encode(png2.tobytes())
+    else:
+        after_im = None
 
     return template('result',
         result=makeup(result_dict),
         before_after_pairs=before_after_pairs,
         before_im=before_im,
         after_im=after_im,
+        formatted_output=formatted_output,
+        quoted_output=quote_plus(formatted_output),
     )
 
 

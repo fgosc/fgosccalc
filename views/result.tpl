@@ -5,7 +5,9 @@
         <meta name="robots" content="noindex,nofollow,noarchive">
         <link rel="stylesheet" href="https://cdn.rawgit.com/Chalarangelo/mini.css/v3.0.1/dist/mini-default.min.css">
         <link rel="stylesheet" href="static/style.css">
+        <link rel="canonical" href="/">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
         <title>FGOスクショ差分チェッカー</title>
     </head>
     <body>
@@ -17,6 +19,15 @@
             <div class="card fluid">
                 <h3 class="section">解析結果</h3>
                 <p>{{ result }}</p>
+                <p><pre>{{ formatted_output }}</pre></p>
+                <p>
+                    <a
+                        class="twitter-share-button"
+                        href="https://twitter.com/intent/tweet?text={{ quoted_output }}&url="
+                        data-size="large">
+                        Tweet
+                    </a>
+                </p>
                 <table>
                     <thead>
                         <tr>
@@ -40,8 +51,12 @@
         <div class="row">
             <div class="card fluid">
                 <div class="section">
+                    % if before_im:
                     <img class="image" src="data:image/png;base64,{{ before_im }}">
+                    % end
+                    % if after_im:
                     <img class="image" src="data:image/png;base64,{{ after_im }}">
+                    % end
                 </div>
             </div>
         </div>
