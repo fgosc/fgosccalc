@@ -916,7 +916,7 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in self.dropitems.dist_item.keys():
             d = Item.hasher.compare(hash_item, self.dropitems.dist_item[i])
-            if d <= 16:
+            if d <= 15:
             # #21 の修正のため15→14に変更して様子見
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
