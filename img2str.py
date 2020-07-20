@@ -439,11 +439,16 @@ class ScreenShot:
             self.error = str(e)
 
         self.items = []
-        template = cv2.imread('syoji_silber.png',0) # Item内で使用
+        template = cv2.imread('syoji_silber.png',0) # Item内でも使用
+        self.template = template
+
         for i, pt in enumerate(item_pts):
-            item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
-            item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
-            item_img_hsv = self.img_hsv[pt[1] :  pt[3],  pt[0] :  pt[2]]
+            tmp_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0]:  pt[2]]
+            offset_x, offset_y = self.calc_offset(tmp_img_gray)
+
+            item_img_rgb = self.img_rgb[pt[1] + offset_y :  pt[3] + offset_y,  pt[0] + offset_x :  pt[2] + offset_x]
+            item_img_gray = self.img_gray[pt[1] + offset_y :  pt[3] + offset_y,  pt[0] + offset_x :  pt[2] + offset_x]
+            item_img_hsv = self.img_hsv[pt[1] + offset_y :  pt[3] + offset_y,  pt[0] + offset_x :  pt[2] + offset_x]
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             # アイテム枠のヒストグラム調査
@@ -466,6 +471,23 @@ class ScreenShot:
         self.deside_freequestname()
         if self.quest_output == "":
             self.deside_syurenquestname()
+
+    def calc_offset(self, img_gray):
+        # 所持の座標を算出
+        w, h = self.template.shape[::-1]
+        res = cv2.matchTemplate(img_gray,self.template,cv2.TM_CCOEFF_NORMED)
+        threshold = 0.7
+        loc = np.where( res >= threshold)
+        syoji_pt = []
+        for pt in zip(*loc[::-1]):
+            syoji_pt = pt
+            break
+        if len(syoji_pt) == 0:
+            return 0, 0
+        offset_x = syoji_pt[0] -13
+        offset_y = syoji_pt[1] -281
+        return offset_x, offset_y
+
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
@@ -894,7 +916,7 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in self.dropitems.dist_item.keys():
             d = Item.hasher.compare(hash_item, self.dropitems.dist_item[i])
-            if d <= 16:
+            if d <= 15:
             # #21 の修正のため15→14に変更して様子見
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に

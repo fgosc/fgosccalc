@@ -187,7 +187,22 @@ def overray_item(name, background, foreground):
     if name.endswith("魔石"):
         foreground = foreground[:,:100-16]
     fg_height, fg_width = foreground.shape[:2]
-    point = (int((bg_width-fg_width)/2), int((bg_height-14-fg_height)/2))
+    if name in ["セイバーピース","セイバーモニュメント"]:
+        point = (int((bg_width-fg_width)/2)-3, 131-fg_height)
+    elif name in ["アーチャーピース","アーチャーモニュメント"]:
+        point = (int((bg_width-fg_width)/2)-8, 131-fg_height)
+    elif name in ["ランサーピース","ランサーモニュメント"]:
+        point = (int((bg_width-fg_width)/2), 131-fg_height)
+    elif name in ["ライダーピース","ライダーモニュメント"]:
+        point = (int((bg_width-fg_width)/2)+7, 131-fg_height)
+    elif name in ["キャスターピース","キャスターモニュメント"]:
+        point = (int((bg_width-fg_width)/2)-1, 131-fg_height)
+    elif name in ["アサシンピース","アサシンモニュメント"]:
+        point = (int((bg_width-fg_width)/2)+6, 131-fg_height)
+    elif name in ["バーサーカーピース","バーサーカーモニュメント"]:
+        point = (int((bg_width-fg_width)/2)-3, 131-fg_height)
+    else:
+        point = (int((bg_width-fg_width)/2), int((bg_height-14-fg_height)/2))
     # 合成
     image = CvOverlayImage.overlay(background,
                                    foreground,
