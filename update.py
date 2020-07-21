@@ -261,12 +261,17 @@ def make_item_data():
         Image_file = search_item_file(item["icon"], Image_dir /str(item["background"]))
         fg_image = cv2.imread(str(Image_file), cv2.IMREAD_UNCHANGED)
         image = overray_item(name, bg_image[item['background']], fg_image)
-        hash_item = compute_hash(image)
-        tmp = [name2nickname(name, item_nickname)] + list(hash_item[0])
+        hash = compute_hash(image)
+        out = ""
+        for h in hash[0]:
+            out = out + "{:02x}".format(h)
+        tmp = [name2nickname(name, item_nickname)] + [out]
         item_output.append(tmp)
 
+    header = ["name", "phash"]
     with open(Item_output_file, 'w', encoding="UTF-8") as f:
         writer = csv.writer(f, lineterminator="\n")
+        writer.writerow(header)
         writer.writerows(item_output)
 
 def make_star_data():
@@ -304,11 +309,16 @@ def make_ce_data():
         star_image = cv2.imread(str(Misc_dir / ("star" + str(ce["rarity"]) + ".png")), cv2.IMREAD_UNCHANGED)
         image = overray_ce(ce_image, star_image)
         hash = compute_hash_ce(image)
-        tmp = [name] + [ce['rarity']] + list(hash[0])
+        out = ""
+        for h in hash[0]:
+            out = out + "{:02x}".format(h)
+        tmp = [name] + [ce['rarity']] + [out]
         ce_output.append(tmp)            
 
+    header = ["name", "rarity", "phash"]
     with open(CE_output_file, 'w', encoding="UTF-8") as f:
         writer = csv.writer(f, lineterminator="\n")
+        writer.writerow(header)
         writer.writerows(ce_output)
 
 
