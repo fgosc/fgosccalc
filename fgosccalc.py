@@ -256,11 +256,11 @@ def get_questinfo(sc1, sc2):
     sc2qname = sc2.quest_output
     logger.debug('sc1 quest: %s %s', sc1qname, getattr(sc1, 'droplist', None))
     logger.debug('sc2 quest: %s %s', sc2qname, getattr(sc2, 'droplist', None))
-    if not sc1qname:
+    if not sc2qname:
         return '', ''
-    if sc1qname != sc2qname:
+    if sc1qname and sc1qname != sc2qname:
         return '', ''
-    return sc1qname, getattr(sc2, 'droplist', [])
+    return sc2qname, getattr(sc2, 'droplist', [])
 
 
 def _print_as_syukai_counter(newdic, dropitems, sc1, sc2):
