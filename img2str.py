@@ -346,19 +346,26 @@ class DropItems:
         for itemname, img in self.storage.known_item_dict().items():
             self.dist_local[itemname] = self.compute_hash(img)
 
+    def hex2hash(self, hexstr):
+        hashlist = []
+        for i in range(8):
+            hashlist.append(int('0x' + hexstr[i*2:i*2+2],0))
+        return np.array([hashlist], dtype='uint8')
+
     def calc_dist_item(self):
         """
         既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
         """
         with open(Item_dist_file, encoding='UTF-8') as f:
-            reader = csv.reader(f)
-            for row in reader:    
-                self.dist_item[row[0]] = np.array([row[1:]], dtype='uint8')
+            reader = csv.DictReader(f)
+            lines = [row for row in reader]
+        for l in lines:
+            self.dist_item[l["name"]] = self.hex2hash(l["phash"])
         with open(CE_dist_file, encoding='UTF-8') as f:
-            reader = csv.reader(f)
-            for row in reader:    
-                self.dist_item[row[0]] = np.array([row[2:]], dtype='uint8')
-
+            reader = csv.DictReader(f)
+            lines = [row for row in reader]
+        for l in lines:
+            self.dist_item[l["name"]] = self.hex2hash(l["phash"])
 
     def imread(self, filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
         """
