@@ -201,6 +201,8 @@ def overray_item(name, background, foreground):
         point = (int((bg_width-fg_width)/2)+6, 131-fg_height)
     elif name in ["バーサーカーピース","バーサーカーモニュメント"]:
         point = (int((bg_width-fg_width)/2)-3, 131-fg_height)
+    elif name in ["暁光炉心"]:
+        point = (int((bg_width-fg_width)/2)-5, 131-fg_height-7)
     else:
         point = (int((bg_width-fg_width)/2), int((bg_height-14-fg_height)/2))
     # 合成
