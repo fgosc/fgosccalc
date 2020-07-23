@@ -184,8 +184,8 @@ def overray_item(name, background, foreground):
     枠画像とアイテム画像を合成する
     """
     bg_height, bg_width = background.shape[:2]
-    if name.endswith("魔石"):
-        foreground = foreground[:,:100-16]
+##    if name.endswith("魔石"):
+##        foreground = foreground[:,:100-16]
     fg_height, fg_width = foreground.shape[:2]
     if name in ["セイバーピース","セイバーモニュメント"]:
         point = (int((bg_width-fg_width)/2)-3, 131-fg_height)
@@ -201,8 +201,8 @@ def overray_item(name, background, foreground):
         point = (int((bg_width-fg_width)/2)+6, 131-fg_height)
     elif name in ["バーサーカーピース","バーサーカーモニュメント"]:
         point = (int((bg_width-fg_width)/2)-3, 131-fg_height)
-    elif name in ["暁光炉心"]:
-        point = (int((bg_width-fg_width)/2)-5, 131-fg_height-7)
+##    elif name in ["暁光炉心"]:
+##        point = (int((bg_width-fg_width)/2)-5, 131-fg_height-7)
     else:
         point = (int((bg_width-fg_width)/2), int((bg_height-14-fg_height)/2))
     # 合成
@@ -237,6 +237,16 @@ def name2nickname(name, item_nickname):
                 break
     return name
 
+def cut_img_edge(img, name):
+    height, width = img.shape[:2]
+    if name.endswith("魔石"):
+        img = img[:,:width-16]
+    elif name == "大騎士勲章":
+        img = img[:,14:]
+    elif name == "暁光炉心":
+        img = img[7:,10:]
+    return img
+
 def make_item_data():
     """
     アイテムデータを作成
@@ -262,6 +272,7 @@ def make_item_data():
             continue
         Image_file = search_item_file(item["icon"], Image_dir /str(item["background"]))
         fg_image = cv2.imread(str(Image_file), cv2.IMREAD_UNCHANGED)
+        fg_image = cut_img_edge(fg_image, name)
         image = overray_item(name, bg_image[item['background']], fg_image)
         hash = compute_hash(image)
         out = ""

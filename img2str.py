@@ -808,7 +808,7 @@ class Item:
         self.dropnum = self.ocr_digit(debug)
         if debug == True:
             print("ドロップ数: {}".format(self.dropnum))
-        self.name = self.classify_item(img_rgb)
+        self.name = self.classify_item(img_rgb, debug)
         if debug == True:
             if self.name not in DropItems.dist_item.keys() and not self.name.endswith("火"):
                 print('"' + self.name + '"', end="")
@@ -931,6 +931,7 @@ class Item:
                 itemfiles[i] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
+            if debug: print(itemfiles)
             item = next(iter(itemfiles))
             if item[0].endswith("魔"):
                 hash_ma = self.compute_maseki_hash(img)
