@@ -70,7 +70,6 @@ def upload_post():
     logger.info('questdrop: %s', questdrop)
 
     drops_diff = fgosccalc.DropsDiff(result_dict, questname, questdrop)
-    is_known_freequest = drops_diff.validate_dropitems()
     parsed_obj = drops_diff.parse()
     formatted_output = parsed_obj.as_syukai_counter()
 
@@ -90,6 +89,8 @@ def upload_post():
 
     return template('result',
         result=makeup(result_dict),
+        sc1_available=(len(sc1.itemlist) > 0),
+        sc2_available=(len(sc2.itemlist) > 0),
         before_after_pairs=before_after_pairs,
         before_im=before_im,
         after_im=after_im,

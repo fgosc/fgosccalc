@@ -22,7 +22,28 @@
         <header class="row">
             <span class="logo">FGOスクショ差分チェッカー<small>(α version)</small></span>
         </header>
-        % if result:
+        % if not result:
+        <div class="row">
+            <div class="card fluid">
+                <div class="section">
+                    % if not sc1_available:
+                    <p>画像1を正常に解析できませんでした。アップロードしたファイルが正しいか確認してください。</p>
+                    % end
+                    % if not sc2_available:
+                    <p>画像2を正常に解析できませんでした。アップロードしたファイルが正しいか確認してください。</p>
+                    % end
+                </div>
+                <div class="section">
+                    % if before_im:
+                    <img class="image" src="data:image/png;base64,{{ before_im }}">
+                    % end
+                    % if after_im:
+                    <img class="image" src="data:image/png;base64,{{ after_im }}">
+                    % end
+                </div>
+            </div>
+        </div>
+        % else:
         <div class="row">
             <div class="card fluid">
                 <h3 class="section">解析結果</h3>
