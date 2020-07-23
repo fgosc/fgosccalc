@@ -412,6 +412,7 @@ class ScreenShot:
             self.error = str(e)
             self.itemlist = []
             self.itemdic = {}
+            self.quest_output = ""
             return
 
         if debug:
