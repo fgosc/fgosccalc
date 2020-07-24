@@ -1,3 +1,4 @@
+import io
 import base64
 import logging
 from pathlib import Path
@@ -36,6 +37,18 @@ def makeup(result_dict):
     return '-'.join(['{}{}'.format(k, v) for k, v in result_dict.items()])
 
 
+def is_valid_file(f):
+    if f is None:
+        logger.warning('file is not specified')
+        return False
+    f.seek(0, io.SEEK_END)
+    if f.tell() == 0:
+        logger.warning('blank file')
+        return False
+    f.seek(0)
+    return True
+
+
 @app.get('/upload')
 def upload_get():
     redirect('/')
@@ -46,7 +59,12 @@ def upload_post():
     file1 = request.files.get('file1')
     file2 = request.files.get('file2')
 
-    if file1 is None or file2 is None:
+    logger.info('test file1')
+    if not is_valid_file(file1.file):
+        redirect('/')
+
+    logger.info('test file2')
+    if not is_valid_file(file2.file):
         redirect('/')
 
     dropitems = img2str.DropItems(storage=storage)
