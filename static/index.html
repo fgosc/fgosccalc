@@ -30,11 +30,11 @@
             <form method="post" action="/upload" enctype="multipart/form-data">
                 <div class="row responsive-label">
                     <div class="col-sm-12 col-md-2 label"><label for="before">周回前</label></div>
-                    <div class="col-sm-12 col-md"><input type="file" id="before" name="file1"></div>
+                    <div class="col-sm-12 col-md"><input type="file" id="before" name="file1" accept=".png,.jpg,.jpeg"></div>
                 </div>
                 <div class="row responsive-label">
                     <div class="col-sm-12 col-md-2 label"><label for="after">周回後</label></div>
-                    <div class="col-sm-12 col-md"><input type="file" id="after" name="file2"></div>
+                    <div class="col-sm-12 col-md"><input type="file" id="after" name="file2" accept=".png,.jpg,.jpeg"></div>
                 </div>
                 <div class="row responsive-label">
                     <input type="submit" class="primary" value="送信" onclick="return validate();">
