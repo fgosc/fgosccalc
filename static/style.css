@@ -1,29 +1,15 @@
-@media (min-width: 768px) {
-    .label {
-        text-align: right;
-    }
-    .image {
-        width: 48%;
-    }
+ul.note {
+    margin-bottom: 0.8rem;
 }
 
-@media (max-width: 768px) {
-    table tr {
-        display: flex;
-    }
-    .image {
-        width: 100%;
-    }
+ul.note li {
+    font-size: small;
 }
 
-.responsive-label {
-    align-items: center;
+.valign-middle {
+    vertical-align: middle !important;
 }
 
-label {
-    padding: calc(var(--universal-padding) / 2) var(--universal-padding);
-}
-input {
-    margin: calc(var(--universal-margin) / 2);
-    padding: var(--universal-padding) calc(1.5 * var(--universal-padding));
+.title:not(.is-spaced)+.subtitle {
+    margin-top: -1.25rem;
 }

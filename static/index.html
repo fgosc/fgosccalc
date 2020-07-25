@@ -1,57 +1,118 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset="utf-8">
-        <meta name="robots" content="noindex,nofollow,noarchive">
-        <link rel="stylesheet" href="https://cdn.rawgit.com/Chalarangelo/mini.css/v3.0.1/dist/mini-default.min.css">
-        <link rel="stylesheet" href="static/style.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>FGOスクショ差分チェッカー</title>
-    </head>
-    <body>
-        <header class="row">
-            <span class="logo">FGOスクショ差分チェッカー<small>(α version)</small></span>
-        </header>
-        <div class="card fluid">
-            <p>
-                <a href="https://github.com/fgophi/fgosccalc" target="_blank">fgosccalc</a>
-                (作者: <a href="https://twitter.com/fgophi" target="_blank">ファイさん</a>) のウェブサービス版です。
-                クエスト情報の戦利品のスクリーンショット2枚（周回前後）を投稿すると、アイテム獲得数を計算します。
-            </p>
-        </div>
-        <div class="card fluid">
-            <h2 class="section">注意</h2>
-            <ul>
-                <li>たまにエラーが発生します（仕様）。ブラウザバックで戻ってもう一回同じ操作をしてください。繰り返しエラーになる場合はご連絡ください。</li>
-                <li>数字の認識精度は 100% ではありません。過信しないようご注意を。バグ報告は歓迎します。</li>
-            </ul>
-        </div>
-        <div class="card fluid">
-            <form method="post" action="/upload" enctype="multipart/form-data">
-                <div class="row responsive-label">
-                    <div class="col-sm-12 col-md-2 label"><label for="before">周回前</label></div>
-                    <div class="col-sm-12 col-md"><input type="file" id="before" name="file1" accept=".png,.jpg,.jpeg"></div>
-                </div>
-                <div class="row responsive-label">
-                    <div class="col-sm-12 col-md-2 label"><label for="after">周回後</label></div>
-                    <div class="col-sm-12 col-md"><input type="file" id="after" name="file2" accept=".png,.jpg,.jpeg"></div>
-                </div>
-                <div class="row responsive-label">
-                    <input type="submit" class="primary" value="送信" onclick="return validate();">
-                </div>
-            </form>
-        </div>
-        <p><a href="https://twitter.com/max747_fgo">連絡先</a></p>
-        <script>
-            function validate() {
-                var file1 = document.getElementById("before");
-                var file2 = document.getElementById("after");
-                if (file1.value === "" || file2.value === "") {
-                    alert("周回前後のスクリーンショットを指定してください。");
-                    return false;
-                }
-                return true;
-            }
-        </script>
-    </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.css">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="canonical" href="/">
+  <title>fgosccalc</title>
+</head>
+<body>
+  <section class="hero is-success">
+    <div class="hero-body" style="padding: 2rem 1.5rem">
+      <div class="container">
+        <p class="title">fgosccalc</p>
+        <p class="subtitle">FGOスクショ差分チェッカー</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="content">
+        <p>クエスト情報の戦利品のスクリーンショット2枚（周回前後）を投稿すると、アイテム獲得数を計算します。</p>
+
+        <form method="post" action="/upload" enctype="multipart/form-data">
+          <div class="field">
+            <div class="file has-name">
+              <label class="file-label">
+                <input class="file-input" id="before" type="file" name="file1" accept=".png,.jpg,.jpeg">
+                <span class="file-cta">
+                  <span class="file-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span class="file-label">
+                    周回前
+                  </span>
+                </span>
+                <span id="before-filename" class="file-name">
+                  ファイルが選択されていません。
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="file has-name">
+              <label class="file-label">
+                <input class="file-input" id="after" type="file" name="file2" accept=".png,.jpg,.jpeg">
+                <span class="file-cta">
+                  <span class="file-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span class="file-label">
+                    周回後
+                  </span>
+                </span>
+                <span id="after-filename" class="file-name">
+                  ファイルが選択されていません。
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="control">
+              <input type="submit" class="button is-link" value="送信" onclick="return validate();">
+            </div>
+          </div>
+        </form>
+
+        <h3>注意</h3>
+        <ul>
+          <li>たまにエラーが発生します（仕様）。ブラウザバックで戻ってもう一回同じ操作をしてください。3-4 回繰り返しても同じエラーが起きる場合はご連絡ください。</li>
+          <li>画像認識の精度は 100% ではありません。過信しないようご注意を。バグ報告は歓迎します。</li>
+        </ul>
+
+        <hr>
+        <p>
+          <span class="tag is-link is-light is-medium"><a href="https://github.com/fgosc/" target="_blank">fgosc project</a></span>
+        </p>
+        <p>
+          解析エンジン: <a href="https://github.com/fgosc/fgosccalc" target="_blank">fgosccalc</a>
+          developed by <a href="https://twitter.com/fgophi" target="_blank">fgophi</a>
+          <br>
+          <a href="https://twitter.com/max747_fgo" target="_blank">連絡先</a>
+        </p>
+      </div><!-- content -->
+    </div><!-- container -->
+  </section>
+  <script>
+    const beforeInput = document.getElementById("before");
+    beforeInput.onchange = () => {
+      if (beforeInput.files.length > 0) {
+        const fileName = document.getElementById('before-filename');
+        fileName.textContent = beforeInput.files[0].name;
+      }
+    }
+
+    const afterInput = document.getElementById("after");
+    afterInput.onchange = () => {
+      if (afterInput.files.length > 0) {
+        const fileName = document.getElementById('after-filename');
+        fileName.textContent = afterInput.files[0].name;
+      }
+    }
+
+    function validate() {
+      const file1 = document.getElementById("before");
+      const file2 = document.getElementById("after");
+      if (file1.value === "" || file2.value === "") {
+        alert("周回前後のスクリーンショットを指定してください。");
+        return false;
+      }
+      return true;
+    }
+  </script>
+</body>
 </html>
