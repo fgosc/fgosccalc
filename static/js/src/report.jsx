@@ -100,7 +100,7 @@ class TableLine extends React.Component {
     const reportValue = this.props.report
 
     const materialValidationResult = this.isValidMaterialValue(materialValue.trim())
-    if (materialValidationResult == 'BLANK') {
+    if (materialValidationResult === 'BLANK') {
       materialComponent = (
         <React.Fragment>
           <input type="text" className="input is-small is-danger" value={materialValue} onChange={this.handleMaterialChange} />
@@ -568,25 +568,72 @@ class EditBox extends React.Component {
     }))
   }
 
+  findAboveLine(lines, target) {
+    return lines.reduce((currentMax, line) => {
+      // target よりも order が小さく、かつ最大の order を持つ行
+      if (currentMax.order < target.order && line.order < target.order) {
+        if (currentMax.order < line.order) {
+          return line
+        } else {
+          return currentMax
+        }
+      }
+      if (currentMax.order > target.order && line.order > target.order) {
+        return line
+      }
+      if (currentMax.order === line.order) {
+        return line
+      }
+      if (currentMax.order < line.order) {
+        return currentMax
+      }
+      return line
+    })
+  }
+
+  findBelowLine(lines, target) {
+    return lines.reduce((currentMin, line) => {
+      // target よりも order が大きく、かつ最小の order を持つ行
+      if (currentMin.order > target.order && line.order > target.order) {
+        if (currentMin.order > line.order) {
+          return line
+        } else {
+          return currentMin
+        }
+      }
+      if (currentMin.order < target.order && line.order < target.order) {
+        return line
+      }
+      if (currentMin.order === line.order) {
+        return line
+      }
+      if (currentMin.order > line.order) {
+        return currentMin
+      }
+      return line
+    })
+  }
+
   changeLineOrder(lines, target, direction) {
+    let theOther
     if (direction === 'up') {
-      target.order -= 1
-    } else if (direction == 'down') {
-      target.order += 1
+      theOther = this.findAboveLine(lines, target)
+    } else if (direction === 'down') {
+      theOther = this.findBelowLine(lines, target)
     } else {
       throw new Error('unsupported direction')
     }
 
-    const theOthers = lines.filter(line => { return line.id !== target.id && line.order === target.order })
-    if (theOthers.length != 1) {
-      throw new Error('ambigious lines')
+    if (theOther === target) {
+      // 交換不可: 対象が見つからない
+      console.log('cannot change line order')
+      return
     }
-    const theOther = theOthers[0]
-    if (direction === 'up') {
-      theOther.order += 1
-    } else {
-      theOther.order -= 1
-    }
+
+    // order の入れ替え
+    const currentTargetOrder = target.order
+    target.order = theOther.order
+    theOther.order = currentTargetOrder
 
     lines.sort((a, b) => {
       return a.order - b.order
@@ -616,7 +663,8 @@ class EditBox extends React.Component {
     if (target.length != 1) {
       return
     }
-    if (target[0].order >= linesCopy.length - 1) {
+    const maxOrder = linesCopy.reduce((a, b) => { return a > b ? a.order : b.order })
+    if (target[0].order >= maxOrder) {
       return
     }
 
@@ -630,8 +678,8 @@ class EditBox extends React.Component {
   handleAddRowButtonClick() {
     const lines = this.state.lines
     const newline = {
-      id: lines.length,
-      order: lines.length,
+      id: Math.max(...lines.map(line => { return line.id })) + 1,
+      order: Math.max(...lines.map(line => { return line.order })) + 1,
       material: "素材",
       initial: 0,
       add: 0,
