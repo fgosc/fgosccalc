@@ -37,8 +37,17 @@ class TableLine extends React.Component {
 
   handleReportChange(event) {
     const v = event.target.value
-    if (v !== "NaN" && isNaN(parseInt(v))) {
-      this.setState({ invalidResultValue: true })
+    if (v !== "NaN") {
+      if (!/^[0-9]+$/.test(v)) {
+        this.setState({ invalidResultValue: true })
+
+      } else if (v !== '0' && v.startsWith('0')) {
+        // 012 のような記述を排除する目的
+        this.setState({ invalidResultValue: true })
+
+      } else {
+        this.setState({ invalidResultValue: false })
+      }
     } else {
       this.setState({ invalidResultValue: false })
     }
@@ -82,7 +91,7 @@ class TableLine extends React.Component {
         reportComponent = (
           <React.Fragment>
             <input type="text" className="input is-small is-danger" value={this.props.report} onChange={this.handleReportChange} />
-            <p className="help is-danger">整数か NaN を入力してください。</p>
+            <p className="help is-danger">整数または NaN</p>
           </React.Fragment>
         )
       } else {
