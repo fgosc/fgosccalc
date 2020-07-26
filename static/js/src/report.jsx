@@ -506,7 +506,7 @@ class EditBox extends React.Component {
     this.changeLineOrder(linesCopy, target[0], 'up')
     this.setState((state) => ({
       lines: linesCopy,
-      reportText: this.buildReportText(state.questname, state.runcount, lines)
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy)
     }))
   }
 
@@ -523,7 +523,7 @@ class EditBox extends React.Component {
     this.changeLineOrder(linesCopy, target[0], 'down')
     this.setState((state) => ({
       lines: linesCopy,
-      reportText: this.buildReportText(state.questname, state.runcount, lines)
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy)
     }))
   }
 
