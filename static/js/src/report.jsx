@@ -79,13 +79,14 @@ class TableLine extends React.Component {
   }
 
   isValidReportValue(v) {
-    if (v === "NaN") {
+    const s = String(v).trim()
+    if (s === "NaN") {
       return true
     }
-    if (!/^[0-9]+$/.test(v)) {
+    if (!/^[0-9]+$/.test(s)) {
       return false
     }
-    if (v !== '0' && v.startsWith('0')) {
+    if (s !== '0' && s.startsWith('0')) {
       // 012 のような記述を排除する目的
       return false
     }
@@ -120,7 +121,7 @@ class TableLine extends React.Component {
     if (this.state.editResult) {
       addComponent = <span>{this.props.add}</span>
       reduceComponent = <span>{this.props.reduce}</span>
-      if (this.isValidReportValue(reportValue.trim())) {
+      if (!this.isValidReportValue(reportValue)) {
         reportComponent = (
           <React.Fragment>
             <input type="text" className="input is-small is-danger" value={reportValue} onChange={this.handleReportChange} />
@@ -209,10 +210,10 @@ class Table extends React.Component {
         <div>
           <button className="button is-small" onClick={this.props.onAddRowButtonClick}><i className="fas fa-plus"></i></button>
         </div>
-        <ul>
-          <li><small><b>周回外増</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</small></li>
-          <li><small><b>周回外減</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</small></li>
-          <li><small><b>編集</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</small></li>
+        <ul class="note">
+          <li><b>周回外増</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</li>
+          <li><b>周回外減</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</li>
+          <li><b>編集</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</li>
         </ul>
       </div>
     )
@@ -452,6 +453,13 @@ class EditBox extends React.Component {
     const questname = props.questname
     const runcount = parseInt(props.runcount)
     const lines = props.lines
+
+    lines.map(line => {
+      // report の値を計算しておく。
+      // data から与えられた report 値はここで上書きしてしまってよい。
+      line.report = this.computeReportValue(line)
+    })
+
     this.state = {
       editMode: false,
       questname: questname,
@@ -539,7 +547,11 @@ class EditBox extends React.Component {
 
   handleMaterialReportCountChange(id, count) {
     const hook = (line) => {
-      line.report = count
+      if (count < 0) {
+        line.report = "NaN"
+      } else {
+        line.report = count
+      }
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
