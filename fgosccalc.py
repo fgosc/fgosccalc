@@ -177,6 +177,7 @@ class ParsedDropsDiff:
                 if first_row:
                     item_name = name
                     first_row = False
+                    category_head = False
                 elif category_head:
                     # Web 上で報告フォーマットを編集するときの改行表現
                     # (FGO 周回カウンタサイト互換)

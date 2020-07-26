@@ -96,6 +96,7 @@ def upload_post():
     parsed_obj = drops_diff.parse()
 
     dropdata = parsed_obj.as_json_data()
+    logger.info('dropdata json: %s', dropdata)
 
     # さらに web 向けに加工する
     for d in dropdata:
