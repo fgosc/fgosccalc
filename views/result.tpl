@@ -88,11 +88,14 @@
           </div>
         </div>
 
+      % if contains_unknown_items:
         <h3><a href="/items" target="_blank">未知アイテム一覧</a></h3>
         <p>
           解析結果に <code>item000001</code> のような名称不明アイテムが含まれている場合、それは未知のアイテムです。
           上記のリンク先で対応する画像を調べることができます。
         </p>
+      % end
+
         <h3>周回報告フォーマット編集</h3>
         <!-- react -->
         <div id="app0"></div>

@@ -106,6 +106,7 @@ def upload_post():
         d['reduce'] = 0
 
     before_after_pairs = make_before_after_pairs(sc1.itemlist, sc2.itemlist)
+    contains_unknown_items = any([pair[0].startswith('item0') for pair in before_after_pairs])
 
     ok, png1 = cv2.imencode('.png', im1)
     if ok:
@@ -128,6 +129,7 @@ def upload_post():
         after_im=after_im,
         questname=questname,
         dropdata=json.dumps(dropdata),
+        contains_unknown_items=contains_unknown_items,
     )
 
 
