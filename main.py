@@ -170,7 +170,7 @@ if __name__ == "__main__":
     def index():
         return static_file('index.html', root=static_root)
 
-    @app.route('/static/<filepath>')
+    @app.route('/static/<filepath:path>')
     def static_content(filepath):
         return static_file(filepath, root=static_root)
     

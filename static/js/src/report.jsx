@@ -1,4 +1,5 @@
 "use strict";
+// ver 20200726-01
 
 class TableLine extends React.Component {
   constructor(props) {
@@ -287,7 +288,7 @@ class TweetButton extends React.Component {
     if (questname.length === 0) {
       return false
     }
-    const pos = questname.replaceAll('　', ' ').trim().indexOf(' ')
+    const pos = questname.replace(/　/g, ' ').trim().indexOf(' ')
     if (pos < 0) {
       return false
     }
@@ -317,7 +318,6 @@ class TweetButton extends React.Component {
       for (let node of el.childNodes) {
         el.removeChild(node)
       }
-      console.log(this.props.reportText)
       window.twttr.widgets.createShareButton(
         '',
         el,
@@ -549,7 +549,7 @@ class EditBox extends React.Component {
     const reportText = lines
         .map(line => { return line.material + line.report })
         .join("-")
-        .replaceAll('-!', '\n')
+        .replace(/-\!/g, '\n')
 
     let value = `【${questname}】${runcount}周
 ${reportText}

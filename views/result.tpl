@@ -8,10 +8,9 @@
   <link rel="stylesheet" href="static/style.css">
   <link rel="canonical" href="/">
   <title>fgosccalc</title>
-  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  <script crossorigin async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
   <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </head>
 <body>
@@ -124,7 +123,7 @@
     var runcount = '000';
     var data = JSON.parse('{{! dropdata }}');
   </script>
-  <script type="text/babel" src="./static/report.jsx"></script>
+  <script src="/static/js/dist/report.js"></script>
 % end
 </body>
 </html>
