@@ -12,6 +12,7 @@ class TableLine extends React.Component {
     this.handleReduceChange = this.handleReduceChange.bind(this)
     this.handleReportChange = this.handleReportChange.bind(this)
     this.handleEditClick = this.handleEditClick.bind(this)
+    this.handleDiscardEditClick = this.handleDiscardEditClick.bind(this)
     this.handleDeleteClick = this.handleDeleteClick.bind(this)
     this.handleUpClick = this.handleUpClick.bind(this)
     this.handleDownClick = this.handleDownClick.bind(this)
@@ -51,6 +52,12 @@ class TableLine extends React.Component {
     this.props.onMaterialReduceCountChange(this.props.id, 0)
   }
 
+  handleDiscardEditClick(event) {
+    this.setState({ editResult: false })
+    // 直接編集終了時は今までの編集操作をなかったことにする
+    this.props.onMaterialReportCountChange(this.props.id, this.props.initial)
+  }
+
   handleDeleteClick(event) {
     if (confirm("この行を削除しますか？")) {
       this.props.onLineDeleteButtonClick(this.props.id)
@@ -81,7 +88,7 @@ class TableLine extends React.Component {
       } else {
         reportComponent = <input type="text" className="input is-small" value={this.props.report} onChange={this.handleReportChange} />
       }
-      editButton = ''
+      editButton = <button className="button is-small is-danger" onClick={this.handleDiscardEditClick}>破棄</button>
     } else {
       addComponent = <input type="number" className="input is-small" min="0" value={this.props.add} onChange={this.handleAddChange} />
       reduceComponent = <input type="number" className="input is-small" min="0" value={this.props.reduce} onChange={this.handleReduceChange} />
