@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="static/style.css">
   <link rel="canonical" href="/">
   <title>fgosccalc</title>
+  <script
+    src="https://browser.sentry-cdn.com/5.20.1/bundle.min.js"
+    integrity="sha384-O8HdAJg1h8RARFowXd2J/r5fIWuinSBtjhwQoPesfVILeXzGpJxvyY/77OaPPXUo"
+    crossorigin="anonymous"></script>
   <script crossorigin async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>

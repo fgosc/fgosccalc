@@ -1,5 +1,6 @@
 "use strict";
 // ver 20200726-01
+Sentry.init({dsn: "https://c3ee02d195ae440aacd020b5869abfa7@o425638.ingest.sentry.io/5363673"});
 
 const defaultQuestName = '(クエスト名)'
 
