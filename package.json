@@ -4,7 +4,8 @@
   "description": "![fgosccalc1](https://user-images.githubusercontent.com/62515228/78868001-0ca71a80-7a7d-11ea-84b2-087f6b2466fc.png) # fgosccalc FGOのクエスト情報戦利品の周回前後のスクショを読み取り差分を計算",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel static/js/src -d static/js/dist"
   },
   "repository": {
     "type": "git",

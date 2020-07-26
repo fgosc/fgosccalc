@@ -1,7 +1,10 @@
+.PHONY: build
 .PHONY: deploy deploy-prod
 .PHONY: app-deploy-staging app-deploy-production
 .PHONY: pre-deploy post-deploy
 
+build:
+	npm run build
 
 deploy: pre-deploy app-deploy-staging post-deploy
 
