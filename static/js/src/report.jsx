@@ -1,6 +1,8 @@
 "use strict";
 // ver 20200726-01
 
+const defaultQuestName = '(クエスト名)'
+
 class TableLine extends React.Component {
   constructor(props) {
     super(props)
@@ -178,13 +180,41 @@ class QuestNameEditor extends React.Component {
     this.props.onQuestNameChange(event.target.value)
   }
 
+  buildInputNode(questname) {
+    if (questname === defaultQuestName || questname.trim().length === 0) {
+      return (
+        <div className="control">
+          <input type="text" className="input is-small is-danger" value={questname} onChange={this.handleChange} />
+          <p className="help is-danger">周回場所を入力してください。</p>
+        </div>
+      )
+    }
+    const pos = questname.replace(/　/g, ' ').trim().indexOf(' ')
+    if (pos < 0) {
+      return (
+        <div className="control">
+          <input type="text" className="input is-small is-info" value={questname} onChange={this.handleChange} />
+          <p className="help is-info">「剣の修練場 超級」「オケアノス 豊かな海」のようにスペースで区切る記述を推奨します。</p>
+        </div>
+      )
+    }
+    return (
+      <div className="control has-icons-right">
+        <input type="text" className="input is-small is-success" value={questname} onChange={this.handleChange} />
+        <span class="icon is-small is-right">
+          <i class="fas fa-check"></i>
+        </span>
+      </div>
+    )
+  }
+
   render() {
+    const questname = this.props.questname
+    const node = this.buildInputNode(questname)
     return (
       <div className="field">
         <label className="label">周回場所</label>
-        <div className="control">
-          <input type="text" className="input is-small" value={this.props.questname} onChange={this.handleChange} />
-        </div>
+        {node}
       </div>
     )
   }
@@ -285,14 +315,10 @@ class ReportViewer extends React.Component {
 class TweetButton extends React.Component {
   isValidCondition(questname, runcount) {
     // questname
-    if (questname === '(クエスト名)') {
+    if (questname === defaultQuestName) {
       return false
     }
-    if (questname.length === 0) {
-      return false
-    }
-    const pos = questname.replace(/　/g, ' ').trim().indexOf(' ')
-    if (pos < 0) {
+    if (questname.trim().length === 0) {
       return false
     }
     // runcount
