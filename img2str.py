@@ -578,7 +578,7 @@ class ScreenShot:
         if self.place != "":
             quest_list = [quest for quest in self.dropitems.freequest.keys() if self.dropitems.freequest[quest]["特異点"] == self.tokuiten and  self.dropitems.freequest[quest]["場所"] == self.place]
             if self.tokuiten == "北米":
-                self.quest_output = self.place + self.quest
+                self.quest_output = self.place + " " + self.quest
             elif len(quest_list) == 1:
                 self.quest_output = self.tokuiten + " " + self.place
             else:
