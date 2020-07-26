@@ -270,9 +270,12 @@ class ReportViewer extends React.Component {
 
     return (
       <div className="field">
-        <label className="label">周回報告テキスト（編集不可）</label>
+        <label className="label">
+          周回報告テキスト
+          <span className="tag is-warning">直接編集不可</span>
+        </label>
         <div className="control">
-          <textarea className="textarea is-small" readOnly value={this.props.reportText} rows={numRows} />
+          <textarea className="textarea is-small" style={{backgroundColor: "#fffbeb"}} readOnly value={this.props.reportText} rows={numRows} />
         </div>
       </div>
     )
