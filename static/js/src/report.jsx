@@ -19,7 +19,6 @@ class TableLine extends React.Component {
 
     this.state = {
       editResult: false,
-      invalidResultValue: false,
     }
   }
 
@@ -36,22 +35,7 @@ class TableLine extends React.Component {
   }
 
   handleReportChange(event) {
-    const v = event.target.value
-    if (v !== "NaN") {
-      if (!/^[0-9]+$/.test(v)) {
-        this.setState({ invalidResultValue: true })
-
-      } else if (v !== '0' && v.startsWith('0')) {
-        // 012 のような記述を排除する目的
-        this.setState({ invalidResultValue: true })
-
-      } else {
-        this.setState({ invalidResultValue: false })
-      }
-    } else {
-      this.setState({ invalidResultValue: false })
-    }
-    this.props.onMaterialReportCountChange(this.props.id, v)
+    this.props.onMaterialReportCountChange(this.props.id, event.target.value)
   }
 
   handleEditClick(event) {
@@ -81,27 +65,76 @@ class TableLine extends React.Component {
     this.props.onLineDownButtonClick(this.props.id)
   }
 
+  isValidMaterialValue(v) {
+    if (v === '') {
+      return 'BLANK'
+    }
+    if (v === '!') {
+      return 'BLANK'
+    }
+    if (/[0-9]/.test(v[v.length-1])) {
+      return 'TAILNUM'
+    }
+    return 'OK'
+  }
+
+  isValidReportValue(v) {
+    if (v === "NaN") {
+      return true
+    }
+    if (!/^[0-9]+$/.test(v)) {
+      return false
+    }
+    if (v !== '0' && v.startsWith('0')) {
+      // 012 のような記述を排除する目的
+      return false
+    }
+    return true
+  }
+
   render() {
-    let addComponent, reduceComponent, reportComponent, editButton
+    // TODO refactor
+    let materialComponent, addComponent, reduceComponent, reportComponent, editButton
+    const materialValue = this.props.material
+    const reportValue = this.props.report
+
+    const materialValidationResult = this.isValidMaterialValue(materialValue.trim())
+    if (materialValidationResult == 'BLANK') {
+      materialComponent = (
+        <React.Fragment>
+          <input type="text" className="input is-small is-danger" value={materialValue} onChange={this.handleMaterialChange} />
+          <p className="help is-danger">入力必須</p>
+        </React.Fragment>
+      )
+    } else if (materialValidationResult === 'TAILNUM') {
+      materialComponent = (
+        <React.Fragment>
+          <input type="text" className="input is-small" value={materialValue} onChange={this.handleMaterialChange} />
+          <p className="help is-danger">末尾は数字以外</p>
+        </React.Fragment>
+      )
+    } else {
+      materialComponent = <input type="text" className="input is-small" value={materialValue} onChange={this.handleMaterialChange} />
+    }
 
     if (this.state.editResult) {
       addComponent = <span>{this.props.add}</span>
       reduceComponent = <span>{this.props.reduce}</span>
-      if (this.state.invalidResultValue) {
+      if (this.isValidReportValue(reportValue.trim())) {
         reportComponent = (
           <React.Fragment>
-            <input type="text" className="input is-small is-danger" value={this.props.report} onChange={this.handleReportChange} />
+            <input type="text" className="input is-small is-danger" value={reportValue} onChange={this.handleReportChange} />
             <p className="help is-danger">整数または NaN</p>
           </React.Fragment>
         )
       } else {
-        reportComponent = <input type="text" className="input is-small" value={this.props.report} onChange={this.handleReportChange} />
+        reportComponent = <input type="text" className="input is-small" value={reportValue} onChange={this.handleReportChange} />
       }
       editButton = <button className="button is-small is-danger" onClick={this.handleDiscardEditClick}>破棄</button>
     } else {
       addComponent = <input type="number" className="input is-small" min="0" value={this.props.add} onChange={this.handleAddChange} />
       reduceComponent = <input type="number" className="input is-small" min="0" value={this.props.reduce} onChange={this.handleReduceChange} />
-      reportComponent = <span>{this.props.report}</span>
+      reportComponent = <span>{reportValue}</span>
       editButton = <button className="button is-small is-success" onClick={this.handleEditClick}>編集</button>
     }
 
@@ -119,7 +152,7 @@ class TableLine extends React.Component {
           </button>
         </td>
         <td className="valign-middle">
-          <input type="text" className="input is-small" value={this.props.material} onChange={this.handleMaterialChange} />
+          {materialComponent}
         </td>
         <td className="valign-middle">
           {this.props.initial}
