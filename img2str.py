@@ -110,26 +110,36 @@ class DropItems:
     }
 
 
+    dist_hiseki = {
+        '剣秘':np.array([[77, 225, 88, 190, 89, 177, 48, 97]], dtype='uint8'),
+        '弓秘':np.array([[29, 240, 102, 254, 114, 165, 25, 192]], dtype='uint8'),
+        '槍秘':np.array([[89, 252, 90, 247, 102, 139, 180, 110]], dtype='uint8'),
+        '騎秘':np.array([[199, 49, 88, 82, 57, 156, 24, 196]], dtype='uint8'),
+        '術秘':np.array([[91, 118, 176, 188, 214, 233, 8, 196]], dtype='uint8'),
+        '殺秘':np.array([[29, 241, 89, 238, 92, 165, 180, 208]], dtype='uint8'),
+        '狂秘':np.array([[92, 177, 25, 238, 1, 164, 16, 212]], dtype='uint8'),
+    }
+
     #魔石を見分けるハッシュ値
     dist_maseki = {
-        '剣魔':np.array([[153, 218, 134, 103, 122, 231, 158, 235]], dtype='uint8'),
-        '弓魔':np.array([[227, 242, 24, 254, 141, 255, 230, 189]], dtype='uint8'),
-        '槍魔':np.array([[ 11,   7, 126, 248, 216, 164, 104,  80]], dtype='uint8'),
-        '騎魔':np.array([[185, 203, 118,  92,  30, 135, 247, 248]], dtype='uint8'),
-        '術魔':np.array([[153, 153, 110, 227,  61,  14, 242,  58]], dtype='uint8'),
-        '殺魔':np.array([[129, 166, 126, 122, 158, 123, 231, 159]], dtype='uint8'),
-        '狂魔':np.array([[ 91, 166,  20,  86, 250, 123, 122, 251]], dtype='uint8'),
+        '剣魔':np.array([[ 59, 182, 206, 239, 254, 239, 239, 180]], dtype='uint8'),
+        '弓魔':np.array([[227, 250, 24, 246, 141, 119, 230, 61]], dtype='uint8'),
+        '槍魔':np.array([[131, 2, 124, 124, 248, 245, 106, 209]], dtype='uint8'),
+        '騎魔':np.array([[57, 210, 118, 188, 206, 99, 247, 120]], dtype='uint8'),
+        '術魔':np.array([[169, 184, 78, 98, 124, 150, 246, 57]], dtype='uint8'),
+        '殺魔':np.array([[107, 230, 190, 187, 239, 251, 235, 172]], dtype='uint8'),
+        '狂魔':np.array([[171, 238, 254, 186, 254, 251, 238, 237]], dtype='uint8'),
     }
 
     #輝石を見分けるハッシュ値
     dist_kiseki = {
-        '剣輝':np.array([[153, 251, 142,  71, 122,  71, 158, 233]], dtype='uint8'),
-        '弓輝':np.array([[227, 191,  24, 198,  29,  66, 140, 119]], dtype='uint8'),
-        '槍輝':np.array([[2,  15, 230, 236, 216, 180,  44,  88]], dtype='uint8'),
-        '騎輝':np.array([[185, 203, 118, 220,  30, 199, 119, 248]], dtype='uint8'),
-        '術輝':np.array([[145, 153, 110,  99, 124,   6, 242,  58]], dtype='uint8'),
-        '殺輝':np.array([[129, 167, 126, 123, 158, 123, 231, 159]], dtype='uint8'),
-        '狂輝':np.array([[89, 167,  20,  70, 250, 123, 126, 235]], dtype='uint8'),
+        '剣輝':np.array([[16, 191, 158, 69, 62, 69, 77, 62]], dtype='uint8'),
+        '弓輝':np.array([[224, 43, 30, 85, 143, 112, 102, 57]], dtype='uint8'),
+        '槍輝':np.array([[0, 11, 62, 92, 186, 164, 73, 153]], dtype='uint8'),
+        '騎輝':np.array([[56, 203, 54, 52, 142, 99, 100, 56]], dtype='uint8'),
+        '術輝':np.array([[176, 187, 78, 70, 58, 150, 246, 59]], dtype='uint8'),
+        '殺輝':np.array([[64, 239, 62, 17, 46, 113, 65, 46]], dtype='uint8'),
+        '狂輝':np.array([[1, 239, 254, 16, 126, 145, 69, 175]], dtype='uint8'),
     }
 
     #種火のレアリティを見分けるハッシュ値
@@ -933,8 +943,20 @@ class Item:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
             if debug: print(itemfiles)
             item = next(iter(itemfiles))
-            if item[0].endswith("魔"):
-                hash_ma = self.compute_maseki_hash(img)
+            if item[0].endswith("秘"):
+                hash_hi = self.compute_gem_hash(img)
+                hisekifiles = {}
+                for i in self.dropitems.dist_hiseki.keys():
+                    d2 = Item.hasher.compare(hash_hi, self.dropitems.dist_hiseki[i])
+                    if d2 <= 24:
+                        hisekifiles[i] = d2
+                hisekifiles = sorted(hisekifiles.items(), key=lambda x:x[1])
+                try:
+                    item = next(iter(hisekifiles))
+                except:
+                    return ""
+            elif item[0].endswith("魔"):
+                hash_ma = self.compute_gem_hash(img)
                 masekifiles = {}
                 for i in self.dropitems.dist_maseki.keys():
                     d2 = Item.hasher.compare(hash_ma, self.dropitems.dist_maseki[i])
@@ -946,7 +968,7 @@ class Item:
                 except:
                     return ""
             elif item[0].endswith("輝"):
-                hash_ki = self.compute_maseki_hash(img)
+                hash_ki = self.compute_gem_hash(img)
                 kisekifiles = {}
                 for i in self.dropitems.dist_kiseki.keys():
                     d2 = Item.hasher.compare(hash_ki, self.dropitems.dist_kiseki[i])
@@ -1044,16 +1066,25 @@ class Item:
 
         return Item.hasher.compute(img)
 
-    def compute_maseki_hash(self, img_rgb):
+    def compute_gem_hash(self, img_rgb):
         """
-        魔石クラス判別器
+        スキル石クラス判別器
         中央のクラスマークぎりぎりのハッシュを取る
         記述した比率はiPhone6S画像の実測値
         """
-        img = img_rgb[int(41/135*self.height):int(84/135*self.height),
-                      int(44/124*self.width):int(79/124*self.width)]
-        return Item.hasher.compute(img)
+        height, width = img_rgb.shape[:2]
+    ##    img = img_rgb[int(41/135*height):int(84/135*height),
+    ##                  int(44/124*width):int(79/124*width)]
+    ##    img = img_rgb[int((145-16-30/145*height):int(84/145*height),
+    ##                  int(44/132*width):int(79/132*width)]
 
+        img = img_rgb[int((145-16-60)/2/145*height)+5:int((145-16+60)/2/145*height)+5,
+                      int((132-52)/2/132*width):int((132+52)/2/132*width)]
+##        cv2.imshow("img", cv2.resize(img, dsize=None, fx=4.5, fy=4.5))
+##        cv2.waitKey(0)
+##        cv2.destroyAllWindows()
+
+        return Item.hasher.compute(img)
 
     def read_item(self, img_gray, pts, upper=False, yellow=False,):
         """
