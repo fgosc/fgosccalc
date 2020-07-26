@@ -273,25 +273,15 @@ class RunCountEditor extends React.Component {
           <label className="label">周回数</label>
           {inputNode}
         </div>
-        <div className="field is-grouped">
-          <div className="control">
+        <div className="buttons">
+            <button className="button is-small is-danger" onClick={this.handleClick}>-1000</button>
             <button className="button is-small is-danger" onClick={this.handleClick}>-100</button>
-          </div>
-          <div className="control">
             <button className="button is-small is-danger" onClick={this.handleClick}>-10</button>
-          </div>
-          <div className="control">
             <button className="button is-small is-danger" onClick={this.handleClick}>-1</button>
-          </div>
-          <div className="control">
             <button className="button is-small is-link" onClick={this.handleClick}>+1</button>
-          </div>
-          <div className="control">
             <button className="button is-small is-link" onClick={this.handleClick}>+10</button>
-          </div>
-          <div className="control">
             <button className="button is-small is-link" onClick={this.handleClick}>+100</button>
-          </div>
+            <button className="button is-small is-link" onClick={this.handleClick}>+1000</button>
         </div>
       </div>
     )
