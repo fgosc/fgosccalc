@@ -133,8 +133,8 @@ class Table extends React.Component {
               <th></th>
               <th>素材名</th>
               <th>解析結果</th>
-              <th>増</th>
-              <th>減</th>
+              <th>周回外増</th>
+              <th>周回外減</th>
               <th>報告値</th>
               <th></th>
             </tr>
@@ -159,9 +159,9 @@ class Table extends React.Component {
           <button className="button is-small" onClick={this.props.onAddRowButtonClick}><i className="fas fa-plus"></i></button>
         </div>
         <ul>
-          <li><small><b>増</b> ... 指定数分だけ報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</small></li>
-          <li><small><b>減</b> ... 指定数分だけ報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</small></li>
-          <li><small><b>編集</b> ... 解析結果を無視して報告数を直接指定します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</small></li>
+          <li><small><b>周回外増</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</small></li>
+          <li><small><b>周回外減</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</small></li>
+          <li><small><b>編集</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</small></li>
         </ul>
       </div>
     )
@@ -590,6 +590,7 @@ ${reportText}
       tableComponent = (
         <React.Fragment>
           <button className="button is-small is-success" onClick={this.handleCloseClick}>閉じる</button>
+          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
           <Table {...this.state}
               onMaterialChange={this.handleMaterialChange}
               onMaterialAddCountChange={this.handleMaterialAddCountChange}
@@ -606,7 +607,7 @@ ${reportText}
       tableComponent = (
         <React.Fragment>
           <button className="button is-small is-success" onClick={this.handleEditClick}>報告素材を編集</button>
-          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを推奨</span>
+          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
         </React.Fragment>
       )
     }
