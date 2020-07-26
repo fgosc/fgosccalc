@@ -240,18 +240,38 @@ class RunCountEditor extends React.Component {
     this.props.onRunCountChange(v)
   }
 
+  buildInputNode(runcount) {
+    const _runcount = parseInt(runcount)
+    if (_runcount <= 0 || isNaN(_runcount)) {
+      return (
+        <div className="control">
+          <input type="number" className="input is-small is-danger" min="0" value={this.props.runcount} onChange={this.handleChange} />
+          <p className="help is-danger">周回数を設定してください。</p>
+        </div>
+      )
+    }
+    return (
+      <div className="control has-icons-right">
+        <input type="number" className="input is-small is-success" min="0" value={this.props.runcount} onChange={this.handleChange} />
+        <span class="icon is-small is-right">
+          <i class="fas fa-check"></i>
+        </span>
+      </div>
+    )
+  }
+
   handleClick(event) {
     this.addValue(parseInt(event.target.textContent))
   }
 
   render() {
+    const runcount = this.props.runcount
+    const inputNode = this.buildInputNode(runcount)
     return (
       <div>
         <div className="field">
           <label className="label">周回数</label>
-          <div className="control">
-            <input type="number" className="input is-small" min="0" value={this.props.runcount} onChange={this.handleChange} />
-          </div>
+          {inputNode}
         </div>
         <div className="field is-grouped">
           <div className="control">
