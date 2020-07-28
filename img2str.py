@@ -17,6 +17,7 @@ defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("i
 ##Item_dist_file = Path(__file__).resolve().parent / Path("hash_item.csv")
 ##CE_dist_file = Path(__file__).resolve().parent / Path("hash_ce.csv")
 drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
+freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
 
 
 class DropItems:
@@ -24,6 +25,9 @@ class DropItems:
 
     with open(drop_file, encoding='UTF-8') as f:
         drop_item = json.load(f)
+
+    with open(freequest_file, encoding='UTF-8') as f:
+        freequest = json.load(f)
 
     # JSONファイルから各辞書を作成
     item_name = {item["id"]:item["name"] for item in drop_item}
@@ -268,101 +272,101 @@ class DropItems:
         self.storage = storage
 ##        self.calc_dist_item()
         self.calc_dist_local()
-        self.sozai = {}
-        self.sozai_betsumei = {}
-        self.read_item()
-        self.freequest = {}
-        self.read_freequest()
-        self.syurenquest = {}
-        self.read_syurenquest()
+##        self.sozai = {}
+##        self.sozai_betsumei = {}
+##        self.read_item()
+##        self.freequest = {}
+##        self.read_freequest()
+##        self.syurenquest = {}
+##        self.read_syurenquest()
 
-    def read_item(self):
-        """
-        CSV形式のアイテム変換データを読み込む
-        """
-        itemfile = Path(__file__).resolve().parent / Path("item.csv")
-        with open(itemfile, 'r' , encoding="utf_8") as f:
-            try:
-                reader = csv.reader(f)
-                header = next(reader)  # ヘッダーを読み飛ばしたい時
-
-                for row in reader:
-    ##                q = {}
-                    for item in row[2:]:
-                        if item == "":
-                            break
-                        self.sozai_betsumei[item] = row[1]
-                    self.sozai[row[1]] = row[0]
-            except UnicodeDecodeError:
-                print("[エラー]item.csv の文字コードがおかしいようです。UTF-8で保存してください。")
-                sys.exit()
-            except IndexError:
-                print("[エラー]item.csv がCSV形式でないようです。")
-                sys.exit()
-
-    def normalize_item(self, s):
-        for pattern in self.sozai_betsumei.keys():
-            if re.match(pattern, s):
-                s = re.sub("^" + s + "$", self.sozai_betsumei[pattern], s)
-                break
-        return s
-
-    def read_freequest(self):
-        """
-        CSV形式のフリークエストデータを読み込む
-        """
-        fqfile = Path(__file__).resolve().parent / Path("freequest.csv")
-
-        with open(fqfile, 'r', encoding="utf_8") as f:
-            try:
-                reader = csv.reader(f)
-                header = next(reader)  # ヘッダーを読み飛ばしたい時
-
-                for row in reader:
-                    q = {}
-                    q["ストーリー"] = row[0]
-                    q["特異点"] = row[1]
-                    q["場所"] = row[2]
-                    d = {}
-                    for item in row[4:]:
-                        if item == "":
-                            break
-                        d[self.normalize_item(item)] = []
-                    q["ドロップアイテム"] = d
-                    self.freequest[row[3]] = q
-            except UnicodeDecodeError:
-                print("[エラー]freequest.csv の文字コードがおかしいようです。UTF-8で保存してください。")
-                sys.exit()
-            except IndexError:
-                print("[エラー]freequest.csv がCSV形式でないようです。")
-                sys.exit()
-
-    def read_syurenquest(self):
-        """
-        CSV形式の修練クエストデータを読み込む
-        """
-        syurenfile = Path(__file__).resolve().parent / Path("syurenquest.csv")
-        with open(syurenfile, 'r', encoding="utf_8") as f:
-            try:
-                reader = csv.reader(f)
-                header = next(reader)  # ヘッダーを読み飛ばしたい時
-
-                for row in reader:
-                    q = {}
-                    q["周回数"] = []
-                    d = {}
-                    for item in row[1:]:
-                        if item == "":
-                            break
-                        d[self.normalize_item(item)] = []
-                    q["ドロップアイテム"] = d
-                    self.syurenquest[row[0]] = q
-            except UnicodeDecodeError:
-                print("[エラー]syurenquest.csv の文字コードがおかしいようです。UTF-8で保存してください。")
-                sys.exit()
-            except IndexError:
-                print("[エラー]syurenquest.csv がCSV形式でないようです。")
-                sys.exit()
+##    def read_item(self):
+##        """
+##        CSV形式のアイテム変換データを読み込む
+##        """
+##        itemfile = Path(__file__).resolve().parent / Path("item.csv")
+##        with open(itemfile, 'r' , encoding="utf_8") as f:
+##            try:
+##                reader = csv.reader(f)
+##                header = next(reader)  # ヘッダーを読み飛ばしたい時
+##
+##                for row in reader:
+##    ##                q = {}
+##                    for item in row[2:]:
+##                        if item == "":
+##                            break
+##                        self.sozai_betsumei[item] = row[1]
+##                    self.sozai[row[1]] = row[0]
+##            except UnicodeDecodeError:
+##                print("[エラー]item.csv の文字コードがおかしいようです。UTF-8で保存してください。")
+##                sys.exit()
+##            except IndexError:
+##                print("[エラー]item.csv がCSV形式でないようです。")
+##                sys.exit()
+##
+##    def normalize_item(self, s):
+##        for pattern in self.sozai_betsumei.keys():
+##            if re.match(pattern, s):
+##                s = re.sub("^" + s + "$", self.sozai_betsumei[pattern], s)
+##                break
+##        return s
+##
+##    def read_freequest(self):
+##        """
+##        CSV形式のフリークエストデータを読み込む
+##        """
+##        fqfile = Path(__file__).resolve().parent / Path("freequest.csv")
+##
+##        with open(fqfile, 'r', encoding="utf_8") as f:
+##            try:
+##                reader = csv.reader(f)
+##                header = next(reader)  # ヘッダーを読み飛ばしたい時
+##
+##                for row in reader:
+##                    q = {}
+##                    q["ストーリー"] = row[0]
+##                    q["特異点"] = row[1]
+##                    q["場所"] = row[2]
+##                    d = {}
+##                    for item in row[4:]:
+##                        if item == "":
+##                            break
+##                        d[self.normalize_item(item)] = []
+##                    q["ドロップアイテム"] = d
+##                    self.freequest[row[3]] = q
+##            except UnicodeDecodeError:
+##                print("[エラー]freequest.csv の文字コードがおかしいようです。UTF-8で保存してください。")
+##                sys.exit()
+##            except IndexError:
+##                print("[エラー]freequest.csv がCSV形式でないようです。")
+##                sys.exit()
+##
+##    def read_syurenquest(self):
+##        """
+##        CSV形式の修練クエストデータを読み込む
+##        """
+##        syurenfile = Path(__file__).resolve().parent / Path("syurenquest.csv")
+##        with open(syurenfile, 'r', encoding="utf_8") as f:
+##            try:
+##                reader = csv.reader(f)
+##                header = next(reader)  # ヘッダーを読み飛ばしたい時
+##
+##                for row in reader:
+##                    q = {}
+##                    q["周回数"] = []
+##                    d = {}
+##                    for item in row[1:]:
+##                        if item == "":
+##                            break
+##                        d[self.normalize_item(item)] = []
+##                    q["ドロップアイテム"] = d
+##                    self.syurenquest[row[0]] = q
+##            except UnicodeDecodeError:
+##                print("[エラー]syurenquest.csv の文字コードがおかしいようです。UTF-8で保存してください。")
+##                sys.exit()
+##            except IndexError:
+##                print("[エラー]syurenquest.csv がCSV形式でないようです。")
+##                sys.exit()
 
     def calc_dist_local(self):
         """
@@ -574,48 +578,63 @@ class ScreenShot:
         rx = i
 
         return lx, rx
+
+    def compare_drop(self, scitem, fqitem):
+        for i, item in enumerate(fqitem):
+            if item != scitem[i]:
+                return False
+        return True
+
     def deside_syurenquestname(self):
-        itemset = set([i["name"] for i in self.itemlist])
+##        itemset = set([i["name"] for i in self.itemlist])
+        itemlist = [i["name"] for i in self.itemlist if not i["name"].startswith("泥無しアイテム")]
         self.quest = "" #クエスト名
         self.place = "" #クエストの場所名
         self.quest_output = "" #周回カウンタに合わせたクエスト名
-        for quest in self.dropitems.syurenquest:
+        for quest in self.dropitems.freequest:
 ##            print(self.dropitems.syurenquest[quest])
-            dropset = set([i for i in self.dropitems.syurenquest[quest]["ドロップアイテム"].keys() if not i.endswith("火")])
-            if itemset == dropset:
+##            dropset = set([i for i in self.dropitems.syurenquest[quest]["ドロップアイテム"].keys() if not i.endswith("火")])
+            droplist = [i["name"] for i in quest["drop"] if not i["name"].endswith("火")]
+            if self.compare_drop(itemlist, droplist):
                 self.quest_output = quest
-                self.droplist = [i for i in self.dropitems.syurenquest[quest]["ドロップアイテム"].keys()]
+                self.droplist = [i["name"] for i in quest["drop"]]
                 break
+
         
     def deside_freequestname(self):
         """
         クエスト名を決定
         """
-        itemset = set([i["name"] for i in self.itemlist if not i["name"].startswith("泥無しアイテム")])
+##        itemset = set([i["name"] for i in self.itemlist if not i["name"].startswith("泥無しアイテム")])
+        itemlist = [i["name"] for i in self.itemlist if not i["name"].startswith("泥無しアイテム")]
         self.quest = "" #クエスト名
         self.place = "" #クエストの場所名
         self.quest_output = "" #周回カウンタに合わせたクエスト名
         # reversed するのは 未確認座標X-Cを未確認座標X-Bより先に認識させるため
         for quest in reversed(self.dropitems.freequest):
-            if self.dropitems.freequest[quest]["特異点"] == self.tokuiten:
-                dropset = set([i for i in self.dropitems.freequest[quest]["ドロップアイテム"].keys() if not i.endswith("火")])
-                if itemset == dropset:
-                    self.quest = quest
-                    self.place = self.dropitems.freequest[quest]["場所"]
-                    self.droplist = [i for i in self.dropitems.freequest[quest]["ドロップアイテム"].keys()]
+            if quest["chapter"] == self.tokuiten:
+##                dropset = set([i for i in self.dropitems.freequest[quest]["ドロップアイテム"].keys() if not i.endswith("火")])
+                droplist = [i["name"] for i in quest["drop"] if not i["name"].endswith("火")]
+##                if itemlist == droplist:
+                if self.compare_drop(itemlist, droplist):
+##                    self.quest = quest["quest"]
+##                    self.place = quest["place"]
+                    self.droplist = [i["name"] for i in quest["drop"]]
+                    self.quest_output = quest
                     break
-        if self.place != "":
-            quest_list = [quest for quest in self.dropitems.freequest.keys() if self.dropitems.freequest[quest]["特異点"] == self.tokuiten and  self.dropitems.freequest[quest]["場所"] == self.place]
-            if self.tokuiten == "北米":
-                self.quest_output = self.place + " " + self.quest
-            elif len(quest_list) == 1:
-                self.quest_output = self.tokuiten + " " + self.place
-            else:
-                # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-                if quest_list.index(self.quest) == 0:
-                    self.quest_output = self.tokuiten + " " + self.place
-                else:
-                    self.quest_output = self.tokuiten + " " + self.quest            
+##        if self.place != "":
+##            quest_list = [quest for quest in self.dropitems.freequest.keys() if self.dropitems.freequest[quest]["特異点"] == self.tokuiten and  self.dropitems.freequest[quest]["場所"] == self.place]
+##            quest_list = [quest["quest"] for quest in self.dropitems.freequest if quest["chapter"] == self.tokuiten and quest["place"] == self.place]
+##            if self.tokuiten == "北米":
+##                self.quest_output = self.place + " " + self.quest
+##            elif len(quest_list) == 1:
+##                self.quest_output = self.tokuiten + " " + self.place
+##            else:
+##                # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
+##                if quest_list.index(self.quest) == 0:
+##                    self.quest_output = self.tokuiten + " " + self.place
+##                else:
+##                    self.quest_output = self.tokuiten + " " + self.quest            
 
     def detect_enemy_tab(self, debug=False):
         """
@@ -1294,15 +1313,14 @@ if __name__ == '__main__':
     img_rgb = imread(str(file))
     sc = ScreenShot(img_rgb, svm, dropitems, args.debug)
     if sc.quest_output != "":
-        result = "【"+ sc.quest_output + "】"
+        result = "【"+ sc.quest_output["chapter"] + sc.quest_output["place"] + sc.quest_output["quest"] + "】"
     else:
         result = ""
-    print(sc.itemlist)
-##    for item in sc.itemlist:
-##        if not item[0].startswith("未ドロップ"):
-##            result = result + item[0] + item[1] + '-'
-##    if len(result) > 0:
-##        result = result[:-1]
-##    print(result)
-##    if  sc.error != "":
-##        print(sc.error)
+    for item in sc.itemlist:
+        if item["name"] not in ["未ドロップ", "泥無しアイテム"]:
+            result = result + item["name"] + str(item["dropnum"]) + '-'
+    if len(result) > 0:
+        result = result[:-1]
+    print(result)
+    if  sc.error != "":
+        print(sc.error)

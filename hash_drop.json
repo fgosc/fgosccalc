@@ -745,6 +745,10 @@
         "phash": "7611858c5384c966",
         "name": "煌星のカケラ",
         "shortname": "カケラ",
+        "alias": [
+            "煌星の欠片",
+            "煌星のかけら"
+        ],
         "priority": 410011,
         "phash_battle": "1a816658059a052c"
     },
@@ -785,6 +789,10 @@
         "phash": "7618244c6321b19b",
         "name": "奇奇神酒",
         "shortname": "神酒",
+        "alias": [
+            "奇々神酒",
+            "酒"
+        ],
         "priority": 410051,
         "phash_battle": "3e8425a95959644e"
     },
@@ -805,6 +813,9 @@
         "phash": "9c63a718134d616c",
         "name": "原初の産毛",
         "shortname": "産毛",
+        "alias": [
+            "毛"
+        ],
         "priority": 410071,
         "phash_battle": "1e33d929a4169a4a"
     },
@@ -835,6 +846,9 @@
         "phash": "1762e99673cd369b",
         "name": "戦馬の幼角",
         "shortname": "幼角",
+        "alias": [
+            "角"
+        ],
         "priority": 415001,
         "phash_battle": "92295629d649a5d2"
     },
@@ -885,6 +899,10 @@
         "phash": "764c0903490853d0",
         "name": "黒獣脂",
         "shortname": "脂",
+        "alias": [
+            "獣脂",
+            "油"
+        ],
         "priority": 415051,
         "phash_battle": "5e05a1611b581484"
     },
@@ -895,6 +913,9 @@
         "phash": "2641c9920504c904",
         "name": "血の涙石",
         "shortname": "涙石",
+        "alias": [
+            "血涙"
+        ],
         "priority": 415061,
         "phash_battle": "162158a66813994c"
     },
@@ -905,6 +926,9 @@
         "phash": "f7e207f878594b93",
         "name": "神脈霊子",
         "shortname": "霊子",
+        "alias": [
+            "神脈"
+        ],
         "priority": 420001,
         "phash_battle": "fa063db98b5256d4"
     },
@@ -915,6 +939,9 @@
         "phash": "efa81d76eaad76e3",
         "name": "光銀の冠",
         "shortname": "冠",
+        "alias": [
+            "光銀"
+        ],
         "priority": 420011,
         "phash_battle": "e91dea413e45fae9"
     },
@@ -925,6 +952,10 @@
         "phash": "f4028bf453691a91",
         "name": "禍罪の矢尻",
         "shortname": "矢尻",
+        "alias": [
+            "禍罪の鏃",
+            "鏃"
+        ],
         "priority": 420021,
         "phash_battle": "be0168a84d42b482"
     },
@@ -965,6 +996,9 @@
         "phash": "5e82a9fcea1c33c6",
         "name": "永遠結氷",
         "shortname": "結氷",
+        "alias": [
+            "氷"
+        ],
         "priority": 420061,
         "phash_battle": "7e816cc6936ac936"
     },
@@ -1015,6 +1049,9 @@
         "phash": "1e584983d2e93821",
         "name": "蛇の宝玉",
         "shortname": "蛇玉",
+        "alias": [
+            "宝玉"
+        ],
         "priority": 425011,
         "phash_battle": "56a5c372b9b18972"
     },
@@ -1025,6 +1062,10 @@
         "phash": "5652f3a9acc1d971",
         "name": "鳳凰の羽根",
         "shortname": "羽根",
+        "alias": [
+            "鳳凰の羽",
+            "羽"
+        ],
         "priority": 425021,
         "phash_battle": "a6bb4d44691444a2"
     },
@@ -1035,6 +1076,9 @@
         "phash": "96a383d80c846332",
         "name": "ホムンクルスベビー",
         "shortname": "ホム",
+        "alias": [
+            "ホムベビ"
+        ],
         "priority": 425031,
         "phash_battle": "56e16a84b119ad65"
     },
@@ -1105,6 +1149,10 @@
         "phash": "8c8d983361f3e3c3",
         "name": "宵哭きの鉄杭",
         "shortname": "鉄杭",
+        "alias": [
+            "宵哭の鉄杭",
+            "杭"
+        ],
         "priority": 430011,
         "phash_battle": "4c8d3363e3633030"
     },
@@ -1125,6 +1173,9 @@
         "phash": "d6a52c4959939313",
         "name": "万死の毒針",
         "shortname": "毒針",
+        "alias": [
+            "針"
+        ],
         "priority": 430031,
         "phash_battle": "5ab5294bd3b2346c"
     },
@@ -1416,6 +1467,9 @@
         "phash": "2643639893c9cc32",
         "name": "セイバーモニュメント",
         "shortname": "剣モ",
+        "alias": [
+            "剣モニュメント"
+        ],
         "priority": 470001,
         "phash_battle": "96a15949649ba626"
     },
@@ -1426,6 +1480,9 @@
         "phash": "861939c3c684c712",
         "name": "アーチャーモニュメント",
         "shortname": "弓モ",
+        "alias": [
+            "弓モニュメント"
+        ],
         "priority": 470011,
         "phash_battle": "46992342851b3d3a"
     },
@@ -1435,7 +1492,10 @@
         "rarity": 3,
         "phash": "a65963923299cc38",
         "name": "ランサーモニュメント",
-        "shortname": "槍ﾓ",
+        "shortname": "槍モ",
+        "alias": [
+            "槍モニュメント"
+        ],
         "priority": 470021,
         "phash_battle": "d6a93249a40d6692"
     },
@@ -1446,6 +1506,9 @@
         "phash": "66c9a913360ccd72",
         "name": "ライダーモニュメント",
         "shortname": "騎モ",
+        "alias": [
+            "騎モニュメント"
+        ],
         "priority": 470031,
         "phash_battle": "36e9199e653a8944"
     },
@@ -1456,6 +1519,9 @@
         "phash": "26c963386304ccb3",
         "name": "キャスターモニュメント",
         "shortname": "術モ",
+        "alias": [
+            "術モニュメント"
+        ],
         "priority": 470041,
         "phash_battle": "46a118b764539c62"
     },
@@ -1466,6 +1532,9 @@
         "phash": "864331188631cc1e",
         "name": "アサシンモニュメント",
         "shortname": "殺モ",
+        "alias": [
+            "殺モニュメント"
+        ],
         "priority": 470051,
         "phash_battle": "66b9ccd22526114e"
     },
@@ -1476,6 +1545,9 @@
         "phash": "3e19e34307b1d113",
         "name": "バーサーカーモニュメント",
         "shortname": "狂モ",
+        "alias": [
+            "狂モニュメント"
+        ],
         "priority": 470061,
         "phash_battle": "0e49a3d34986642b"
     },
@@ -1486,6 +1558,9 @@
         "phash": "266b6398d38dcc32",
         "name": "セイバーピース",
         "shortname": "剣ピ",
+        "alias": [
+            "剣ピース"
+        ],
         "priority": 480001,
         "phash_battle": "96b14949649aa624"
     },
@@ -1496,6 +1571,9 @@
         "phash": "a6583dcbc685c612",
         "name": "アーチャーピース",
         "shortname": "弓ピ",
+        "alias": [
+            "弓ピース"
+        ],
         "priority": 480011,
         "phash_battle": "5699634284593d38"
     },
@@ -1506,6 +1584,9 @@
         "phash": "2659e3d23299ca3c",
         "name": "ランサーピース",
         "shortname": "槍ピ",
+        "alias": [
+            "槍ピース"
+        ],
         "priority": 480021,
         "phash_battle": "d6a93ad8a42c6692"
     },
@@ -1516,6 +1597,9 @@
         "phash": "26d92913320ccd32",
         "name": "ライダーピース",
         "shortname": "騎ピ",
+        "alias": [
+            "騎ピース"
+        ],
         "priority": 480031,
         "phash_battle": "36e9199a653a8964"
     },
@@ -1526,6 +1610,9 @@
         "phash": "2cc97338622cccb3",
         "name": "キャスターピース",
         "shortname": "術ピ",
+        "alias": [
+            "術ピース"
+        ],
         "priority": 480041,
         "phash_battle": "46e918b26c53ac62"
     },
@@ -1536,6 +1623,9 @@
         "phash": "8edb31189631cc0c",
         "name": "アサシンピース",
         "shortname": "殺ピ",
+        "alias": [
+            "殺ピース"
+        ],
         "priority": 480051,
         "phash_battle": "66b9ccd23526994e"
     },
@@ -1546,6 +1636,9 @@
         "phash": "2c58e37282b1d317",
         "name": "バーサーカーピース",
         "shortname": "狂ピ",
+        "alias": [
+            "狂ピース"
+        ],
         "priority": 480061,
         "phash_battle": "0e69a3525996746b"
     },
