@@ -1,6 +1,26 @@
 "use strict";
-// ver 20200726-01
-Sentry.init({dsn: "https://c3ee02d195ae440aacd020b5869abfa7@o425638.ingest.sentry.io/5363673"});
+// ver 20200729-01
+Sentry.init({
+  dsn: "https://c3ee02d195ae440aacd020b5869abfa7@o425638.ingest.sentry.io/5363673",
+});
+
+// https://developer.twitter.com/en/docs/twitter-for-websites/javascript-api/guides/set-up-twitter-for-websites
+window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
 
 const defaultQuestName = '(クエスト名)'
 
@@ -374,6 +394,12 @@ class ReportViewer extends React.Component {
 }
 
 class TweetButton extends React.Component {
+  constructor(props) {
+    super(props)
+    this.createTweetButton = this.createTweetButton.bind(this)
+    this.state = { tweetButtonDisplayed: false }
+  }
+
   isValidCondition(questname, runcount) {
     // questname
     if (questname === defaultQuestName) {
@@ -389,25 +415,32 @@ class TweetButton extends React.Component {
     return true
   }
 
-  createTweetButton() {
+  removeTweetButton() {
+    console.log('removeTweetButton event')
     const el = document.getElementById('tweet-button')
     if (el === null) {
-      return ''
+      return
     }
-    
-    // 周回場所、周回数未設定の場合はボタン非表示
-    if (!this.isValidCondition(this.props.questname, this.props.runcount)) {
-      return (
-        <article className="message is-warning is-small">
-          <div className="message-body">周回場所、周回数を設定するとツイートボタンが表示されます。</div>
-        </article>
-      )
+    for (let node of el.childNodes) {
+      el.removeChild(node)
+    }
+    this.setState({ tweetButtonDisplayed: false })
+  }
+
+  createTweetButton(event) {
+    console.log('createShareButton event')
+    // tweet-button はこのコンテナの外にある
+    const el = document.getElementById('tweet-button')
+    if (el === null) {
+      return
     }
 
+    console.log('ready')
     window.twttr.ready(() => {
       for (let node of el.childNodes) {
         el.removeChild(node)
       }
+      console.log('createShareButton run')
       window.twttr.widgets.createShareButton(
         '',
         el,
@@ -416,19 +449,31 @@ class TweetButton extends React.Component {
           size: 'large',
         }
       )
+      console.log('createShareButton ok')
+      this.props.onShowTweetButton()
+      this.setState({ tweetButtonDisplayed: true })
     })
-    return ''
-  }
-
-  componentDidMount() {
-    // このタイミングで強制的に一度 render する
-    this.setState({})
   }
 
   render() {
-    const node = this.createTweetButton()
+    const tweetButtonDisplayed = this.state.tweetButtonDisplayed
+    if (tweetButtonDisplayed && this.props.canTweet != tweetButtonDisplayed) {
+      // 上位コンポーネントがツイートボタン表示不可といっているので、その状態に合わせる。
+      // このような回りくどいことをしているのは DOM 操作が絡むから。
+      this.removeTweetButton()
+    }
+    const invalidCondition = !this.isValidCondition(this.props.questname, this.props.runcount)
+    let className
+    if (invalidCondition) {
+      className = "button is-small"
+    } else {
+      className = "button is-small is-link"
+    }
+    const generateButton = <button className={className} disabled={invalidCondition} onClick={this.createTweetButton}>ツイートボタン生成</button>
     return (
-      <div id="tweet-button" style={{ marginTop: 1 + 'rem'}}>{node}</div>
+      <div style={{ marginTop: 1 + 'rem'}}>
+        {generateButton}
+      </div>
     )
   }
 }
@@ -450,6 +495,7 @@ class EditBox extends React.Component {
     this.handleLineDownButtonClick = this.handleLineDownButtonClick.bind(this)
     this.handleAddRowButtonClick = this.handleAddRowButtonClick.bind(this)
     this.buildReportText = this.buildReportText.bind(this)
+    this.handleShowTweetButton = this.handleShowTweetButton.bind(this)
 
     const questname = props.questname
     const runcount = parseInt(props.runcount)
@@ -466,7 +512,8 @@ class EditBox extends React.Component {
       questname: questname,
       runcount: runcount,
       lines: lines,
-      reportText: this.buildReportText(questname, runcount, lines)
+      reportText: this.buildReportText(questname, runcount, lines),
+      canTweet: false,
     }
   }
 
@@ -481,14 +528,16 @@ class EditBox extends React.Component {
   handleQuestNameChange(questname) {
     this.setState((state) => ({
         questname: questname,
-        reportText: this.buildReportText(questname, state.runcount, state.lines)
+        reportText: this.buildReportText(questname, state.runcount, state.lines),
+        canTweet: false,
     }))
   }
 
   handleRunCountChange(runcount) {
     this.setState((state) => ({
       runcount: runcount,
-      reportText: this.buildReportText(state.questname, runcount, state.lines)
+      reportText: this.buildReportText(state.questname, runcount, state.lines),
+      canTweet: false,
     }))
   }
 
@@ -510,7 +559,8 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines)
+      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      canTweet: false,
     }))
   }
 
@@ -530,7 +580,8 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines)
+      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      canTweet: false,
     }))
   }
 
@@ -542,7 +593,8 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines)
+      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      canTweet: false,
     }))
   }
 
@@ -557,7 +609,8 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines)
+      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      canTweet: false,
     }))
   }
 
@@ -565,7 +618,8 @@ class EditBox extends React.Component {
     const newlines = this.state.lines.filter(line => { return line.id !== id })
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines)
+      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      canTweet: false,
     }))
   }
 
@@ -654,7 +708,8 @@ class EditBox extends React.Component {
     this.changeLineOrder(linesCopy, target[0], 'up')
     this.setState((state) => ({
       lines: linesCopy,
-      reportText: this.buildReportText(state.questname, state.runcount, linesCopy)
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy),
+      canTweet: false,
     }))
   }
 
@@ -672,7 +727,8 @@ class EditBox extends React.Component {
     this.changeLineOrder(linesCopy, target[0], 'down')
     this.setState((state) => ({
       lines: linesCopy,
-      reportText: this.buildReportText(state.questname, state.runcount, linesCopy)
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy),
+      canTweet: false,
     }))
   }
 
@@ -690,7 +746,8 @@ class EditBox extends React.Component {
     lines.push(newline)
     this.setState((state) => ({
       lines: lines,
-      reportText: this.buildReportText(state.questname, state.runcount, lines)
+      reportText: this.buildReportText(state.questname, state.runcount, lines),
+      canTweet: false,
     }))
   }
 
@@ -733,6 +790,10 @@ ${reportText}
     return value
   }
 
+  handleShowTweetButton(event) {
+    this.setState({ canTweet: true })
+  }
+
   render() {
     let tableComponent
     if (this.state.editMode) {
@@ -770,7 +831,8 @@ ${reportText}
         <div style={{marginTop: 1 + 'rem'}}>
           {tableComponent}
         </div>
-        <TweetButton {...this.state} />
+        <TweetButton {...this.state}
+          onShowTweetButton={this.handleShowTweetButton} />
       </div>
     )
   }

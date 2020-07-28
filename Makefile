@@ -16,7 +16,7 @@ app-deploy-staging:
 app-deploy-production:
 	gcloud app deploy
 
-pre-deploy:
+pre-deploy: build
 	python3 makeprop.py
 	mv requirements.txt requirements-backup.txt
 	mv requirements-gcloud.txt requirements.txt
