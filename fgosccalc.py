@@ -21,6 +21,8 @@ ID_EXP_MIN = 9700100
 ID_EXP_MAX = 9707500
 ID_STANDARD_ITEM_MIN = 6501
 ID_STANDARD_ITEM_MAX = 6599
+ID_UNDROPPED = -2
+ID_NO_POSESSION = -1
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
@@ -37,9 +39,9 @@ def make_diff(itemlist1, itemlist2):
     tmplist = []
     for before, after in zip(itemlist1, itemlist2):
         diff = after.copy()
-        if before["id"] == -2 or after["id"] == -2:
+        if before["id"] == ID_UNDROPPED or after["id"] == ID_UNDROPPED:
             continue
-        elif before["id"] == -1 and after["id"] > 0:
+        elif before["id"] == ID_NO_POSESSION and after["id"] > 0:
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
         elif str(before["dropnum"]).isdigit() and str(after["dropnum"]).isdigit():
@@ -252,7 +254,7 @@ def main(args):
 
     file2 = Path(args.sc2)
     img_rgb = img2str.imread(str(file2))
-    sc2 = img2str.ScreenShot(img_rgb, svm, dropitems)
+    sc2 = img2str.ScreenShot(img_rgb, svm, dropitems, sc1.tokuiten)
 
     logger.debug('sc1: %s', sc1.itemlist)
     logger.debug('sc2: %s', sc2.itemlist)

@@ -75,7 +75,7 @@ def upload_post():
     sc1 = img2str.ScreenShot(im1, svm, dropitems)
 
     im2 = cv2.imdecode(get_np_array(file2.file), 1)
-    sc2 = img2str.ScreenShot(im2, svm, dropitems)
+    sc2 = img2str.ScreenShot(im2, svm, dropitems, sc1.tokuiten)
 
     logger.info('sc1: %s', sc1.itemlist)
     logger.info('sc2: %s', sc2.itemlist)

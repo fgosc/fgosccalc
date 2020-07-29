@@ -12,6 +12,8 @@ import json
 progname = "img2str"
 version = "0.2.0"
 
+ID_UNDROPPED = -2
+ID_NO_POSESSION = -1
 ID_STANDARD_ITEM_MIN = 6501
 ID_STANDARD_ITEM_MAX = 6599
 
@@ -122,7 +124,7 @@ class DropItems:
 class ScreenShot:
     unknown_item_id = 95000000
 
-    def __init__(self, img_rgb, svm, dropitems, debug=False):
+    def __init__(self, img_rgb, svm, dropitems, tokuiten="", debug=False):
         # TRAINING_IMG_WIDTHは3840x2160の解像度をベースにしている
         TRAINING_IMG_WIDTH = 1514
         threshold = 80
@@ -134,7 +136,7 @@ class ScreenShot:
         self.height, self.width = img_rgb.shape[:2]
 
         self.error = ""
-        self.tokuiten = ""
+        self.tokuiten = tokuiten
         try:
             game_screen = self.extract_game_screen(debug)
         except ValueError as e:
@@ -525,12 +527,12 @@ class Item:
     hasher = cv2.img_hash.PHash_create()
     def __init__(self, img_rgb, img_hsv, img_gray, svm, dropitems, through_item, template, debug=False):
         if self.is_undropped_box(img_hsv):
-            self.id = -1
+            self.id = ID_NO_POSESSION
             self.name = "未ドロップ"
             self.dropnum = 0
             return
         if through_item:
-            self.id = -2
+            self.id = ID_UNDROPPED
             self.name = "所持数無しアイテム"
             self.dropnum = 0
             return
