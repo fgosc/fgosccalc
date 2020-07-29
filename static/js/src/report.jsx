@@ -787,7 +787,7 @@ ${reportText}
     if (additionalLines.length > 0) {
       value += '\n\n' + additionalLines.join('\n')
     }
-    return value
+    return value + '\n'
   }
 
   handleShowTweetButton(event) {
