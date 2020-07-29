@@ -43,10 +43,6 @@ def make_diff(itemlist1, itemlist2):
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
         elif str(before["dropnum"]).isdigit() and str(after["dropnum"]).isdigit():
-            print(before["dropnum"])
-            print(type(before["dropnum"]))
-            print(after["dropnum"])
-            print(type(after["dropnum"]))
             diff["dropnum"] = after["dropnum"] - before["dropnum"]
             tmplist.append(diff)
         else:
