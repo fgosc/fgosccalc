@@ -17,7 +17,7 @@ from pathlib import Path
 import json
 
 progname = "FGOツイートスクショチェック"
-version = "0.0.2"
+version = "0.1.0"
 
 MAXSERCH = 100 # --auto オプションで1度の検索で取得するツイート
 MAX_LOOP = 5 # --auto オプションでMAXSERCH 件取得を何回行うか
@@ -38,39 +38,6 @@ for item in drop_item:
         for a in item["alias"]:
             alias2id[a] = item["id"]
 
-##sozai = {}
-##sozai_betsumei = {}
-##
-##def read_item():
-##    """
-##    CSV形式のアイテム変換データを読み込む
-##    """
-##    itemfile = os.path.join(os.path.dirname(__file__), 'item.csv')
-##    with open(itemfile, 'r' , encoding="utf_8") as f:
-##        try:
-##            reader = csv.reader(f)
-##            header = next(reader)  # ヘッダーを読み飛ばしたい時
-##
-##            for row in reader:
-####                q = {}
-##                for item in row[2:]:
-##                    if item == "":
-##                        break
-##                    sozai_betsumei[item] = row[1]
-##                sozai[row[1]] = row[0]
-##        except UnicodeDecodeError:
-##            print("[エラー]item.csv の文字コードがおかしいようです。UTF-8で保存してください。")
-##            sys.exit()
-##        except IndexError:
-##            print("[エラー]item.csv がCSV形式でないようです。")
-##            sys.exit()
-
-##def normalize_item(s):
-##    for pattern in sozai_betsumei.keys():
-##        if re.match(pattern, s):
-##            s = re.sub("^" + s + "$", sozai_betsumei[pattern], s)
-##            break
-##    return s
 def make_itemdic(s):
     """
     入力テキストからドロップアイテムとその数を抽出

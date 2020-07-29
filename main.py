@@ -33,8 +33,8 @@ def get_np_array(stream):
     return np.asarray(bytearray(stream.read()), dtype=np.uint8)
 
 
-def makeup(result_dict):
-    return '-'.join(['{}{}'.format(k, v) for k, v in result_dict.items()])
+def makeup(result_list):
+    return '-'.join(['{}{}'.format(item["name"], item["dropnum"]) for item in result_list])
 
 
 def is_valid_file(f):
@@ -80,14 +80,14 @@ def upload_post():
     logger.info('sc1: %s', sc1.itemlist)
     logger.info('sc2: %s', sc2.itemlist)
 
-    result_dict = fgosccalc.make_diff(sc1.itemlist, sc2.itemlist)
-    logger.info('result_dict: %s', result_dict)
+    result_list = fgosccalc.make_diff(sc1.itemlist, sc2.itemlist)
+    logger.info('result_list: %s', result_list)
 
     questname, questdrop = fgosccalc.get_questinfo(sc1, sc2)
     logger.info('quest: %s', questname)
     logger.info('questdrop: %s', questdrop)
 
-    drops_diff = fgosccalc.DropsDiff(result_dict, questname, questdrop)
+    drops_diff = fgosccalc.DropsDiff(result_list, questname, questdrop)
     parsed_obj = drops_diff.parse()
     formatted_output = parsed_obj.as_syukai_counter()
 
@@ -106,7 +106,7 @@ def upload_post():
         after_im = None
 
     return template('result',
-        result=makeup(result_dict),
+        result=makeup(result_list),
         sc1_available=(len(sc1.itemlist) > 0),
         sc2_available=(len(sc2.itemlist) > 0),
         before_after_pairs=before_after_pairs,
@@ -119,16 +119,17 @@ def upload_post():
 
 def make_before_after_pairs(before_list, after_list):
     pairs = []
-    for pair in zip(before_list, after_list):
-        name_before, num_before = pair[0]
-        name_after, num_after = pair[1]
-        if name_before.startswith('未ドロップ') or name_before.startswith('泥無しアイテム'):
+    for before, after in zip(before_list, after_list):
+##    for pair in zip(before_list, after_list):
+##        name_before, num_before = pair[0]
+##        name_after, num_after = pair[1]
+        if before["id"] == -2 or after["id"] == -2:
             continue
-        if not num_before.isdigit() or not num_after.isdigit():
+        if not str(before["dropnum"]).isdigit() or not str(after["dropnum"]).isdigit():
             continue
-        if name_before != name_after:
+        if before["id"] != after["id"]:
             continue
-        pairs.append((name_before, num_before, num_after, int(num_after) - int(num_before)))
+        pairs.append((before["name"], before["dropnum"], after["dropnum"], after["dropnum"] - before["dropnum"]))
     return pairs
 
 
