@@ -12,6 +12,9 @@ import json
 progname = "img2str"
 version = "0.2.0"
 
+ID_STANDARD_ITEM_MIN = 6501
+ID_STANDARD_ITEM_MAX = 6599
+
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
 ##Item_dist_file = Path(__file__).resolve().parent / Path("hash_item.csv")
@@ -495,6 +498,9 @@ class ScreenShot:
             if self.is_empty_box(item_img_hsv) == True: break
             if debug:print("\n[Item{} Information]".format(i))
             item = Item(item_img_rgb, item_img_hsv, item_img_gray, svm, dropitems, through_item, template, debug)
+            if ID_STANDARD_ITEM_MIN <= item.id <= ID_STANDARD_ITEM_MAX and numbered == False:
+                break
+##                raise ValueError("「所持」が認識できません")
             if debug == True:                
                 print(item.name)
 ##            if item.name.endswith("種火") or item.name.endswith("灯火") or item.name.endswith("大火"):
@@ -581,6 +587,10 @@ class ScreenShot:
         return lx, rx
 
     def compare_drop(self, scitem, fqitem):
+        """
+        フリクエのドロップアイテムと画像のドロップアイテムを比較
+        """
+        if len(scitem) < len(fqitem): return False
         for i, item in enumerate(fqitem):
             if item != scitem[i]:
                 return False
@@ -595,6 +605,7 @@ class ScreenShot:
         for quest in self.dropitems.freequest:
 ##            print(self.dropitems.syurenquest[quest])
 ##            dropset = set([i for i in self.dropitems.syurenquest[quest]["ドロップアイテム"].keys() if not i.endswith("火")])
+            if quest["category"] != "修練場": continue
             droplist = [i["name"] for i in quest["drop"] if not i["name"].endswith("火")]
             if self.compare_drop(itemlist, droplist):
                 self.quest = quest
@@ -637,7 +648,7 @@ class ScreenShot:
                 output = self.tokuiten + " " + self.quest["quest"]
             else:
                 # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-                if quest_list.index(self.quest) == 0:
+                if quest_list.index(self.quest["quest"]) == 0:
                     output = self.tokuiten + " " + self.quest["place"]
                 else:
                     output = self.tokuiten + " " + self.quest["quest"]
@@ -877,9 +888,9 @@ class Item:
             print("ドロップ数: {}".format(self.dropnum))
         self.id = self.classify_item(img_rgb, debug)
         self.name = dropitems.item_name[self.id]
-        if debug == True:
-            if self.name not in DropItems.dist_item.keys() and not self.name.endswith("火"):
-                print('"' + self.name + '"', end="")
+##        if debug == True:
+##            if self.name not in DropItems.dist_item.keys() and not self.name.endswith("火"):
+##                print('"' + self.name + '"', end="")
 ##                self.name = self.classify_item(img_rgb,debug)
 
     def is_undropped_box(self, img_hsv):
