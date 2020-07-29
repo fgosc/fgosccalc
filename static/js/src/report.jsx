@@ -61,14 +61,14 @@ class TableLine extends React.Component {
 
   handleEditClick(event) {
     this.setState({ editResult: true })
-    // 直接編集開始時は今までの増減操作をなかったことにする
+    // 直接入力開始時は今までの増減操作をなかったことにする
     this.props.onMaterialAddCountChange(this.props.id, 0)
     this.props.onMaterialReduceCountChange(this.props.id, 0)
   }
 
   handleDiscardEditClick(event) {
     this.setState({ editResult: false })
-    // 直接編集終了時は今までの編集操作をなかったことにする
+    // 直接入力終了時は今までの編集操作をなかったことにする
     this.props.onMaterialReportCountChange(this.props.id, this.props.initial)
   }
 
@@ -152,12 +152,12 @@ class TableLine extends React.Component {
       } else {
         reportComponent = <input type="text" className="input is-small" value={reportValue} onChange={this.handleReportChange} />
       }
-      editButton = <button className="button is-small is-danger" onClick={this.handleDiscardEditClick}>破棄</button>
+      editButton = <button className="button is-small is-danger" onClick={this.handleDiscardEditClick}>キャンセル</button>
     } else {
       addComponent = <input type="number" className="input is-small" min="0" value={this.props.add} onChange={this.handleAddChange} />
       reduceComponent = <input type="number" className="input is-small" min="0" value={this.props.reduce} onChange={this.handleReduceChange} />
       reportComponent = <span>{reportValue}</span>
-      editButton = <button className="button is-small is-success" onClick={this.handleEditClick}>編集</button>
+      editButton = <button className="button is-small is-success" onClick={this.handleEditClick}>直接入力</button>
     }
 
     return (
@@ -234,7 +234,7 @@ class Table extends React.Component {
         <ul class="note">
           <li><b>周回外増</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</li>
           <li><b>周回外減</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</li>
-          <li><b>編集</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</li>
+          <li><b>直接入力</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</li>
         </ul>
       </div>
     )
