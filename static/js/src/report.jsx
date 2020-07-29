@@ -304,7 +304,13 @@ class RunCountEditor extends React.Component {
   }
 
   addValue(delta) {
-    let v = parseInt(this.props.runcount) + delta
+    let runcount = parseInt(this.props.runcount)
+    // ブランクなど数値でない場合に NaN になる可能性がある。
+    // その場合は強制的に 0 にする。
+    if (isNaN(runcount)) {
+      runcount = 0
+    }
+    let v = runcount + delta
     if (v < 0) {
       v = 0
     }
