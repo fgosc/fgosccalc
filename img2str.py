@@ -510,8 +510,9 @@ class ScreenShot:
 ##        self.itemdic = self.makeitemdict()
         self.itemlist = self.makeitemlist()
         self.deside_freequestname()
-        if self.quest_output == "":
+        if self.quest == "":
             self.deside_syurenquestname()
+        self.quest_output = self.make_quest_output()
 
     def calc_offset(self, img_gray):
         # 所持の座標を算出
@@ -587,16 +588,16 @@ class ScreenShot:
 
     def deside_syurenquestname(self):
 ##        itemset = set([i["name"] for i in self.itemlist])
-        itemlist = [i["name"] for i in self.itemlist if not i["name"].startswith("泥無しアイテム")]
-        self.quest = "" #クエスト名
-        self.place = "" #クエストの場所名
-        self.quest_output = "" #周回カウンタに合わせたクエスト名
+        itemlist = [i["name"] for i in self.itemlist if not i["name"].startswith("所持数無しアイテム")]
+##        self.quest = "" #クエスト名
+##        self.place = "" #クエストの場所名
+        self.quest = "" #周回カウンタに合わせたクエスト名
         for quest in self.dropitems.freequest:
 ##            print(self.dropitems.syurenquest[quest])
 ##            dropset = set([i for i in self.dropitems.syurenquest[quest]["ドロップアイテム"].keys() if not i.endswith("火")])
             droplist = [i["name"] for i in quest["drop"] if not i["name"].endswith("火")]
             if self.compare_drop(itemlist, droplist):
-                self.quest_output = quest
+                self.quest = quest
                 self.droplist = [i["name"] for i in quest["drop"]]
                 break
 
@@ -606,10 +607,10 @@ class ScreenShot:
         クエスト名を決定
         """
 ##        itemset = set([i["name"] for i in self.itemlist if not i["name"].startswith("泥無しアイテム")])
-        itemlist = [i["name"] for i in self.itemlist if not i["name"].startswith("泥無しアイテム")]
-        self.quest = "" #クエスト名
-        self.place = "" #クエストの場所名
-        self.quest_output = "" #周回カウンタに合わせたクエスト名
+        itemlist = [i["name"] for i in self.itemlist if not i["name"].startswith("所持数無しアイテム")]
+##        self.quest = "" #クエスト名
+##        self.place = "" #クエストの場所名
+        self.quest = "" #周回カウンタに合わせたクエスト名
         # reversed するのは 未確認座標X-Cを未確認座標X-Bより先に認識させるため
         for quest in reversed(self.dropitems.freequest):
             if quest["chapter"] == self.tokuiten:
@@ -620,21 +621,27 @@ class ScreenShot:
 ##                    self.quest = quest["quest"]
 ##                    self.place = quest["place"]
                     self.droplist = [i["name"] for i in quest["drop"]]
-                    self.quest_output = quest
+                    self.quest = quest
                     break
-##        if self.place != "":
+
+    def make_quest_output(self, debug=False):
+        output = ""
+        if self.quest != "":
 ##            quest_list = [quest for quest in self.dropitems.freequest.keys() if self.dropitems.freequest[quest]["特異点"] == self.tokuiten and  self.dropitems.freequest[quest]["場所"] == self.place]
-##            quest_list = [quest["quest"] for quest in self.dropitems.freequest if quest["chapter"] == self.tokuiten and quest["place"] == self.place]
-##            if self.tokuiten == "北米":
-##                self.quest_output = self.place + " " + self.quest
-##            elif len(quest_list) == 1:
-##                self.quest_output = self.tokuiten + " " + self.place
-##            else:
-##                # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-##                if quest_list.index(self.quest) == 0:
-##                    self.quest_output = self.tokuiten + " " + self.place
-##                else:
-##                    self.quest_output = self.tokuiten + " " + self.quest            
+            quest_list = [quest["quest"] for quest in self.dropitems.freequest if quest["chapter"] == self.tokuiten and quest["place"] == self.quest["place"]]
+            if self.quest["category"] == "北米":
+                output = self.quest["place"] + " " + self.quest["quest"]
+            elif self.quest["category"] == "修練場":
+                output = self.quest["chapter"] + " " + self.quest["place"]                
+            elif len(quest_list) == 1:
+                output = self.tokuiten + " " + self.quest["quest"]
+            else:
+                # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
+                if quest_list.index(self.quest) == 0:
+                    output = self.tokuiten + " " + self.quest["place"]
+                else:
+                    output = self.tokuiten + " " + self.quest["quest"]
+        return output
 
     def detect_enemy_tab(self, debug=False):
         """
@@ -854,7 +861,7 @@ class Item:
             return
         if through_item:
             self.id = -2
-            self.name = "泥無しアイテム"
+            self.name = "所持数無しアイテム"
             self.dropnum = 0
             return
             
@@ -1149,14 +1156,14 @@ class Item:
             未知のアイテムを storage に登録する。
             同時にハッシュ値を計算し dist_local に保存する。
 
-            ただしドロップカウントがない場合は「泥無しアイテム」として管理し
+            ただしドロップカウントがない場合は「所持数無しアイテム」として管理し
             storage には登録しない。(ハッシュのみ計算し dist_local に保存)
 
             いずれの場合も、アイテム名を返す。
         """
         if self.dropnum == "":
             ScreenShot.unknown_item_count = ScreenShot.unknown_item_count + 1
-            itemname = "泥無しアイテム" + str(ScreenShot.unknown_item_count)
+            itemname = "所持数無しアイテム" + str(ScreenShot.unknown_item_count)
             self.dropitems.dist_local[itemname] = self.compute_hash(img)
             return itemname
 
@@ -1312,12 +1319,13 @@ if __name__ == '__main__':
     file = Path(args.file)
     img_rgb = imread(str(file))
     sc = ScreenShot(img_rgb, svm, dropitems, args.debug)
-    if sc.quest_output != "":
-        result = "【"+ sc.quest_output["chapter"] + sc.quest_output["place"] + sc.quest_output["quest"] + "】"
+    if sc.quest != "":
+        result = "【" + sc.quest_output + "】"
+##        result = "【"+ sc.quest_output["chapter"] + sc.quest_output["place"] + sc.quest_output["quest"] + "】"
     else:
         result = ""
     for item in sc.itemlist:
-        if item["name"] not in ["未ドロップ", "泥無しアイテム"]:
+        if item["name"] not in ["未ドロップ", "所持数無しアイテム"]:
             result = result + item["name"] + str(item["dropnum"]) + '-'
     if len(result) > 0:
         result = result[:-1]
