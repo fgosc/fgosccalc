@@ -319,7 +319,7 @@ class ScreenShot:
             elif self.quest["category"] == "修練場":
                 output = self.quest["chapter"] + " " + self.quest["place"]                
             elif len(quest_list) == 1:
-                output = self.tokuiten + " " + self.quest["quest"]
+                output = self.tokuiten + " " + self.quest["place"]
             else:
                 # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
                 if quest_list.index(self.quest["quest"]) == 0:
