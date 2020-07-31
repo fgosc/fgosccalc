@@ -12,7 +12,7 @@ pip install -r requirements-gcloud.txt
 npm install
 ```
 
-JS ファイルをビルドします。
+JS ファイルをビルドします(JSX ファイルそのままだとブラウザが解釈できないため babel で JS に変換します)。
 `make` コマンドが使える場合は `make` でもよいです。
 デフォルトターゲットが `npm run build` の実行になっています。
 
@@ -27,4 +27,4 @@ npm run build
 python main.py
 ```
 
-準備が整ったので `http://localhost:8080/ にアクセスします。
+準備が整ったので http://localhost:8080/ にアクセスします。
