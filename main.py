@@ -1,5 +1,6 @@
 import io
 import base64
+import json
 import logging
 from pathlib import Path
 from urllib.parse import quote_plus
@@ -37,10 +38,14 @@ def makeup(result_dict):
     return '-'.join(['{}{}'.format(k, v) for k, v in result_dict.items()])
 
 
-def is_valid_file(f):
-    if f is None:
+def is_valid_file(obj):
+    if obj is None:
+        logger.warning('file1 is None')
+        return False
+    if obj.file is None:
         logger.warning('file is not specified')
         return False
+    f = obj.file
     f.seek(0, io.SEEK_END)
     if f.tell() == 0:
         logger.warning('blank file')
@@ -60,11 +65,11 @@ def upload_post():
     file2 = request.files.get('file2')
 
     logger.info('test file1')
-    if not is_valid_file(file1.file):
+    if not is_valid_file(file1):
         redirect('/')
 
     logger.info('test file2')
-    if not is_valid_file(file2.file):
+    if not is_valid_file(file2):
         redirect('/')
 
     dropitems = img2str.DropItems(storage=storage)
@@ -89,9 +94,19 @@ def upload_post():
 
     drops_diff = fgosccalc.DropsDiff(result_dict, questname, questdrop)
     parsed_obj = drops_diff.parse()
-    formatted_output = parsed_obj.as_syukai_counter()
+
+    dropdata = parsed_obj.as_json_data()
+    logger.info('dropdata json: %s', dropdata)
+
+    # さらに web 向けに加工する
+    for d in dropdata:
+        d['order'] = d['id']
+        d['initial'] = d['report']
+        d['add'] = 0
+        d['reduce'] = 0
 
     before_after_pairs = make_before_after_pairs(sc1.itemlist, sc2.itemlist)
+    contains_unknown_items = any([pair[0].startswith('item0') for pair in before_after_pairs])
 
     ok, png1 = cv2.imencode('.png', im1)
     if ok:
@@ -112,8 +127,9 @@ def upload_post():
         before_after_pairs=before_after_pairs,
         before_im=before_im,
         after_im=after_im,
-        formatted_output=formatted_output,
-        quoted_output=quote_plus(formatted_output),
+        questname=questname,
+        dropdata=json.dumps(dropdata),
+        contains_unknown_items=contains_unknown_items,
     )
 
 
@@ -157,7 +173,7 @@ if __name__ == "__main__":
     def index():
         return static_file('index.html', root=static_root)
 
-    @app.route('/static/<filepath>')
+    @app.route('/static/<filepath:path>')
     def static_content(filepath):
         return static_file(filepath, root=static_root)
     

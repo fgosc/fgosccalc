@@ -17,6 +17,13 @@ __pycache__/
 # Ignored by the build system
 /setup.cfg
 
+# js
+.babelrc
+node_modules/
+package.json
+package-lock.json
+*.jsx
+
 venv/
 .mypy_cache/
 image/

@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from collections import Counter
-from typing import Dict
+from typing import List, Dict, Any
 import csv
 
 import img2str
@@ -122,28 +122,18 @@ def out_name(d):
     logger.debug('out_name after: %s', d)
     return d
 
+
 @dataclasses.dataclass
 class ParsedDropsDiff:
     """
         DropsDiff を
+         - 礼装 craft_essence
          - 素材 materials
          - スキル石 gems
          - ピースモニュメント pieces
          - 種火 wisdoms
          - 非恒常アイテム non_standards
         に分解したもの。
-
-        FIXME この対応では不完全。
-        イベント時は非恒常アイテムをさらに
-        礼装、イベント素材に分類し、並び順を
-        - 礼装
-        - 素材
-        - スキル石
-        - ピースモニュメント
-        - 種火
-        - イベント素材
-        としなければいけない。
-        礼装とイベント素材を正しく並べるには、外部からアイテム名とソート順序を与えるしかない。
     """
     questname: str
     craft_essence: Dict[str, int]
@@ -152,6 +142,58 @@ class ParsedDropsDiff:
     pieces: Dict[str, int]
     wisdoms: Dict[str, str]
     non_standards: Dict[str, int]
+
+    def as_json_data(self) -> List[Dict[str, str]]:
+        """
+            Web 出力に最適化された JSON like なデータを返す。
+            つまり辞書のリスト。
+            素材のデータのみで、クエスト名は含まない。
+
+            出力例:
+            [
+                { "id": 1, "material": "爪", "report": 10 },
+                { "id": 2, "material": "羽根", "report": 25 },
+                { "id": 3, "material": "!弓モニュ", "report": 3 }
+            ]
+        """
+        categories = [
+            self.craft_essence,
+            self.materials,
+            self.gems,
+            self.pieces,
+            self.wisdoms,
+            self.non_standards,
+        ]
+        data = []
+        index = 0
+        # 開始時のみ素材名先頭に "!" をつけない
+        first_row = True
+
+        for cat in categories:
+            # カテゴリごとに改行するため素材名先頭に "!" をつける
+            category_head = True
+
+            for name, count in cat.items():
+                if first_row:
+                    item_name = name
+                    first_row = False
+                    category_head = False
+                elif category_head:
+                    # Web 上で報告フォーマットを編集するときの改行表現
+                    # (FGO 周回カウンタサイト互換)
+                    item_name = f'!{name}'
+                    category_head = False
+                else:
+                    item_name = name
+
+                d = {
+                    'id': index,
+                    'material': item_name,
+                    'report': str(count),
+                }
+                data.append(d)
+                index += 1
+        return data
 
     def as_syukai_counter(self):
         """

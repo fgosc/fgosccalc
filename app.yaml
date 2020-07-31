@@ -15,3 +15,7 @@ handlers:
 - url: /static/style.css
   static_files: static/style.css
   upload: static/style.css
+
+- url: /static/js/dist/report.js
+  static_files: static/js/dist/report.js
+  upload: static/js/dist/report.js
