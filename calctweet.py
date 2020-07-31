@@ -14,46 +14,30 @@ import configparser
 import urllib
 import webbrowser
 from pathlib import Path
+import json
 
 progname = "FGOツイートスクショチェック"
-version = "0.0.2"
+version = "0.1.0"
 
 MAXSERCH = 100 # --auto オプションで1度の検索で取得するツイート
 MAX_LOOP = 5 # --auto オプションでMAXSERCH 件取得を何回行うか
 
-sozai = {}
-sozai_betsumei = {}
+drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
 
-def read_item():
-    """
-    CSV形式のアイテム変換データを読み込む
-    """
-    itemfile = os.path.join(os.path.dirname(__file__), 'item.csv')
-    with open(itemfile, 'r' , encoding="utf_8") as f:
-        try:
-            reader = csv.reader(f)
-            header = next(reader)  # ヘッダーを読み飛ばしたい時
+with open(drop_file, encoding='UTF-8') as f:
+    drop_item = json.load(f)
 
-            for row in reader:
-##                q = {}
-                for item in row[2:]:
-                    if item == "":
-                        break
-                    sozai_betsumei[item] = row[1]
-                sozai[row[1]] = row[0]
-        except UnicodeDecodeError:
-            print("[エラー]item.csv の文字コードがおかしいようです。UTF-8で保存してください。")
-            sys.exit()
-        except IndexError:
-            print("[エラー]item.csv がCSV形式でないようです。")
-            sys.exit()
+item_name = {item["id"]:item["name"] for item in drop_item}
+item_shortname = {item["id"]:item["shortname"] for item in drop_item if "shortname" in item.keys()}
+alias2id = {}
+for item in drop_item:
+    alias2id[item["name"]] = item["id"]
+    if "shortname"in item.keys():
+        alias2id[item["shortname"]] = item["id"]
+    if "alias"in item.keys():
+        for a in item["alias"]:
+            alias2id[a] = item["id"]
 
-def normalize_item(s):
-    for pattern in sozai_betsumei.keys():
-        if re.match(pattern, s):
-            s = re.sub("^" + s + "$", sozai_betsumei[pattern], s)
-            break
-    return s
 def make_itemdic(s):
     """
     入力テキストからドロップアイテムとその数を抽出
@@ -93,10 +77,13 @@ def make_itemdic(s):
         m = re.search(pattern, item)
         if not m: #パターンに一致しない場合コメント扱いにする
             continue
-        tmpitem = normalize_item(re.sub(pattern, r"\g<name>", item).strip())
+##        tmpitem = normalize_item(re.sub(pattern, r"\g<name>", item).strip())
+        tmpitem = (re.sub(pattern, r"\g<name>", item).strip())
         if " " in tmpitem:
             continue
         else:
+            if tmpitem in alias2id.keys():
+                tmpitem = item_shortname[alias2id[tmpitem]]
             num = int(re.sub(pattern, r"\g<num>", item))
             items[tmpitem] = num
 
@@ -154,18 +141,18 @@ def calc_iamge_diff(status, savelocal=False, debug=False):
             if debug:
                 print("画像" + str(i + 1), end=",")
                 for j in sc.itemlist:
-                    print (j[0], end=",")
+                    print (j["name"], end=",")
                 print()
                 print("画像" + str(i + 1), end=",")
                 for j in sc.itemlist:
-                    print (j[0], end=",")
-                    print (j[1], end=",")
+                    print (j["name"], end=",")
+                    print (j["dropnum"], end=",")
                 print()
         ## 通常素材が埋まって無い報告は無いと推測してそういう報告は無効と判断
             new_itemlists = []                    
             for itemlist in itemlists:
                 for item in itemlist:
-                    if item[0] in dropitems.dist_item.keys():
+                    if item["id"] in dropitems.dist_item.keys():
                         new_itemlists.append(itemlist)
                         break
 
@@ -174,13 +161,19 @@ def calc_iamge_diff(status, savelocal=False, debug=False):
         print(new_itemlists)
     #戦利品スクショでないものはスキップして new_listを作成
     if len(new_itemlists) == 4:
-        for before1, after1, before2, after2 in zip(new_itemlists[0], new_itemlists[1],new_itemlists[2], new_itemlists[3]):
-            if before1[1].isdigit() and after1[1].isdigit() and before2[1].isdigit() and after2[1].isdigit() and (not before1[0].startswith("未ドロップ") and not after1[0].startswith("未ドロップ") and not before2[0].startswith("未ドロップ") and not after2[0].startswith("未ドロップ")):
-                item_dic[normalize_item(after1[0])] = int(after1[1])-int(before1[1]) + int(after2[1])-int(before2[1])        
+        for before1, after1, before2, after2 \
+            in zip(new_itemlists[0], new_itemlists[1],
+                   new_itemlists[2], new_itemlists[3]):
+            if str(before1["dropnum"]).isdigit() and str(after1["dropnum"]).isdigit() \
+               and str(before2["dropnum"]).isdigit() and str(after2["dropnum"]).isdigit() \
+               and not before1["id"] < 0 and not after1["id"] < 0 \
+                    and not before2["id"] < 0 and not after2["id"] < 0:
+                item_dic[item_shortname[after1["id"]]] = after1["dopnum"]-before1["dopnum"] + after2["dopnum"]-before2["dopnum"]      
     elif len(new_itemlists) >= 2:
         for before, after in zip(new_itemlists[0], new_itemlists[1]):
-            if before[1].isdigit() and after[1].isdigit() and (not before[0].startswith("未ドロップ") and not after[0].startswith("未ドロップ")):
-                item_dic[normalize_item(after[0])] = int(after[1])-int(before[1])
+            if str(before["dropnum"]).isdigit() and str(after["dropnum"]).isdigit() \
+               and not before["id"] < 0 and not after["id"] < 0:
+                item_dic[item_shortname[after["id"]]] = int(after["dropnum"])-int(before["dropnum"])
 
     # 報告前と報告後の後の画像順が逆の場合の対策
     sum = 0
@@ -312,7 +305,7 @@ def get_one_tweet(args, api):
         print("エラー: ツイート読み込みに失敗しました")
         sys.exit(1)
 
-    read_item()
+##    read_item()
 
     report_items = make_data4tweet(status.full_text)
     image_items, error_dic = calc_iamge_diff(status, savelocal=args.savelocal, debug=args.debug)
