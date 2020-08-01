@@ -1,5 +1,5 @@
 "use strict";
-// ver 20200729-01
+// ver 20200801-01
 Sentry.init({
   dsn: "https://c3ee02d195ae440aacd020b5869abfa7@o425638.ingest.sentry.io/5363673",
 });
@@ -23,6 +23,7 @@ window.twttr = (function(d, s, id) {
 }(document, "script", "twitter-wjs"));
 
 const defaultQuestName = '(クエスト名)'
+const tweetURL = 'https://fgosccalc.appspot.com'
 
 class TableLine extends React.Component {
   constructor(props) {
@@ -448,7 +449,7 @@ class TweetButton extends React.Component {
       }
       console.log('createShareButton run')
       window.twttr.widgets.createShareButton(
-        '',
+        tweetURL,
         el,
         {
           text: this.props.reportText,
