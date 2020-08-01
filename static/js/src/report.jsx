@@ -23,6 +23,7 @@ window.twttr = (function(d, s, id) {
 }(document, "script", "twitter-wjs"));
 
 const defaultQuestName = '(クエスト名)'
+const tweetURL = 'https://fgosccalc.appspot.com'
 
 class TableLine extends React.Component {
   constructor(props) {
@@ -448,7 +449,7 @@ class TweetButton extends React.Component {
       }
       console.log('createShareButton run')
       window.twttr.widgets.createShareButton(
-        '',
+        tweetURL,
         el,
         {
           text: this.props.reportText,
