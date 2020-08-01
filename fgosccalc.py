@@ -38,12 +38,18 @@ exp_list = [item["shortname"] for item in drop_item if ID_EXP_MIN <= item["id"] 
 def make_diff(itemlist1, itemlist2):
     tmplist = []
     for before, after in zip(itemlist1, itemlist2):
-        diff = after.copy()
+        diff = after
         if before["id"] == ID_UNDROPPED or after["id"] == ID_UNDROPPED:
+            continue
+        elif before["id"] == ID_NO_POSESSION and after["id"] == ID_NO_POSESSION:
             continue
         elif before["id"] == ID_NO_POSESSION and after["id"] > 0:
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
+        elif before["id"] > 0 and after["id"]  == ID_NO_POSESSION:
+            # 画像の認識順が周回前後逆の時のエラー対策
+            before["dropnum"] = "NaN"
+            tmplist.append(before)
         elif str(before["dropnum"]).isdigit() and str(after["dropnum"]).isdigit():
             diff["dropnum"] = after["dropnum"] - before["dropnum"]
             tmplist.append(diff)
