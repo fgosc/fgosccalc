@@ -1,3 +1,4 @@
+import copy
 import io
 import base64
 import json
@@ -85,7 +86,7 @@ def upload_post():
     logger.info('sc1: %s', sc1.itemlist)
     logger.info('sc2: %s', sc2.itemlist)
 
-    result_list = fgosccalc.make_diff(sc1.itemlist, sc2.itemlist)
+    result_list = fgosccalc.make_diff(copy.deepcopy(sc1.itemlist), copy.deepcopy(sc2.itemlist))
     logger.info('result_list: %s', result_list)
 
     questname, questdrop = fgosccalc.get_questinfo(sc1, sc2)
@@ -106,6 +107,7 @@ def upload_post():
         d['reduce'] = 0
 
     before_after_pairs = make_before_after_pairs(sc1.itemlist, sc2.itemlist)
+    logger.info('pairs: %s', before_after_pairs)
     contains_unknown_items = any([pair[0].startswith('item0') for pair in before_after_pairs])
 
     ok, png1 = cv2.imencode('.png', im1)
@@ -136,16 +138,14 @@ def upload_post():
 def make_before_after_pairs(before_list, after_list):
     pairs = []
     for before, after in zip(before_list, after_list):
-##    for pair in zip(before_list, after_list):
-##        name_before, num_before = pair[0]
-##        name_after, num_after = pair[1]
         if before["id"] == -2 or after["id"] == -2:
             continue
         if not str(before["dropnum"]).isdigit() or not str(after["dropnum"]).isdigit():
             continue
         if before["id"] != after["id"]:
             continue
-        pairs.append((before["name"], before["dropnum"], after["dropnum"], after["dropnum"] - before["dropnum"]))
+        pair = (before["name"], before["dropnum"], after["dropnum"], after["dropnum"] - before["dropnum"])
+        pairs.append(pair)
     return pairs
 
 
