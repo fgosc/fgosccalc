@@ -314,7 +314,7 @@ class ScreenShot:
         output = ""
         if self.quest != "":
             quest_list = [quest["quest"] for quest in self.dropitems.freequest if quest["chapter"] == self.tokuiten and quest["place"] == self.quest["place"]]
-            if self.quest["category"] == "北米":
+            if self.quest["chapter"] == "北米":
                 output = self.quest["place"] + " " + self.quest["quest"]
             elif self.quest["category"] == "修練場":
                 output = self.quest["chapter"] + " " + self.quest["place"]                
