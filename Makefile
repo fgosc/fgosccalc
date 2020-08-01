@@ -11,7 +11,7 @@ deploy: pre-deploy app-deploy-staging post-deploy
 deploy-prod: pre-deploy app-deploy-production post-deploy
 
 app-deploy-staging:
-	gcloud app deploy --no-promote
+	gcloud app deploy --no-promote -v stg
 
 app-deploy-production:
 	gcloud app deploy
