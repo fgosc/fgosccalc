@@ -289,7 +289,7 @@ class ScreenShot:
         for quest in reversed(self.dropitems.freequest):
             droplist = [{"id":i["id"], "name":i["name"]} for i in quest["drop"] if not i["name"].endswith("火")]
             if self.compare_drop(itemlist, droplist):
-                self.droplist = [{i["name"]} for i in quest["drop"]]
+                self.droplist = [i["name"] for i in quest["drop"]]
                 if self.quest == "":
                     self.quest = quest
                 self.quests.append(quest)
