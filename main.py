@@ -138,7 +138,7 @@ def upload_post():
 def make_before_after_pairs(before_list, after_list):
     pairs = []
     for before, after in zip(before_list, after_list):
-        if before["id"] == -2 or after["id"] == -2:
+        if before["id"] == img2str.ID_NO_POSESSION or after["id"] == img2str.ID_NO_POSESSION:
             continue
         if not str(before["dropnum"]).isdigit() or not str(after["dropnum"]).isdigit():
             continue

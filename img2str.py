@@ -16,11 +16,20 @@ ID_UNDROPPED = -2
 ID_NO_POSESSION = -1
 ID_STANDARD_ITEM_MIN = 6501
 ID_STANDARD_ITEM_MAX = 6599
+ID_GEM_MIN = 6001
+ID_GEM_MAX = 6007
+ID_MAGIC_GEM_MIN = 6101
+ID_MAGIC_GEM_MAX = 6107
+ID_SECRET_GEM_MIN = 6201
+ID_SECRET_GEM_MAX = 6207
+ID_PIECE_MIN = 7001
+ID_MONUMENT_MAX = 7107
 
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
 drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
 freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
+eventquest_file = Path(__file__).resolve().parent / Path("event.json")
 
 
 class DropItems:
@@ -32,40 +41,21 @@ class DropItems:
     with open(freequest_file, encoding='UTF-8') as f:
         freequest = json.load(f)
 
+    with open(eventquest_file, encoding='UTF-8') as f:
+        event = json.load(f)
+        freequest = freequest + event
+
     # JSONファイルから各辞書を作成
     item_name = {item["id"]:item["name"] for item in drop_item}
     item_shortname = {item["id"]:item["shortname"] for item in drop_item if "shortname" in item.keys()}
+    item_type = {item["id"]:item["type"] for item in drop_item if "type" in item.keys()}
     dist_item = {item["id"]:item["phash"] for item in drop_item if  "phash" in item.keys()}
-    dist_secret_gem = {item["id"]:item["phash_class"] for item in drop_item if 6200 < item["id"] < 6208 and "phash_class" in item.keys()}
-    dist_magic_gem = {item["id"]:item["phash_class"] for item in drop_item if 6100 < item["id"] < 6108 and "phash_class" in item.keys()}
-    dist_gem = {item["id"]:item["phash_class"] for item in drop_item if 6000 < item["id"] < 6008 and "phash_class" in item.keys()}
-
-    #クエストを見分けるハッシュ値
-    dist_quest = {
-        '冬木':np.array([[ 81,  74,  74, 166, 182, 212, 158, 218]], dtype='uint8'),
-        'オルレアン':np.array([[129, 126, 122, 174, 158,  93, 236, 222]], dtype='uint8'),
-        'セプテム':np.array([[113,  58, 156, 198, 138, 117, 158, 174]], dtype='uint8'),
-        'オケアノス':np.array([[225, 154,  62,  30, 170,  92, 215, 151]], dtype='uint8'),
-        'ロンドン':np.array([[241, 158, 110, 170, 126, 124, 191, 186]], dtype='uint8'),
-        '北米':np.array([[  1, 174, 250, 222, 137, 174, 214, 141]], dtype='uint8'),
-        'キャメロット':np.array([[129, 242, 246,  60, 124, 238, 188, 124]], dtype='uint8'),
-        'バビロニア':np.array([[193, 227,  86, 218, 250, 170, 245,  59]], dtype='uint8'),
-        '新宿':np.array([[121,  58, 166, 174, 142, 102, 238, 221]], dtype='uint8'),
-        'アガルタ':np.array([[145, 206,  78,  58, 170, 243, 114, 235]], dtype='uint8'),
-        '下総国':np.array([[113, 122,  86, 102, 170, 154, 170, 115]], dtype='uint8'),
-        'セイレム':np.array([[241, 190, 198,  76, 158, 243, 206, 202]], dtype='uint8'),
-        'アナスタシア':np.array([[  1, 243, 246, 142,  10, 248, 190, 106]], dtype='uint8'),
-        'ゲッテルデメルング':np.array([[ 79, 126,  16, 175, 248,  23, 238, 115]], dtype='uint8'),
-        'シン':np.array([[185, 238, 110, 185, 114, 119, 202, 106]], dtype='uint8'),
-        'ユガ・クシェートラ':np.array([[  3,  30, 216, 186, 180, 212, 122,  71]], dtype='uint8'),
-        'アトランティス':np.array([[ 65,  30,  58, 242, 170, 250,  92, 231]], dtype='uint8'),
-        'オリュンポス':np.array([[225, 242,  26,  87,  42, 169, 181, 222]], dtype='uint8'),
-    }
-
+    dist_secret_gem = {item["id"]:item["phash_class"] for item in drop_item if ID_SECRET_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX and "phash_class" in item.keys()}
+    dist_magic_gem = {item["id"]:item["phash_class"] for item in drop_item if ID_MAGIC_GEM_MIN <= item["id"] <= ID_MAGIC_GEM_MAX and "phash_class" in item.keys()}
+    dist_gem = {item["id"]:item["phash_class"] for item in drop_item if ID_GEM_MIN <= item["id"] <= ID_GEM_MAX and "phash_class" in item.keys()}
 
     dist_local = {
     }
-
 
     def __init__(self, storage=defaultItemStorage):
         self.storage = storage
@@ -203,9 +193,10 @@ class ScreenShot:
 
         self.itemlist = self.makeitemlist()
         self.deside_freequestname()
-        if self.quest == "":
-            self.deside_syurenquestname()
-        self.quest_output = self.make_quest_output()
+##        if self.quest == "":
+##            self.deside_syurenquestname()
+        self.quest_output = self.make_quest_output(self.quest)
+        self.quest_list = self.make_quest_list()
 
     def calc_offset(self, img_gray):
         # 所持の座標を算出
@@ -277,55 +268,55 @@ class ScreenShot:
         """
         フリクエのドロップアイテムと画像のドロップアイテムを比較
         """
-        if len(scitem) < len(fqitem): return False
-        for i, item in enumerate(fqitem):
-            if item != scitem[i]:
+        for sc, fq in zip(scitem, fqitem):
+            if sc["id"] == ID_UNDROPPED:
+                if self.dropitems.item_type[fq["id"]] == "Craft Essence":
+                    continue
+                else:
+                    return False
+            elif sc["id"] != fq["id"]:
                 return False
         return True
-
-    def deside_syurenquestname(self):
-        itemlist = [i["name"] for i in self.itemlist if not i["name"].startswith("所持数無しアイテム")]
-        self.quest = "" #周回カウンタに合わせたクエスト名
-        for quest in self.dropitems.freequest:
-            if quest["category"] != "修練場": continue
-            droplist = [i["name"] for i in quest["drop"] if not i["name"].endswith("火")]
-            if self.compare_drop(itemlist, droplist):
-                self.quest = quest
-                self.droplist = [i["name"] for i in quest["drop"]]
-                break
-
         
     def deside_freequestname(self):
         """
         クエスト名を決定
         """
-        itemlist = [i["name"] for i in self.itemlist if not i["name"].startswith("所持数無しアイテム")]
+        itemlist = [{"id":i["id"], "name":i["name"]} for i in self.itemlist  if i["id"] != ID_NO_POSESSION]
         self.quest = "" #周回カウンタに合わせたクエスト名
+        self.quests = [] #周回カウンタに合わせたクエスト名(複数対応)
         # reversed するのは 未確認座標X-Cを未確認座標X-Bより先に認識させるため
         for quest in reversed(self.dropitems.freequest):
-            if quest["chapter"] == self.tokuiten:
-                droplist = [i["name"] for i in quest["drop"] if not i["name"].endswith("火")]
-                if self.compare_drop(itemlist, droplist):
-                    self.droplist = [i["name"] for i in quest["drop"]]
+            droplist = [{"id":i["id"], "name":i["name"]} for i in quest["drop"] if not i["name"].endswith("火")]
+            if self.compare_drop(itemlist, droplist):
+                self.droplist = [{i["name"]} for i in quest["drop"]]
+                if self.quest == "":
                     self.quest = quest
-                    break
+                self.quests.append(quest)
 
-    def make_quest_output(self, debug=False):
+    def make_quest_list(self, debug=False):
+        quest_list = []
+        for quest in self.quests:
+            quest_list.append(self.make_quest_output(quest))
+        return quest_list
+            
+    def make_quest_output(self, quest, debug=False):
         output = ""
-        if self.quest != "":
-            quest_list = [quest["quest"] for quest in self.dropitems.freequest if quest["chapter"] == self.tokuiten and quest["place"] == self.quest["place"]]
-            if self.quest["chapter"] == "北米":
-                output = self.quest["place"] + " " + self.quest["quest"]
-            elif self.quest["category"] == "修練場":
-                output = self.quest["chapter"] + " " + self.quest["place"]                
-            elif len(quest_list) == 1:
-                output = self.tokuiten + " " + self.quest["place"]
+        if quest != "":
+##            quest_list = [q["quest"] for q in self.dropitems.freequest if q["chapter"] == self.tokuiten and q["place"] == quest["place"]]
+            quest_list = [q["quest"] for q in self.dropitems.freequest if q["place"] == quest["place"]]
+            if quest["chapter"] == "北米":
+                output = quest["place"] + " " + quest["quest"]
+            elif quest["category"] == "修練場":
+                output = quest["chapter"] + " " + quest["place"]                
+            elif quest["category"] == "event":
+                output = quest["shortname"]                
             else:
                 # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-                if quest_list.index(self.quest["quest"]) == 0:
-                    output = self.tokuiten + " " + self.quest["place"]
+                if quest_list.index(quest["quest"]) == 0:
+                    output = quest["chapter"] + " " + quest["place"]
                 else:
-                    output = self.tokuiten + " " + self.quest["quest"]
+                    output = quest["chapter"] + " " + quest["quest"]
         return output
 
     def detect_enemy_tab(self, debug=False):
@@ -416,51 +407,6 @@ class ScreenShot:
         right_x = right_x - rx
 
         game_screen = self.img_rgb_orig[upper_y:bottom_y,left_x:right_x]
-        # ここでクエスト名を認識する
-        # 左座標
-        quest_left = right_x + int((1983-1723)/(1723 - 209)*(right_x -left_x))
-        quest_right = right_x + int((3810-1723)/(1723 - 209)*(right_x -left_x))
-#        quest_right = right_x + int((3820-1723)/(1723 - 209)*(right_x -left_x))
-        quest_top = upper_y - int((631-21)/(1881 - 631)*(bottom_y - upper_y))
-#        quest_top = upper_y - int((631-10)/(1881 - 631)*(bottom_y - upper_y))
-        quest_bottom = upper_y - int((631-143)/(1881 - 631)*(bottom_y - upper_y))
-#        quest_bottom = upper_y - int((631-180)/(1881 - 631)*(bottom_y - upper_y))
-        # 有効な座標があるか
-        if quest_left > self.width or quest_right > self.width or quest_left < 0 or quest_top < 0:
-            return game_screen
-        if debug:
-            print("quest名切り出しの座標: [[", end ="")
-            print(quest_left, end=", ")
-            print(quest_top, end=", ")
-            print(quest_right, end=", ")
-            print(quest_bottom, end="")
-            print("]]")
-        quest = self.img_rgb_orig[quest_top:quest_bottom,quest_left:quest_right]
-        lower = np.array([100,100,100]) 
-        upper = np.array([255,255,255]) #ほぼ黒
-        img_mask = cv2.inRange(quest, lower, upper)
-
-##        cv2.imshow("img", cv2.resize(img_mask, dsize=None, fx=.5, fy=.5))
-##        cv2.waitKey(0)
-##        cv2.destroyAllWindows()
-        hash = self.compute_hash(quest)
-        if debug:
-            print(hash)
-        tokuitens = {}
-        for i in self.dropitems.dist_quest.keys():
-            d = Item.hasher.compare(hash, self.dropitems.dist_quest[i])
-            #同じアイテムでも14離れることあり(IMG_8785)
-            if d <= 20:
-                tokuitens[i] = d
-        tokuitens = sorted(tokuitens.items(), key=lambda x:x[1])
-
-        try:
-            tokuiten = next(iter(tokuitens))
-        except:
-            tokuiten = ""
-
-        if tokuiten != "":
-            self.tokuiten = tokuiten[0]
         return game_screen
 
     def makeitemlist(self):
@@ -527,12 +473,12 @@ class Item:
     hasher = cv2.img_hash.PHash_create()
     def __init__(self, img_rgb, img_hsv, img_gray, svm, dropitems, through_item, template, debug=False):
         if self.is_undropped_box(img_hsv):
-            self.id = ID_NO_POSESSION
+            self.id = ID_UNDROPPED
             self.name = "未ドロップ"
             self.dropnum = 0
             return
         if through_item:
-            self.id = ID_UNDROPPED
+            self.id = ID_NO_POSESSION
             self.name = "所持数無しアイテム"
             self.dropnum = 0
             return
@@ -670,13 +616,13 @@ class Item:
             ids = sorted(ids.items(), key=lambda x:x[1])
             id_tupple = next(iter(ids))
             id = id_tupple[0]
-            if 6200 < id < 6208:
+            if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
                 id = self.gem_img2id(img, self.dropitems.dist_secret_gem)
-            elif 6100 < id < 6108:
+            elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
                 id = self.gem_img2id(img, self.dropitems.dist_magic_gem)
-            elif 6000 < id < 6008:
+            elif ID_GEM_MIN <= id <= ID_GEM_MAX:
                 id = self.gem_img2id(img, self.dropitems.dist_gem)
-            elif 7000 < id < 7108:
+            elif ID_PIECE_MIN <= id <= ID_MONUMENT_MAX:
                 #ヒストグラム
                 img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
                 h, w = img_hsv.shape[:2]
@@ -856,9 +802,12 @@ if __name__ == '__main__':
     file = Path(args.file)
     img_rgb = imread(str(file))
     sc = ScreenShot(img_rgb, svm, dropitems, args.debug)
+    if len(sc.quest_list) >= 2:
+        print("周回場所の候補が複数あります")
+        print(sc.quest_list)
     if args.debug:
         print(sc.itemlist)
-    if sc.quest_output != "":
+    if len(sc.quest_list) == 1:
         result = "【" + sc.quest_output + "】"
     else:
         result = ""
