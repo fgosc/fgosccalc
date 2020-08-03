@@ -173,7 +173,11 @@ def calc_iamge_diff(status, savelocal=False, debug=False):
         for before, after in zip(new_itemlists[0], new_itemlists[1]):
             if str(before["dropnum"]).isdigit() and str(after["dropnum"]).isdigit() \
                and not before["id"] < 0 and not after["id"] < 0:
-                item_dic[item_shortname[after["id"]]] = int(after["dropnum"])-int(before["dropnum"])
+                if after["id"] in item_shortname.keys():
+                    name = item_shortname[after["id"]]
+                else:
+                    name = item_name[after["id"]]
+                item_dic[name] = int(after["dropnum"])-int(before["dropnum"])
 
     # 報告前と報告後の後の画像順が逆の場合の対策
     sum = 0
