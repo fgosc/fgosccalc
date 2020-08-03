@@ -41,11 +41,11 @@ def make_diff(itemlist1, itemlist2):
     for before, after in zip(itemlist1, itemlist2):
         diff = copy.deepcopy(after)
         diff_b = copy.deepcopy(before)
-        if before["id"] == ID_UNDROPPED or after["id"] == ID_UNDROPPED:
+        if before["id"] == ID_UNDROPPED and after["id"] == ID_UNDROPPED:
             continue
-        elif before["id"] == ID_NO_POSESSION and after["id"] == ID_NO_POSESSION:
+        elif before["id"] == ID_NO_POSESSION or after["id"] == ID_NO_POSESSION:
             continue
-        elif before["id"] == ID_NO_POSESSION and after["id"] > 0:
+        elif before["id"] == ID_UNDROPPED and after["id"] > 0:
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
         elif before["id"] > 0 and after["id"]  == ID_NO_POSESSION:
