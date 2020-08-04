@@ -33,7 +33,7 @@ training = Path(__file__).resolve().parent / Path("property.xml") #アイテム�
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
 drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
 freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
-eventquest_file = Path(__file__).resolve().parent / Path("event.json")
+eventquest_dir = Path(__file__).resolve().parent / Path("data/json/")
 
 class DropItems:
     hasher = cv2.img_hash.PHash_create()
@@ -44,9 +44,14 @@ class DropItems:
     with open(freequest_file, encoding='UTF-8') as f:
         freequest = json.load(f)
 
-    with open(eventquest_file, encoding='UTF-8') as f:
-        event = json.load(f)
-        freequest = freequest + event
+    evnetfiles = eventquest_dir.glob('**/*.json')
+    for evnetfile in evnetfiles:
+        try:
+            with open(evnetfile, encoding='UTF-8') as f:
+                event = json.load(f)
+                freequest = freequest + event
+        except:
+            print("{}: ファイルが読み込めません".format(evnetfile))
 
     # JSONファイルから各辞書を作成
     item_name = {item["id"]:item["name"] for item in drop_item}
@@ -278,6 +283,7 @@ class ScreenShot:
         """
         フリクエのドロップアイテムと画像のドロップアイテムを比較
         """
+        if len(fqitem) > 12: fqitem = fqitem[:12]
         if len(scitem) != len(fqitem): return False
         for sc, fq in zip(scitem, fqitem):
             if sc["id"] == ID_UNDROPPED:
