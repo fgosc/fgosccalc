@@ -207,8 +207,8 @@ class Table extends React.Component {
               <th></th>
               <th>素材名</th>
               <th>解析結果</th>
-              <th>周回外増</th>
-              <th>周回外減</th>
+              <th>消費</th>
+              <th>追加獲得</th>
               <th>報告値</th>
               <th></th>
             </tr>
@@ -233,8 +233,8 @@ class Table extends React.Component {
           <button className="button is-small" onClick={this.props.onAddRowButtonClick}><i className="fas fa-plus"></i></button>
         </div>
         <ul class="note">
-          <li><b>周回外増</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</li>
-          <li><b>周回外減</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</li>
+          <li><b>消費</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</li>
+          <li><b>追加獲得</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</li>
           <li><b>直接入力</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</li>
         </ul>
       </div>
