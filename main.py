@@ -110,15 +110,15 @@ def upload_post():
     logger.info('pairs: %s', before_after_pairs)
     contains_unknown_items = any([pair[0].startswith('item0') for pair in before_after_pairs])
 
-    ok, png1 = cv2.imencode('.png', im1)
+    ok, jpg1 = nparray_to_image(im1)
     if ok:
-        before_im = base64.b64encode(png1.tobytes())
+        before_im = base64.b64encode(jpg1.tobytes())
     else:
         before_im = None
 
-    ok, png2 = cv2.imencode('.png', im2)
+    ok, jpg2 = nparray_to_image(im2)
     if ok:
-        after_im = base64.b64encode(png2.tobytes())
+        after_im = base64.b64encode(jpg2.tobytes())
     else:
         after_im = None
 
@@ -133,6 +133,16 @@ def upload_post():
         dropdata=json.dumps(dropdata),
         contains_unknown_items=contains_unknown_items,
     )
+
+
+def nparray_to_image(im):
+    h, _ = im.shape[:2]
+    # 解像度の高いものは半分にリサイズ
+    if h >= 1000:
+        resized_im = cv2.resize(im, dsize=None, fx=0.5, fy=0.5)
+    else:
+        resized_im = im
+    return cv2.imencode('.jpg', resized_im)
 
 
 def make_before_after_pairs(before_list, after_list):
