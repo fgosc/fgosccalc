@@ -25,13 +25,15 @@ ID_SECRET_GEM_MAX = 6207
 ID_PIECE_MIN = 7001
 ID_MONUMENT_MAX = 7107
 ID_START = 95000000
+ID_EXP_MIN = 9700100
+ID_EXP_MAX = 9707500
+PRIORITY_REWARD_QP = 9012
 
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
 drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
 freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
 eventquest_file = Path(__file__).resolve().parent / Path("event.json")
-
 
 class DropItems:
     hasher = cv2.img_hash.PHash_create()
@@ -50,10 +52,12 @@ class DropItems:
     item_name = {item["id"]:item["name"] for item in drop_item}
     item_shortname = {item["id"]:item["shortname"] for item in drop_item if "shortname" in item.keys()}
     item_type = {item["id"]:item["type"] for item in drop_item if "type" in item.keys()}
+    item_dropPriority = {item["id"]:item["dropPriority"] for item in drop_item}
     dist_item = {item["id"]:item["phash"] for item in drop_item if  "phash" in item.keys()}
     dist_secret_gem = {item["id"]:item["phash_class"] for item in drop_item if ID_SECRET_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX and "phash_class" in item.keys()}
     dist_magic_gem = {item["id"]:item["phash_class"] for item in drop_item if ID_MAGIC_GEM_MIN <= item["id"] <= ID_MAGIC_GEM_MAX and "phash_class" in item.keys()}
     dist_gem = {item["id"]:item["phash_class"] for item in drop_item if ID_GEM_MIN <= item["id"] <= ID_GEM_MAX and "phash_class" in item.keys()}
+    exp_list = [item["shortname"] for item in drop_item if ID_EXP_MIN <= item["id"] < ID_EXP_MAX]
 
     dist_local = {
     }
@@ -77,6 +81,8 @@ class DropItems:
 
             self.item_name[id] = itemname
             self.item_shortname[id] = itemname
+            self.item_dropPriority[id] = 0
+            self.item_type[id] = "Item"
             hash = self.compute_hash(img)
             hash_hex = ""
             for h in hash[0]:
@@ -119,7 +125,7 @@ class DropItems:
 class ScreenShot:
     unknown_item_id = ID_START
 
-    def __init__(self, img_rgb, svm, dropitems, tokuiten="", debug=False):
+    def __init__(self, img_rgb, svm, dropitems, debug=False):
         # TRAINING_IMG_WIDTHは3840x2160の解像度をベースにしている
         TRAINING_IMG_WIDTH = 1514
         threshold = 80
@@ -131,7 +137,6 @@ class ScreenShot:
         self.height, self.width = img_rgb.shape[:2]
 
         self.error = ""
-        self.tokuiten = tokuiten
         try:
             game_screen = self.extract_game_screen(debug)
         except ValueError as e:
@@ -189,7 +194,8 @@ class ScreenShot:
             # アイテム枠のヒストグラム調査
             if self.is_empty_box(item_img_hsv) == True: break
             if debug:print("\n[Item{} Information]".format(i))
-            item = Item(item_img_rgb, item_img_hsv, item_img_gray, svm, dropitems, through_item, template, debug)
+            item = Item(item_img_rgb, item_img_hsv, item_img_gray, svm,
+                        dropitems, through_item, template, debug)
             if ID_STANDARD_ITEM_MIN <= item.id <= ID_STANDARD_ITEM_MAX and numbered == False:
                 break
             if debug == True: print(item.name)
@@ -619,6 +625,7 @@ class Item:
                 ids[i] = d
         if len(ids) > 0:
             ids = sorted(ids.items(), key=lambda x:x[1])
+            if debug: print("Near IDs : {}".format(ids))
             id_tupple = next(iter(ids))
             id = id_tupple[0]
             if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
@@ -687,6 +694,9 @@ class Item:
         self.dropitems.dist_item[id] = hash_hex
         self.dropitems.item_name[id] = name
         self.dropitems.item_shortname[id] = shortname
+        self.dropitems.item_dropPriority[id] = 0
+        self.dropitems.item_type[id] = "Item"
+        print(id)
         return id
 
     def classify_item(self, img, debug=False):

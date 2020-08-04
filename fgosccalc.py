@@ -27,14 +27,6 @@ ID_NO_POSESSION = -1
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
-drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
-
-with open(drop_file, encoding='UTF-8') as f:
-    drop_item = json.load(f)
-item_name = {item["id"]:item["name"] for item in drop_item}
-item_shortname = {item["id"]:item["shortname"] for item in drop_item if "shortname" in item.keys()}
-item_type = {item["id"]:item["type"] for item in drop_item}
-exp_list = [item["shortname"] for item in drop_item if ID_EXP_MIN <= item["id"] < ID_EXP_MAX]
 
 def make_diff(itemlist1, itemlist2):
     tmplist = []
@@ -76,13 +68,13 @@ def make_diff(itemlist1, itemlist2):
 
     return newlist
 
-def out_name(id):
-    d = item_name[id]
+def out_name(id, dropitems):
+    d = dropitems.item_name[id]
     logger.debug('out_name before: %s', d)
     if d[-1] == '_':
         d = d[:-1]
-    if id in item_shortname.keys():
-        d = item_shortname[id]
+    if id in dropitems.item_shortname.keys():
+        d = dropitems.item_shortname[id]
     if d[-1].isdigit():
         d = d + '_'
     logger.debug('out_name after: %s', d)
@@ -102,12 +94,12 @@ class ParsedDropsDiff:
         に分解したもの。
     """
     questname: str
-    craft_essence: Dict[str, int]
-    materials: Dict[str, int]
-    gems: Dict[str, int]
-    pieces: Dict[str, int]
-    wisdoms: Dict[str, str]
-    non_standards: Dict[str, int]
+    craft_essence: List[Dict[str, int]]
+    materials: List[Dict[str, int]]
+    gems: List[Dict[str, int]]
+    pieces: List[Dict[str, int]]
+    wisdoms: List[Dict[str, str]]
+    non_standards: List[Dict[str, int]]
 
     def as_json_data(self) -> List[Dict[str, str]]:
         """
@@ -139,7 +131,9 @@ class ParsedDropsDiff:
             # カテゴリごとに改行するため素材名先頭に "!" をつける
             category_head = True
 
-            for name, count in cat.items():
+            for item in cat:
+                name = item["name"]
+                count = item["dropnum"]
                 if first_row:
                     item_name = name
                     first_row = False
@@ -165,11 +159,11 @@ class ParsedDropsDiff:
         """
             周回カウンタ報告形式の文字列を返す
         """
-        def format(item_dict):
-            return '-'.join(['{}{}'.format(name, count) for name, count in item_dict.items()])
+        def format(item_list):
+            return '-'.join(['{}{}'.format(item["name"], item["dropnum"]) for item in item_list])
 
-        def add_line(item_dict, lines):
-            line = format(item_dict)
+        def add_line(item_list, lines):
+            line = format(item_list)
             if line:
                 lines.append(line)
 
@@ -211,38 +205,38 @@ class DropsDiff:
                 return False
         return True
 
-    def parse(self):
+    def parse(self, dropitems):
         """
             素材、スキル石、モニュピ、種火に分解した結果を返す。
         """
 
-        craft_essence = {}
-        non_standards = {}
-        materials = {}
-        gems = {}
-        pieces = {}
-        wisdoms = {}
+        craft_essence = []
+        non_standards = []
+        materials = []
+        gems = []
+        pieces = []
+        wisdoms = []
 
         for item in self.item_list:
-            if item_type[item["id"]] == "Craft Essence":
-                craft_essence[out_name(item["id"])] = item["dropnum"]
+            if dropitems.item_type[item["id"]] == "Craft Essence":
+                craft_essence.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
             elif ID_STANDARD_ITEM_MIN <= item["id"] <= ID_STANDARD_ITEM_MAX:
-                materials[out_name(item["id"])] = item["dropnum"]
+                materials.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
             elif ID_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX:
-                gems[out_name(item["id"])] = item["dropnum"]
+                gems.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
             elif ID_PIECE_MIN <= item["id"] <= ID_MONUMENT_MAX:
-                pieces[out_name(item["id"])] = item["dropnum"]
+                pieces.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
             elif ID_EXP_MIN <= item["id"] <= ID_EXP_MAX:
                 raise ValueError('item_dict should not have wisdoms')
             else:
-                non_standards[out_name(item["id"])] = item["dropnum"]
+                non_standards.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
 
         if self.is_freequest:
             for questdrop in self.questdrops:
-                if questdrop in exp_list:
+                if questdrop in dropitems.exp_list:
                     # 種火はスクリーンショットから個数計算できないため常に
                     # NaN (N/A の意味。FGO周回カウンタ互換) を設定する
-                    wisdoms[questdrop] = 'NaN'
+                    wisdoms.append({"name":questdrop, "dropnum":'NaN'})
 
         return ParsedDropsDiff(
             self.questname,
@@ -304,7 +298,7 @@ def main(args):
 
     file2 = Path(args.sc2)
     img_rgb = img2str.imread(str(file2))
-    sc2 = img2str.ScreenShot(img_rgb, svm, dropitems, sc1.tokuiten)
+    sc2 = img2str.ScreenShot(img_rgb, svm, dropitems)
 
     logger.debug('sc1: %s', sc1.itemlist)
     logger.debug('sc2: %s', sc2.itemlist)
@@ -318,7 +312,7 @@ def main(args):
 
     obj = DropsDiff(newdic, questname, droplist)
     is_valid = obj.validate_dropitems()
-    parsed_obj = obj.parse()
+    parsed_obj = obj.parse(dropitems)
     output = parsed_obj.as_syukai_counter()
 
     if not is_valid:

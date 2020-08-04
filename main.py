@@ -81,7 +81,7 @@ def upload_post():
     sc1 = img2str.ScreenShot(im1, svm, dropitems)
 
     im2 = cv2.imdecode(get_np_array(file2.file), 1)
-    sc2 = img2str.ScreenShot(im2, svm, dropitems, sc1.tokuiten)
+    sc2 = img2str.ScreenShot(im2, svm, dropitems)
 
     logger.info('sc1: %s', sc1.itemlist)
     logger.info('sc2: %s', sc2.itemlist)
@@ -94,7 +94,7 @@ def upload_post():
     logger.info('questdrop: %s', questdrop)
 
     drops_diff = fgosccalc.DropsDiff(result_list, questname, questdrop)
-    parsed_obj = drops_diff.parse()
+    parsed_obj = drops_diff.parse(dropitems)
 
     dropdata = parsed_obj.as_json_data()
     logger.info('dropdata json: %s', dropdata)
