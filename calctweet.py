@@ -83,7 +83,10 @@ def make_itemdic(s):
             continue
         else:
             if tmpitem in alias2id.keys():
-                tmpitem = item_shortname[alias2id[tmpitem]]
+                if alias2id[tmpitem] in item_shortname.keys():
+                    tmpitem = item_shortname[alias2id[tmpitem]]
+                else:
+                    tmpitem = item_name[alias2id[tmpitem]]
             num = int(re.sub(pattern, r"\g<num>", item))
             items[tmpitem] = num
 

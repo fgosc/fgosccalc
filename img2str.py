@@ -24,6 +24,7 @@ ID_SECRET_GEM_MIN = 6201
 ID_SECRET_GEM_MAX = 6207
 ID_PIECE_MIN = 7001
 ID_MONUMENT_MAX = 7107
+ID_START = 95000000
 
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
@@ -65,12 +66,12 @@ class DropItems:
         """
         既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
         """
-        start_id = 94000000
+        start_id = ID_START
         for itemname, img in self.storage.known_item_dict().items():
             # id 候補を決める
             for j in range(99999):
                 id = j + start_id
-                if id in self.dist_item.keys():
+                if id in self.item_name.keys():
                     continue
                 break
 
@@ -80,7 +81,8 @@ class DropItems:
             hash_hex = ""
             for h in hash[0]:
                 hash_hex = hash_hex + "{:02x}".format(h)
-            self.dist_item[id] = hash_hex
+##            self.dist_local[id] = hash_hex
+            self.dist_local[id] = hash
 
     def hex2hash(self, hexstr):
         hashlist = []
@@ -107,12 +109,15 @@ class DropItems:
         記述した比率はiPpd2018画像の実測値
         """
         height, width = img_rgb.shape[:2]
-        img = img_rgb[int(11/180*height):int(150/180*height),
-                        int(23/166*width):int(140/166*width)]
+        img = img_rgb[int(11/180*height):int(148/180*height),
+                        int(10/166*width):int(156/166*width)]
+##        img = img_rgb[int(11/180*height):int(150/180*height),
+##                        int(23/166*width):int(140/166*width)]
+
         return DropItems.hasher.compute(img)
 
 class ScreenShot:
-    unknown_item_id = 95000000
+    unknown_item_id = ID_START
 
     def __init__(self, img_rgb, svm, dropitems, tokuiten="", debug=False):
         # TRAINING_IMG_WIDTHは3840x2160の解像度をベースにしている
@@ -137,7 +142,6 @@ class ScreenShot:
 
         if debug:
             cv2.imwrite('game_screen.png', game_screen)
-            print(self.tokuiten)
 
         height_g, width_g, _ = game_screen.shape
         if debug:
@@ -268,6 +272,7 @@ class ScreenShot:
         """
         フリクエのドロップアイテムと画像のドロップアイテムを比較
         """
+        if len(scitem) != len(fqitem): return False
         for sc, fq in zip(scitem, fqitem):
             if sc["id"] == ID_UNDROPPED:
                 if self.dropitems.item_type[fq["id"]] == "Craft Essence":
@@ -466,8 +471,8 @@ class ScreenShot:
 
         return pts
 
-    def compute_hash(self, img_rgb):
-        return Item.hasher.compute(img_rgb)
+##    def compute_hash(self, img_rgb):
+##        return Item.hasher.compute(img_rgb)
 
 class Item:
     hasher = cv2.img_hash.PHash_create()
@@ -600,7 +605,7 @@ class Item:
         """
         imgとの距離を比較して近いアイテムを求める
         """
-        hash_item = self.compute_hash(img) #画像の距離
+        hash_item = self.dropitems.compute_hash(img) #画像の距離
         if debug == True:
             print(":np.array([" + str(list(hash_item[0])) + "], dtype='uint8'),")
         ids = {}
@@ -642,7 +647,7 @@ class Item:
         """
         既所持のアイテム画像の距離を計算して保持
         """
-        hash_item = self.compute_hash(img) #画像の距離
+        hash_item = self.dropitems.compute_hash(img) #画像の距離
 
         itemfiles = {}
         # 既存のアイテムとの距離を比較
@@ -654,9 +659,7 @@ class Item:
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
             item = next(iter(itemfiles))
-            if isinstance(item[0], str):
-                return item[0]
-            return item[0].stem
+            return item[0]
         return ""
 
     def make_new_item(self, img):
@@ -677,7 +680,7 @@ class Item:
         id = ScreenShot.unknown_item_id            
         name = itemname
         shortname = itemname
-        hash = self.compute_hash(img)
+        hash = self.dropitems.compute_hash(img)
         hash_hex = ""
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
@@ -749,15 +752,15 @@ class Item:
 
         return lines[::-1]
 
-    def compute_hash(self, img_rgb):
-        """
-        判別器
-        この判別器は下部のドロップ数を除いた部分を比較するもの
-        記述した比率はiPpd2018画像の実測値
-        """
-        height, width = img_rgb.shape[:2]
-        img = img_rgb[int(11/180*height):int(148/180*height),
-                        int(10/166*width):int(156/166*width)]
+##    def compute_hash(self, img_rgb):
+##        """
+##        判別器
+##        この判別器は下部のドロップ数を除いた部分を比較するもの
+##        記述した比率はiPpd2018画像の実測値
+##        """
+##        height, width = img_rgb.shape[:2]
+##        img = img_rgb[int(11/180*height):int(148/180*height),
+##                        int(10/166*width):int(156/166*width)]
 ##        cv2.imshow("img", cv2.resize(img, dsize=None, fx=2., fy=2.))
 ##        cv2.waitKey(0)
 ##        cv2.destroyAllWindows()
