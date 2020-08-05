@@ -8,6 +8,7 @@ from storage.filesystem import FileSystemStorage
 import csv
 import re
 import json
+import math
 
 progname = "img2str"
 version = "0.2.0"
@@ -28,11 +29,15 @@ ID_START = 95000000
 ID_EXP_MIN = 9700100
 ID_EXP_MAX = 9707500
 PRIORITY_REWARD_QP = 9012
+ID_NORTH_AMERICA = 93000500
+ID_SYURENJYO = 94006800
+ID_EVNET = 94000000
 
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
 drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
 freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
+syurenquest_file = Path(__file__).resolve().parent / Path("syurenquest.json")
 eventquest_dir = Path(__file__).resolve().parent / Path("data/json/")
 
 class DropItems:
@@ -43,6 +48,10 @@ class DropItems:
 
     with open(freequest_file, encoding='UTF-8') as f:
         freequest = json.load(f)
+
+    with open(syurenquest_file, encoding='UTF-8') as f:
+        syurenquest = json.load(f)
+        freequest = freequest + syurenquest
 
     evnetfiles = eventquest_dir.glob('**/*.json')
     for evnetfile in evnetfiles:
@@ -304,7 +313,8 @@ class ScreenShot:
         self.quests = [] #周回カウンタに合わせたクエスト名(複数対応)
         # reversed するのは 未確認座標X-Cを未確認座標X-Bより先に認識させるため
         for quest in reversed(self.dropitems.freequest):
-            droplist = [{"id":i["id"], "name":i["name"]} for i in quest["drop"] if not i["name"].endswith("火")]
+##            droplist = [{"id":i["id"], "name":i["name"]} for i in quest["drop"] if not i["name"].endswith("火")]
+            droplist = [{"id":i["id"], "name":i["name"]} for i in quest["drop"] if not i["type"] in ["Point", "Exp. UP"] or i["name"] == "QP"]
             if self.compare_drop(itemlist, droplist):
                 self.droplist = [i["name"] for i in quest["drop"]]
                 if self.quest == "":
@@ -321,19 +331,20 @@ class ScreenShot:
         output = ""
         if quest != "":
 ##            quest_list = [q["quest"] for q in self.dropitems.freequest if q["chapter"] == self.tokuiten and q["place"] == quest["place"]]
-            quest_list = [q["quest"] for q in self.dropitems.freequest if q["place"] == quest["place"]]
-            if quest["chapter"] == "北米":
-                output = quest["place"] + " " + quest["quest"]
-            elif quest["category"] == "修練場":
+            quest_list = [q["name"] for q in self.dropitems.freequest if q["place"] == quest["place"]]
+##            if quest["chapter"] == "北米":
+            if math.floor(quest["id"]/100)*100 == ID_NORTH_AMERICA:
+                output = quest["place"] + " " + quest["name"]
+            elif math.floor(quest["id"]/100)*100 == ID_SYURENJYO:
                 output = quest["chapter"] + " " + quest["place"]                
-            elif quest["category"] == "event":
+            elif math.floor(quest["id"]/100000)*100000 == ID_EVNET:
                 output = quest["shortname"]                
             else:
                 # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-                if quest_list.index(quest["quest"]) == 0:
+                if quest_list.index(quest["name"]) == 0:
                     output = quest["chapter"] + " " + quest["place"]
                 else:
-                    output = quest["chapter"] + " " + quest["quest"]
+                    output = quest["chapter"] + " " + quest["name"]
         return output
 
     def detect_enemy_tab(self, debug=False):
