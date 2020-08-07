@@ -292,6 +292,7 @@
         "type": "Craft Essence",
         "rarity": 5,
         "name": "スイート・デイズ",
+        "shortname": "礼装",
         "phash": "0382eee6d7fdf9fe",
         "dropPriority": 9005
     },
