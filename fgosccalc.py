@@ -34,7 +34,8 @@ def make_diff(itemlist1, itemlist2):
         diff = copy.deepcopy(after)
         diff_b = copy.deepcopy(before)
         if before["id"] == ID_UNDROPPED and after["id"] == ID_UNDROPPED:
-            continue
+            diff["dropnum"] = "NaN"
+            tmplist.append(diff)
         elif before["id"] == ID_NO_POSESSION or after["id"] == ID_NO_POSESSION:
             continue
         elif before["id"] == ID_UNDROPPED and after["id"] > 0:
@@ -217,8 +218,14 @@ class DropsDiff:
         pieces = []
         wisdoms = []
 
-        for item in self.item_list:
-            if dropitems.item_type[item["id"]] == "Craft Essence":
+        for i, item in enumerate(self.item_list):
+            if item["id"] == ID_UNDROPPED:
+                print("check")
+                if len(self.questdrops) > 0:
+                    item_id = [k for k, v in dropitems.item_name.items() if v == self.questdrops[i]][0]
+                    if dropitems.item_type[item_id] == "Craft Essence":
+                        craft_essence.append({"name":out_name(item_id, dropitems), "dropnum":0})                
+            elif dropitems.item_type[item["id"]] == "Craft Essence":
                 craft_essence.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
             elif ID_STANDARD_ITEM_MIN <= item["id"] <= ID_STANDARD_ITEM_MAX:
                 materials.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
