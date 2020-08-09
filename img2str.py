@@ -265,7 +265,7 @@ class ScreenShot:
         """
         直線検出で検出されなかったフチ幅を検出
         """
-        edge_width = 8
+        edge_width = 3
         ## lx = rx = 0
         height, width = img_th.shape[:2]
         target_color = 255 if reverse else 0
