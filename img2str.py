@@ -157,6 +157,7 @@ class ScreenShot:
             self.error = str(e)
             self.itemlist = []
             self.quest_output = ""
+            self.quest_list = []
             return
 
         if debug:
