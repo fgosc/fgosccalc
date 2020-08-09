@@ -500,14 +500,14 @@ class ScreenShot:
 class Item:
     hasher = cv2.img_hash.PHash_create()
     def __init__(self, img_rgb, img_hsv, img_gray, svm, dropitems, through_item, template, debug=False):
-        if through_item:
-            self.id = ID_NO_POSESSION
-            self.name = "所持数無しアイテム"
-            self.dropnum = 0
-            return
         if self.is_undropped_box(img_hsv):
             self.id = ID_UNDROPPED
             self.name = "未ドロップ"
+            self.dropnum = 0
+            return
+        if through_item:
+            self.id = ID_NO_POSESSION
+            self.name = "所持数無しアイテム"
             self.dropnum = 0
             return
             
