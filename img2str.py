@@ -35,10 +35,8 @@ ID_EVNET = 94000000
 
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
-drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
-freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
-syurenquest_file = Path(__file__).resolve().parent / Path("syurenquest.json")
-eventquest_dir = Path(__file__).resolve().parent / Path("data/json/")
+drop_file = Path(__file__).resolve().parent / Path("fgoscdata/hash_drop.json")
+quest_dir = Path(__file__).resolve().parent / Path("fgoscdata/data/json/")
 
 class DropItems:
     hasher = cv2.img_hash.PHash_create()
@@ -46,21 +44,15 @@ class DropItems:
     with open(drop_file, encoding='UTF-8') as f:
         drop_item = json.load(f)
 
-    with open(freequest_file, encoding='UTF-8') as f:
-        freequest = json.load(f)
-
-    with open(syurenquest_file, encoding='UTF-8') as f:
-        syurenquest = json.load(f)
-        freequest = freequest + syurenquest
-
-    evnetfiles = eventquest_dir.glob('**/*.json')
-    for evnetfile in evnetfiles:
+    freequest = []
+    questfiles = quest_dir.glob('**/*.json')
+    for questfile in questfiles:
         try:
-            with open(evnetfile, encoding='UTF-8') as f:
-                event = json.load(f)
-                freequest = freequest + event
+            with open(questfile, encoding='UTF-8') as f:
+                quest = json.load(f)
+                freequest = freequest + quest
         except:
-            print("{}: ファイルが読み込めません".format(evnetfile))
+            print("{}: ファイルが読み込めません".format(questfile))
 
     # JSONファイルから各辞書を作成
     item_name = {item["id"]:item["name"] for item in drop_item}

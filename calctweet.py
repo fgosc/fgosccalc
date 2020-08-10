@@ -22,7 +22,7 @@ version = "0.1.0"
 MAXSERCH = 100 # --auto オプションで1度の検索で取得するツイート
 MAX_LOOP = 5 # --auto オプションでMAXSERCH 件取得を何回行うか
 
-drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
+drop_file = Path(__file__).resolve().parent / Path("fgoscdata/hash_drop.json")
 
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
