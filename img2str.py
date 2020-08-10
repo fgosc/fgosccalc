@@ -35,10 +35,10 @@ ID_EVNET = 94000000
 
 training = Path(__file__).resolve().parent / Path("property.xml") #アイテム下部
 defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
-drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
-freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
-syurenquest_file = Path(__file__).resolve().parent / Path("syurenquest.json")
-eventquest_dir = Path(__file__).resolve().parent / Path("data/json/")
+drop_file = Path(__file__).resolve().parent / Path("fgoscdata/hash_drop.json")
+freequest_file = Path(__file__).resolve().parent / Path("fgoscdata/data/json/freequest.json")
+syurenquest_file = Path(__file__).resolve().parent / Path("fgoscdata/data/json/syurenquest.json")
+eventquest_dir = Path(__file__).resolve().parent / Path("fgoscdata/data/json/")
 
 class DropItems:
     hasher = cv2.img_hash.PHash_create()
