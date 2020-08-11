@@ -7,6 +7,8 @@ import cv2
 from pathlib import Path
 from typing import List, Dict
 import copy
+import numpy as np
+from itertools import zip_longest
 
 import img2str
 
@@ -25,7 +27,7 @@ logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 
-def make_diff(itemlist1, itemlist2):
+def make_diff(itemlist1, itemlist2, owned=None):
     tmplist = []
     for before, after in zip(itemlist1, itemlist2):
         diff = copy.deepcopy(after)
@@ -37,6 +39,10 @@ def make_diff(itemlist1, itemlist2):
             continue
         elif before["id"] == ID_UNDROPPED and after["id"] > 0:
             diff["dropnum"] = "NaN"
+            if owned != None:
+                owned_dic = { item["id"]: item["dropnum"] for item in owned}
+                if after["id"] in owned_dic.keys():
+                    diff["dropnum"] = after["dropnum"] - owned_dic[after["id"]] 
             tmplist.append(diff)
         elif before["id"] > 0 and after["id"] == ID_NO_POSESSION:
             # 画像の認識順が周回前後逆の時のエラー対策
@@ -267,6 +273,125 @@ def get_questinfo(sc1, sc2):
     else:
         return sc1qname, getattr(sc1, 'droplist', [])
 
+class OwnedItem(img2str.Item):
+    def __init__(self, img_rgb, dropitems, debug=False):
+
+        self.dropitems = dropitems
+        self.id = self.classify_standard_item(img_rgb, debug=False)
+
+
+class OwnedNumber(img2str.Item):
+    def __init__(self, img_gray, svm, debug=False):
+
+        pts9 = [[112, 44, 140, 85],
+                [140, 44, 168, 85],
+                [168, 44, 196, 85],
+                [207, 44, 235, 85],
+                [235, 44, 263, 85],
+                [263, 44, 291, 85],
+                [302, 44, 330, 85],
+                [330, 44, 358, 85],
+                [358, 44, 386, 85]]
+        self.svm = svm
+        self.num = int(self.read_item(img_gray, pts9))
+
+def calc_pts(img_rgb):
+    height, width = img_rgb.shape[:2]
+    hsvLower = np.array([50, 0, 0])    # 抽出する色の下限(HSV)
+    hsvUpper = np.array([200, 60, 255])    # 抽出する色の上限(HSV)
+    
+
+    hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV) # 画像をHSVに変換
+    hsv_mask = cv2.inRange(hsv, hsvLower, hsvUpper)    # HSVからマスクを作成
+    contours = cv2.findContours(hsv_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
+    item_pts_l = []
+    item_pts_r = []
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area > 5000:
+            ret = cv2.boundingRect(cnt)
+            pts = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
+    #        print(ret[2]/ret[3])
+            if 4 < ret[2] / ret[3] < 5:
+                if ret[0] + ret[2] / 2 < width / 2:
+                    item_pts_l.append(pts)
+                else:
+                    item_pts_r.append(pts)
+
+    item_pts_l.sort(key=lambda x: x[1])
+    item_pts_r.sort(key=lambda x: x[1])
+
+    item_pts = []
+    for left, right in zip(item_pts_l, item_pts_r):
+        item_pts.append(left)
+        if right is not None:
+            item_pts.append(right)
+
+    return item_pts
+
+def read_owned_ss(owned_files, dropitems, svm):
+    TRAINING_IMG_WIDTH = 1152
+
+    ownitems = []
+    for file in owned_files:
+        img_rgb = img2str.imread(file)
+
+        item_pts = calc_pts(img_rgb)
+        
+        width_g = max([ pts[2] for pts in item_pts]) - min([ pts[0] for pts in item_pts])
+        wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
+        resizeScale = 1 / wscale
+
+        if resizeScale > 1:
+            game_screen = cv2.resize(img_rgb, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
+        else:
+            game_screen = cv2.resize(img_rgb, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+
+        item_pts = calc_pts(game_screen)
+        offset_x = 506 - item_pts[0][0]
+        offset_y = 451 - item_pts[0][1]
+
+        pts = [[294 - offset_x, 369 - offset_y, 481 - offset_x, 572 - offset_y],
+               [1004 - offset_x, 369 - offset_y, 1191 - offset_x, 572 - offset_y],
+               [294 - offset_x, 599 - offset_y, 481 - offset_x, 802 - offset_y],
+               [1004 - offset_x, 599 - offset_y, 1191 - offset_x, 802 - offset_y],
+               [294 - offset_x, 829 - offset_y, 481 - offset_x, 1032 - offset_y],
+               [1004 - offset_x, 829 - offset_y, 1191 - offset_x, 1032 - offset_y],
+               [294 - offset_x, 1059 - offset_y, 481 - offset_x, 1262 - offset_y],
+               [1004 - offset_x, 1059 - offset_y, 1191 - offset_x, 1262 - offset_y],
+               ]
+
+        item_ids = []
+        for pt in pts:
+            item = OwnedItem(game_screen[pt[1]: pt[3], pt[0]: pt[2]], dropitems)
+            if item.id != "":
+                item_ids.append(item.id)
+        logger.debug("item_ids: %s", item_ids)
+
+        item_nums = []
+        img_gray = cv2.cvtColor(game_screen, cv2.COLOR_BGR2GRAY)
+        for  pt in item_pts:
+            numitem = OwnedNumber(img_gray[pt[1]: pt[3], pt[0]: pt[2]], svm)
+            item_nums.append(numitem.num)
+        logger.debug("item_num: %s", item_nums)
+
+        for id, num in zip(item_ids, item_nums):
+            ownitem = {}
+            ownitem["id"] = id
+            ownitem["name"] = dropitems.item_name[id]
+            ownitem["dropnum"] = num
+            ownitems.append(ownitem)
+    ownitems =sorted(ownitems, key=lambda x: x['id'])
+    code = 0
+    prev_id = -1
+    output_items = []
+    for item in ownitems:
+        if item["id"] == prev_id:
+            code = -1
+            break
+        output_items.append(item)
+        prev_id = item["id"]
+    return code, output_items
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -277,6 +402,11 @@ def parse_args():
     parser.add_argument(
         'sc2',
         help='2nd screenshot',
+    )
+    parser.add_argument(
+        '-o', '--owned',
+        nargs='*',
+        help='owned item scrennshot',
     )
     parser.add_argument(
         '--loglevel',
@@ -304,10 +434,23 @@ def main(args):
     img_rgb = img2str.imread(str(file2))
     sc2 = img2str.ScreenShot(img_rgb, svm, dropitems)
 
+    code, owned_list = read_owned_ss(args.owned, dropitems, svm)
+
     logger.debug('sc1: %s', sc1.itemlist)
     logger.debug('sc2: %s', sc2.itemlist)
+    logger.debug('owned_list: %s', owned_list)
 
-    newdic = make_diff(sc1.itemlist, sc2.itemlist)
+    owned_diff = []
+    if code == 0:
+        itemset_sc1 = {item["id"]  for item in sc1.itemlist}
+        itemset_sc2 = {item["id"]  for item in sc2.itemlist}
+        s_diffs = itemset_sc2 - itemset_sc1
+        for s_diff in s_diffs:
+            for owned in owned_list:
+                if s_diff == owned["id"]:
+                    owned_diff.append(owned)
+    
+    newdic = make_diff(sc1.itemlist, sc2.itemlist, owned=owned_diff)
 
     questname, droplist = get_questinfo(sc1, sc2)
 
