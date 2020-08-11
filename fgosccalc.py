@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Dict
 import copy
 import numpy as np
-from itertools import zip_longest
 
 import img2str
 
@@ -39,10 +38,10 @@ def make_diff(itemlist1, itemlist2, owned=None):
             continue
         elif before["id"] == ID_UNDROPPED and after["id"] > 0:
             diff["dropnum"] = "NaN"
-            if owned != None:
-                owned_dic = { item["id"]: item["dropnum"] for item in owned}
+            if owned is not None:
+                owned_dic = {item["id"]: item["dropnum"] for item in owned}
                 if after["id"] in owned_dic.keys():
-                    diff["dropnum"] = after["dropnum"] - owned_dic[after["id"]] 
+                    diff["dropnum"] = after["dropnum"] - owned_dic[after["id"]]
             tmplist.append(diff)
         elif before["id"] > 0 and after["id"] == ID_NO_POSESSION:
             # 画像の認識順が周回前後逆の時のエラー対策
@@ -273,6 +272,7 @@ def get_questinfo(sc1, sc2):
     else:
         return sc1qname, getattr(sc1, 'droplist', [])
 
+
 class OwnedItem(img2str.Item):
     def __init__(self, img_rgb, dropitems, debug=False):
 
@@ -295,13 +295,13 @@ class OwnedNumber(img2str.Item):
         self.svm = svm
         self.num = int(self.read_item(img_gray, pts9))
 
+
 def calc_pts(img_rgb):
     height, width = img_rgb.shape[:2]
     hsvLower = np.array([50, 0, 0])    # 抽出する色の下限(HSV)
     hsvUpper = np.array([200, 60, 255])    # 抽出する色の上限(HSV)
-    
 
-    hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV) # 画像をHSVに変換
+    hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)  # 画像をHSVに変換
     hsv_mask = cv2.inRange(hsv, hsvLower, hsvUpper)    # HSVからマスクを作成
     contours = cv2.findContours(hsv_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
     item_pts_l = []
@@ -329,6 +329,7 @@ def calc_pts(img_rgb):
 
     return item_pts
 
+
 def read_owned_ss(owned_files, dropitems, svm):
     TRAINING_IMG_WIDTH = 1152
 
@@ -337,15 +338,15 @@ def read_owned_ss(owned_files, dropitems, svm):
         img_rgb = img2str.imread(file)
 
         item_pts = calc_pts(img_rgb)
-        
-        width_g = max([ pts[2] for pts in item_pts]) - min([ pts[0] for pts in item_pts])
+
+        width_g = max([pts[2] for pts in item_pts]) - min([pts[0] for pts in item_pts])
         wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
         resizeScale = 1 / wscale
 
         if resizeScale > 1:
-            game_screen = cv2.resize(img_rgb, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
+            game_screen = cv2.resize(img_rgb, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
         else:
-            game_screen = cv2.resize(img_rgb, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+            game_screen = cv2.resize(img_rgb, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
 
         item_pts = calc_pts(game_screen)
         offset_x = 506 - item_pts[0][0]
@@ -370,7 +371,7 @@ def read_owned_ss(owned_files, dropitems, svm):
 
         item_nums = []
         img_gray = cv2.cvtColor(game_screen, cv2.COLOR_BGR2GRAY)
-        for  pt in item_pts:
+        for pt in item_pts:
             numitem = OwnedNumber(img_gray[pt[1]: pt[3], pt[0]: pt[2]], svm)
             item_nums.append(numitem.num)
         logger.debug("item_num: %s", item_nums)
@@ -381,7 +382,7 @@ def read_owned_ss(owned_files, dropitems, svm):
             ownitem["name"] = dropitems.item_name[id]
             ownitem["dropnum"] = num
             ownitems.append(ownitem)
-    ownitems =sorted(ownitems, key=lambda x: x['id'])
+    ownitems = sorted(ownitems, key=lambda x: x['id'])
     code = 0
     prev_id = -1
     output_items = []
@@ -392,6 +393,7 @@ def read_owned_ss(owned_files, dropitems, svm):
         output_items.append(item)
         prev_id = item["id"]
     return code, output_items
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -434,22 +436,26 @@ def main(args):
     img_rgb = img2str.imread(str(file2))
     sc2 = img2str.ScreenShot(img_rgb, svm, dropitems)
 
-    code, owned_list = read_owned_ss(args.owned, dropitems, svm)
+    if args.owned:
+        code, owned_list = read_owned_ss(args.owned, dropitems, svm)
+    else:
+        code = -1
 
     logger.debug('sc1: %s', sc1.itemlist)
     logger.debug('sc2: %s', sc2.itemlist)
-    logger.debug('owned_list: %s', owned_list)
+    if args.owned:
+        logger.debug('owned_list: %s', owned_list)
 
     owned_diff = []
     if code == 0:
-        itemset_sc1 = {item["id"]  for item in sc1.itemlist}
-        itemset_sc2 = {item["id"]  for item in sc2.itemlist}
+        itemset_sc1 = {item["id"] for item in sc1.itemlist}
+        itemset_sc2 = {item["id"] for item in sc2.itemlist}
         s_diffs = itemset_sc2 - itemset_sc1
         for s_diff in s_diffs:
             for owned in owned_list:
                 if s_diff == owned["id"]:
                     owned_diff.append(owned)
-    
+
     newdic = make_diff(sc1.itemlist, sc2.itemlist, owned=owned_diff)
 
     questname, droplist = get_questinfo(sc1, sc2)
