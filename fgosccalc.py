@@ -4,12 +4,8 @@ import dataclasses
 import logging
 import sys
 import cv2
-import numpy as np
 from pathlib import Path
-from collections import Counter
-from typing import List, Dict, Any
-import csv
-import json
+from typing import List, Dict
 import copy
 
 import img2str
@@ -28,6 +24,7 @@ ID_NO_POSESSION = -1
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
+
 def make_diff(itemlist1, itemlist2):
     tmplist = []
     for before, after in zip(itemlist1, itemlist2):
@@ -41,7 +38,7 @@ def make_diff(itemlist1, itemlist2):
         elif before["id"] == ID_UNDROPPED and after["id"] > 0:
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
-        elif before["id"] > 0 and after["id"]  == ID_NO_POSESSION:
+        elif before["id"] > 0 and after["id"] == ID_NO_POSESSION:
             # 画像の認識順が周回前後逆の時のエラー対策
             diff_b["dropnum"] = "NaN"
             tmplist.append(before)
@@ -51,8 +48,7 @@ def make_diff(itemlist1, itemlist2):
         else:
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
-               
-    result = ""
+
     sum = 0
     for item in tmplist:
         if type(item["dropnum"]) is int:
@@ -64,10 +60,11 @@ def make_diff(itemlist1, itemlist2):
     newlist = []
     for item in tmplist:
         if type(item["dropnum"]) is int:
-            item["dropnum"] =  item["dropnum"] *n
-        newlist.append(item)            
+            item["dropnum"] = item["dropnum"] * n
+        newlist.append(item)
 
     return newlist
+
 
 def out_name(id, dropitems):
     d = dropitems.item_name[id]
@@ -224,26 +221,26 @@ class DropsDiff:
                 if len(self.questdrops) > 0:
                     item_id = [k for k, v in dropitems.item_name.items() if v == self.questdrops[i]][0]
                     if dropitems.item_type[item_id] == "Craft Essence":
-                        craft_essence.append({"name":out_name(item_id, dropitems), "dropnum":0})                
+                        craft_essence.append({"name": out_name(item_id, dropitems), "dropnum": 0})
             elif dropitems.item_type[item["id"]] == "Craft Essence":
-                craft_essence.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
+                craft_essence.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
             elif ID_STANDARD_ITEM_MIN <= item["id"] <= ID_STANDARD_ITEM_MAX:
-                materials.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
+                materials.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
             elif ID_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX:
-                gems.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
+                gems.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
             elif ID_PIECE_MIN <= item["id"] <= ID_MONUMENT_MAX:
-                pieces.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
+                pieces.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
             elif ID_EXP_MIN <= item["id"] <= ID_EXP_MAX:
                 raise ValueError('item_dict should not have wisdoms')
             else:
-                non_standards.append({"name":out_name(item["id"], dropitems), "dropnum":item["dropnum"]})
+                non_standards.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
 
         if self.is_freequest:
             for questdrop in self.questdrops:
                 if questdrop in dropitems.exp_list:
                     # 種火はスクリーンショットから個数計算できないため常に
                     # NaN (N/A の意味。FGO周回カウンタ互換) を設定する
-                    wisdoms.append({"name":questdrop, "dropnum":'NaN'})
+                    wisdoms.append({"name": questdrop, "dropnum": 'NaN'})
 
         return ParsedDropsDiff(
             self.questname,
@@ -325,6 +322,7 @@ def main(args):
     if not is_valid:
         logger.info('スクリーンショットからクエストを特定できません')
     args.output.write(output)
+
 
 if __name__ == '__main__':
     args = parse_args()
