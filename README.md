@@ -107,11 +107,6 @@ optional arguments:
   -d, --debug        デバッグ情報を出力
   --version          show program's version number and exit
  ```
-### update.py
-```
-$ udate.py
-```
-アイテムデータのアップデートを行う
 
 ## 制限
 * 8桁の所持数には対応していない
