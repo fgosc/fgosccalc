@@ -54,21 +54,22 @@ def make_diff(itemlist1, itemlist2, owned=None):
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
 
-    sum = 0
-    for item in tmplist:
-        if type(item["dropnum"]) is int:
-            sum = sum + item["dropnum"]
-    if sum < 0:
-        n = -1
-    else:
-        n = 1
-    newlist = []
-    for item in tmplist:
-        if type(item["dropnum"]) is int:
-            item["dropnum"] = item["dropnum"] * n
-        newlist.append(item)
-
-    return newlist
+##    sum = 0
+##    for item in tmplist:
+##        if type(item["dropnum"]) is int:
+##            sum = sum + item["dropnum"]
+##    if sum < 0:
+##        n = -1
+##    else:
+##        n = 1
+##    newlist = []
+##    for item in tmplist:
+##        if type(item["dropnum"]) is int:
+##            item["dropnum"] = item["dropnum"] * n
+##        newlist.append(item)
+##
+##    return newlist
+    return tmplist
 
 
 def out_name(id, dropitems):
