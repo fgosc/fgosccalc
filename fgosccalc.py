@@ -460,7 +460,7 @@ def main(args):
 
     owned_diff = []
     if code == 0:
-        make_owned_diff(sc1.itemlist, sc2.itemlist, owned_list)
+        owned_diff = make_owned_diff(sc1.itemlist, sc2.itemlist, owned_list)
 
     newdic = make_diff(sc1.itemlist, sc2.itemlist, owned=owned_diff)
 
