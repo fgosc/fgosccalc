@@ -61,6 +61,44 @@
               </label>
             </div>
           </div>
+
+          <div class="field">
+            <div class="file has-name">
+              <label class="file-label">
+                <input class="file-input" id="extra1" type="file" name="extra1" accept=".png,.jpg,.jpeg">
+                <span class="file-cta">
+                  <span class="file-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span class="file-label">
+                    （オプション）所持品画像1
+                  </span>
+                </span>
+                <span id="extra1-filename" class="file-name">
+                  ファイルが選択されていません。
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="file has-name">
+              <label class="file-label">
+                <input class="file-input" id="extra2" type="file" name="extra2" accept=".png,.jpg,.jpeg">
+                <span class="file-cta">
+                  <span class="file-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span class="file-label">
+                    （オプション）所持品画像2
+                  </span>
+                </span>
+                <span id="extra2-filename" class="file-name">
+                  ファイルが選択されていません。
+                </span>
+              </label>
+            </div>
+          </div>
+
           <div class="field">
             <div class="control">
               <input type="submit" class="button is-link" value="送信" onclick="return validate();">
@@ -88,22 +126,6 @@
     </div><!-- container -->
   </section>
   <script>
-    const beforeInput = document.getElementById("before");
-    beforeInput.onchange = () => {
-      if (beforeInput.files.length > 0) {
-        const fileName = document.getElementById('before-filename');
-        fileName.textContent = beforeInput.files[0].name;
-      }
-    }
-
-    const afterInput = document.getElementById("after");
-    afterInput.onchange = () => {
-      if (afterInput.files.length > 0) {
-        const fileName = document.getElementById('after-filename');
-        fileName.textContent = afterInput.files[0].name;
-      }
-    }
-
     function validate() {
       const file1 = document.getElementById("before");
       const file2 = document.getElementById("after");
@@ -112,6 +134,21 @@
         return false;
       }
       return true;
+    }
+
+    function setOnChangeEvent(key) {
+      const input = document.getElementById(key);
+      input.onchange = () => {
+        if (input.files.length > 0) {
+          const fileName = document.getElementById(key + '-filename');
+          fileName.textContent = input.files[0].name;
+        }
+      }
+    }
+
+    const keys = ['before', 'after', 'extra1', 'extra2'];
+    for (key of keys) {
+      setOnChangeEvent(key);
     }
   </script>
 </body>
