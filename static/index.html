@@ -61,6 +61,44 @@
               </label>
             </div>
           </div>
+
+          <div class="field">
+            <div class="file has-name">
+              <label class="file-label">
+                <input class="file-input" id="extra1" type="file" name="extra1" accept=".png,.jpg,.jpeg">
+                <span class="file-cta">
+                  <span class="file-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span class="file-label">
+                    （オプション）所持品画像1
+                  </span>
+                </span>
+                <span id="extra1-filename" class="file-name">
+                  ファイルが選択されていません。
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="file has-name">
+              <label class="file-label">
+                <input class="file-input" id="extra2" type="file" name="extra2" accept=".png,.jpg,.jpeg">
+                <span class="file-cta">
+                  <span class="file-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span class="file-label">
+                    （オプション）所持品画像2
+                  </span>
+                </span>
+                <span id="extra2-filename" class="file-name">
+                  ファイルが選択されていません。
+                </span>
+              </label>
+            </div>
+          </div>
+
           <div class="field">
             <div class="control">
               <input type="submit" class="button is-link" value="送信" onclick="return validate();">
@@ -74,6 +112,13 @@
           <li>画像認識の精度は 100% ではありません。過信しないようご注意を。バグ報告は歓迎します。</li>
         </ul>
 
+        <h3>オプション画像について</h3>
+        <ul>
+          <li>周回前画像のドロップアイテムリストに抜けがある場合でも、「マテリアル～所持アイテム一覧」の画像を補完用の画像として添付することで周回開始時のドロップ数とみなして計算します。</li>
+          <li>所持アイテム一覧画像は、補完したい素材が完全に画面内に収まっている状態の画像を<b><u>切り抜きなどのトリミングをせずに</u></b>添付してください（重要）。JPEG 化はかまいません。</li>
+          <li>画像は最大2枚まで添付可能です。スキル石画像と素材画像を1画面に収めることが不可能な場合などに活用してください。</li>
+          <li>所持数 0 の素材は所持アイテム一覧に表示されないため、この方法で補完することはできません。1個以上所持していることが必要です。</li>
+        </ul>
         <hr>
         <p>
           <span class="tag is-link is-light is-medium"><a href="https://github.com/fgosc/" target="_blank">fgosc project</a></span>
@@ -88,22 +133,6 @@
     </div><!-- container -->
   </section>
   <script>
-    const beforeInput = document.getElementById("before");
-    beforeInput.onchange = () => {
-      if (beforeInput.files.length > 0) {
-        const fileName = document.getElementById('before-filename');
-        fileName.textContent = beforeInput.files[0].name;
-      }
-    }
-
-    const afterInput = document.getElementById("after");
-    afterInput.onchange = () => {
-      if (afterInput.files.length > 0) {
-        const fileName = document.getElementById('after-filename');
-        fileName.textContent = afterInput.files[0].name;
-      }
-    }
-
     function validate() {
       const file1 = document.getElementById("before");
       const file2 = document.getElementById("after");
@@ -112,6 +141,21 @@
         return false;
       }
       return true;
+    }
+
+    function setOnChangeEvent(key) {
+      const input = document.getElementById(key);
+      input.onchange = () => {
+        if (input.files.length > 0) {
+          const fileName = document.getElementById(key + '-filename');
+          fileName.textContent = input.files[0].name;
+        }
+      }
+    }
+
+    const keys = ['before', 'after', 'extra1', 'extra2'];
+    for (key of keys) {
+      setOnChangeEvent(key);
     }
   </script>
 </body>

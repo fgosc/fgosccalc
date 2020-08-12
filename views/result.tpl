@@ -78,18 +78,37 @@
           <div class="tile is-parent">
             <article class="tile is-child box">
             % if before_im:
-              <img class="image" src="data:image/png;base64,{{ before_im }}">
+              <img class="image" src="data:image/jpeg;base64,{{ before_im }}">
             % end
             </article>
           </div>
           <div class="tile is-parent">
             <article class="tile is-child box">
             % if after_im:
-              <img class="image" src="data:image/png;base64,{{ after_im }}">
+              <img class="image" src="data:image/jpeg;base64,{{ after_im }}">
             % end
             </article>
           </div>
         </div>
+
+      % if has_extra_im:
+        <div class="tile is-ancestor">
+          <div class="tile is-parent">
+            <article class="tile is-child box">
+            % if extra1_im:
+              <img class="image" src="data:image/jpeg;base64,{{ extra1_im }}">
+            % end
+            </article>
+          </div>
+          <div class="tile is-parent">
+            <article class="tile is-child box">
+            % if extra2_im:
+              <img class="image" src="data:image/jpeg;base64,{{ extra2_im }}">
+            % end
+            </article>
+          </div>
+        </div>
+      % end
 
       % if contains_unknown_items:
         <h3><a href="/items" target="_blank">未知アイテム一覧</a></h3>

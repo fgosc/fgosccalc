@@ -54,21 +54,22 @@ def make_diff(itemlist1, itemlist2, owned=None):
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
 
-    sum = 0
-    for item in tmplist:
-        if type(item["dropnum"]) is int:
-            sum = sum + item["dropnum"]
-    if sum < 0:
-        n = -1
-    else:
-        n = 1
-    newlist = []
-    for item in tmplist:
-        if type(item["dropnum"]) is int:
-            item["dropnum"] = item["dropnum"] * n
-        newlist.append(item)
-
-    return newlist
+##    sum = 0
+##    for item in tmplist:
+##        if type(item["dropnum"]) is int:
+##            sum = sum + item["dropnum"]
+##    if sum < 0:
+##        n = -1
+##    else:
+##        n = 1
+##    newlist = []
+##    for item in tmplist:
+##        if type(item["dropnum"]) is int:
+##            item["dropnum"] = item["dropnum"] * n
+##        newlist.append(item)
+##
+##    return newlist
+    return tmplist
 
 
 def out_name(id, dropitems):
@@ -395,6 +396,18 @@ def read_owned_ss(owned_files, dropitems, svm):
     return code, output_items
 
 
+def make_owned_diff(itemlist1, itemlist2, owned_list):
+    owned_diff = []
+    set1 = {item["id"] for item in itemlist1}
+    set2 = {item["id"] for item in itemlist2}
+    s_diffs = set2 - set1
+    for s_diff in s_diffs:
+        for owned in owned_list:
+            if s_diff == owned["id"]:
+                owned_diff.append(owned)
+    return owned_diff
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -448,13 +461,7 @@ def main(args):
 
     owned_diff = []
     if code == 0:
-        itemset_sc1 = {item["id"] for item in sc1.itemlist}
-        itemset_sc2 = {item["id"] for item in sc2.itemlist}
-        s_diffs = itemset_sc2 - itemset_sc1
-        for s_diff in s_diffs:
-            for owned in owned_list:
-                if s_diff == owned["id"]:
-                    owned_diff.append(owned)
+        owned_diff = make_owned_diff(sc1.itemlist, sc2.itemlist, owned_list)
 
     newdic = make_diff(sc1.itemlist, sc2.itemlist, owned=owned_diff)
 

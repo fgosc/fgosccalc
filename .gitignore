@@ -6,3 +6,4 @@ setting.ini
 .mypy_cache/
 node_modules/
 static/js/dist/
+image/
