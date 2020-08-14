@@ -294,7 +294,12 @@ class OwnedNumber(img2str.Item):
                 [330, 44, 358, 85],
                 [358, 44, 386, 85]]
         self.svm = svm
-        self.num = int(self.read_item(img_gray, pts9))
+        num = self.read_item(img_gray, pts9)
+        if num == "":
+            num = -1
+        else:
+            num = int(num)
+        self.num = num
 
 
 def calc_pts(img_rgb):
@@ -382,7 +387,8 @@ def read_owned_ss(owned_files, dropitems, svm):
             ownitem["id"] = id
             ownitem["name"] = dropitems.item_name[id]
             ownitem["dropnum"] = num
-            ownitems.append(ownitem)
+            if num >= 0:
+                ownitems.append(ownitem)
     ownitems = sorted(ownitems, key=lambda x: x['id'])
     code = 0
     prev_id = -1
