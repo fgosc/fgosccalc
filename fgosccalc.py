@@ -371,8 +371,7 @@ def read_owned_ss(owned_files, dropitems, svm):
         item_ids = []
         for pt in pts:
             item = OwnedItem(game_screen[pt[1]: pt[3], pt[0]: pt[2]], dropitems)
-            if item.id != "":
-                item_ids.append(item.id)
+            item_ids.append(item.id)
         logger.debug("item_ids: %s", item_ids)
 
         item_nums = []
@@ -384,6 +383,8 @@ def read_owned_ss(owned_files, dropitems, svm):
 
         for id, num in zip(item_ids, item_nums):
             ownitem = {}
+            if id == "":
+                continue
             ownitem["id"] = id
             ownitem["name"] = dropitems.item_name[id]
             ownitem["dropnum"] = num
