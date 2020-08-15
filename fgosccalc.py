@@ -416,15 +416,25 @@ def merge_list(upper, bottom):
     """
     上下スクロールのアイテムリストを結合する
     """
-    for j in range(2):
-        for i in range(4):
-            if upper.itemlist[i] != bottom.itemlist[i + 4 * (j + 1)]:
-                break
-            elif upper.itemlist[i]["id"] < 0:
-                continue
-            else:
-                return upper.itemlist + bottom.itemlist[4 * (2 - j):]
-    return upper.itemlist + bottom.itemlist
+    detect_flag = False
+    for i in range(len(bottom.itemlist)):
+        if bottom.itemlist[i]["id"] < 0:
+            continue
+        else:
+            b_candidate = i
+            break
+    logger.debug('b_candidate: %s', b_candidate)
+    
+    for j in range(len(upper.itemlist)):
+        if upper.itemlist[j] == bottom.itemlist[b_candidate]:
+            break
+    logger.debug('u_candidate: %s', j)
+    if j == len(upper.itemlist) -1:
+        lower_start = 0
+    else:
+        lower_start = 12 - (j - b_candidate)
+
+    return upper.itemlist + bottom.itemlist[lower_start:]
 
 
 def merge_sc(sc_list):
