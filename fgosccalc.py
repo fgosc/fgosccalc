@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List, Dict
 import copy
 import numpy as np
+from itertools import zip_longest
 
 import img2str
 
@@ -309,16 +310,17 @@ def calc_pts(img_rgb):
 
     hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)  # 画像をHSVに変換
     hsv_mask = cv2.inRange(hsv, hsvLower, hsvUpper)    # HSVからマスクを作成
+
     contours = cv2.findContours(hsv_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
     item_pts_l = []
     item_pts_r = []
     for cnt in contours:
         area = cv2.contourArea(cnt)
-        if area > 5000:
+        if area > 10000:
             ret = cv2.boundingRect(cnt)
             pts = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
     #        print(ret[2]/ret[3])
-            if 4 < ret[2] / ret[3] < 5:
+            if 4.2 < ret[2] / ret[3] < 4.4:
                 if ret[0] + ret[2] / 2 < width / 2:
                     item_pts_l.append(pts)
                 else:
@@ -328,12 +330,21 @@ def calc_pts(img_rgb):
     item_pts_r.sort(key=lambda x: x[1])
 
     item_pts = []
-    for left, right in zip(item_pts_l, item_pts_r):
+    for left, right in zip_longest(item_pts_l, item_pts_r):
         item_pts.append(left)
         if right is not None:
             item_pts.append(right)
 
-    return item_pts
+    # リスト中央のやつの面積と比較して明らかに面積がおかしいものは除外する
+    center = int(len(item_pts) / 2)
+    teacher_area = (item_pts[center][2] - item_pts[center][0]) *  (item_pts[center][3] - item_pts[center][1])
+    new_item_pts = []
+    for pts in item_pts:
+        area = (pts[2] - pts[0]) *  (pts[3] - pts[1])
+        if teacher_area * 0.9 < area < teacher_area * 1.1:
+            new_item_pts.append(pts)
+
+    return new_item_pts
 
 
 def read_owned_ss(owned_files, dropitems, svm):
@@ -344,6 +355,7 @@ def read_owned_ss(owned_files, dropitems, svm):
         img_rgb = img2str.imread(file)
 
         item_pts = calc_pts(img_rgb)
+        logger.debug("item_pts: %s", item_pts)
 
         width_g = max([pts[2] for pts in item_pts]) - min([pts[0] for pts in item_pts])
         wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
