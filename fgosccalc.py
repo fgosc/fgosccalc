@@ -55,21 +55,6 @@ def make_diff(itemlist1, itemlist2, owned=None):
             diff["dropnum"] = "NaN"
             tmplist.append(diff)
 
-##    sum = 0
-##    for item in tmplist:
-##        if type(item["dropnum"]) is int:
-##            sum = sum + item["dropnum"]
-##    if sum < 0:
-##        n = -1
-##    else:
-##        n = 1
-##    newlist = []
-##    for item in tmplist:
-##        if type(item["dropnum"]) is int:
-##            item["dropnum"] = item["dropnum"] * n
-##        newlist.append(item)
-##
-##    return newlist
     return tmplist
 
 
@@ -337,10 +322,10 @@ def calc_pts(img_rgb):
 
     # リスト中央のやつの面積と比較して明らかに面積がおかしいものは除外する
     center = int(len(item_pts) / 2)
-    teacher_area = (item_pts[center][2] - item_pts[center][0]) *  (item_pts[center][3] - item_pts[center][1])
+    teacher_area = (item_pts[center][2] - item_pts[center][0]) * (item_pts[center][3] - item_pts[center][1])
     new_item_pts = []
     for pts in item_pts:
-        area = (pts[2] - pts[0]) *  (pts[3] - pts[1])
+        area = (pts[2] - pts[0]) * (pts[3] - pts[1])
         if teacher_area * 0.9 < area < teacher_area * 1.1:
             new_item_pts.append(pts)
 
@@ -427,20 +412,59 @@ def make_owned_diff(itemlist1, itemlist2, owned_list):
     return owned_diff
 
 
+def merge_list(upper, bottom):
+    """
+    上下スクロールのアイテムリストを結合する
+    """
+    for j in range(2):
+        for i in range(4):
+            if upper.itemlist[i] != bottom.itemlist[i + 4 * (j + 1)]:
+                break
+            elif upper.itemlist[i]["id"] < 0:
+                continue
+            else:
+                return upper.itemlist + bottom.itemlist[4 * (2 - j):]
+    return upper.itemlist + bottom.itemlist
+
+
+def merge_sc(sc_list):
+    """
+    list内のスクロール上下を決め、内容をマージする
+    """
+    if len(sc_list) == 1:
+        return sc_list[0]
+
+    for i in range(len(sc_list[0].itemlist)):
+        if sc_list[0].itemlist[i]["id"] <= 0 or sc_list[1].itemlist[i]["id"] <= 0:
+            continue
+        if sc_list[0].itemlist[i]["dropPriority"] > sc_list[1].itemlist[i]["dropPriority"]:
+            logger.debug('use sc_list[0] → sc_list[1] on item %s', i)
+            sc_list[0].itemist = merge_list(sc_list[0], sc_list[1])
+            return sc_list[0]
+        else:
+            logger.debug('use sc_list[1] → sc_list[0] on item %s', i)
+            sc_list[1].itemlist = merge_list(sc_list[1], sc_list[0])
+            return sc_list[1]
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'sc1',
-        help='1st screenshot',
+        '-b', '--before',
+        nargs='+',
+        required=True,
+        help='1st screenshot(s)',
     )
     parser.add_argument(
-        'sc2',
-        help='2nd screenshot',
+        '-a', '--after',
+        nargs='+',
+        required=True,
+        help='2nd screenshot(s)',
     )
     parser.add_argument(
         '-o', '--owned',
-        nargs='*',
-        help='owned item scrennshot',
+        nargs='+',
+        help='owned item scrennshot(s)',
     )
     parser.add_argument(
         '--loglevel',
@@ -460,21 +484,33 @@ def parse_args():
 def main(args):
     dropitems = img2str.DropItems()
     svm = cv2.ml.SVM_load(str(img2str.training))
-    file1 = Path(args.sc1)
-    img_rgb = img2str.imread(str(file1))
-    sc1 = img2str.ScreenShot(img_rgb, svm, dropitems)
+    sc_before = []
+    for f in args.before:
+        file = Path(f)
+        img_rgb = img2str.imread(str(file))
+        sc_before.append(img2str.ScreenShot(img_rgb, svm, dropitems))
+    sc1 = merge_sc(sc_before)
+    sc_after = []
+    for f in args.after:
+        file = Path(f)
+        img_rgb = img2str.imread(str(file))
+        sc_after.append(img2str.ScreenShot(img_rgb, svm, dropitems))
+    sc2 = merge_sc(sc_after)
 
-    file2 = Path(args.sc2)
-    img_rgb = img2str.imread(str(file2))
-    sc2 = img2str.ScreenShot(img_rgb, svm, dropitems)
+    logger.debug('sc_before0: %s', sc_before[0].itemlist)
+    if len(sc_before) == 2:
+        logger.debug('sc_before1: %s', sc_before[1].itemlist)
+    logger.debug('sc1: %s', sc1.itemlist)
+    logger.debug('sc_after0: %s', sc_after[0].itemlist)
+    if len(sc_after) == 2:
+        logger.debug('sc_after1: %s', sc_after[1].itemlist)
+    logger.debug('sc2: %s', sc2.itemlist)
 
     if args.owned:
         code, owned_list = read_owned_ss(args.owned, dropitems, svm)
     else:
         code = -1
 
-    logger.debug('sc1: %s', sc1.itemlist)
-    logger.debug('sc2: %s', sc2.itemlist)
     if args.owned:
         logger.debug('owned_list: %s', owned_list)
 
@@ -502,4 +538,10 @@ def main(args):
 if __name__ == '__main__':
     args = parse_args()
     logger.setLevel(args.loglevel)
+    if len(args.before) != len(args.after):
+        logger.critical('前後でスクショ数が合いません')
+        exit(1)
+    elif len(args.before) > 2:
+        logger.critical('3ペア以上のスクショ比較には対応していません')
+        exit(1)
     main(args)

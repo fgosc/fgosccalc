@@ -437,6 +437,7 @@ class ScreenShot:
             itemdic["id"] = item.id
             itemdic["name"] = item.name
             itemdic["dropnum"] = item.dropnum
+            itemdic["dropPriority"] = item.dropPriority
             itemlist.append(itemdic)
         return itemlist
 
@@ -500,11 +501,13 @@ class Item:
             self.id = ID_UNDROPPED
             self.name = "未ドロップ"
             self.dropnum = 0
+            self.dropPriority = 0
             return
         if through_item:
             self.id = ID_NO_POSESSION
             self.name = "所持数無しアイテム"
             self.dropnum = 0
+            self.dropPriority = 0
             return
 
         self.img_rgb = img_rgb
@@ -519,6 +522,7 @@ class Item:
             print("ドロップ数: {}".format(self.dropnum))
         self.id = self.classify_item(img_rgb, debug)
         self.name = dropitems.item_name[self.id]
+        self.dropPriority = dropitems.item_dropPriority[self.id]
 
     def is_undropped_box(self, img_hsv):
         """
@@ -620,8 +624,11 @@ class Item:
             if d2 <= 20:
                 gems[i] = d2
         gems = sorted(gems.items(), key=lambda x: x[1])
-        gem = next(iter(gems))
-        return gem[0]
+        try:
+            gem = next(iter(gems))
+            return gem[0]
+        except StopIteration:
+            return ""
 
     def classify_standard_item(self, img, debug=False):
         """
@@ -684,8 +691,11 @@ class Item:
                 itemfiles[i] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
-            item = next(iter(itemfiles))
-            return item[0]
+            try:
+                item = next(iter(itemfiles))
+                return item[0]
+            except StopIteration:
+                return ""
         return ""
 
     def make_new_item(self, img):
@@ -715,7 +725,6 @@ class Item:
         self.dropitems.item_shortname[id] = shortname
         self.dropitems.item_dropPriority[id] = 0
         self.dropitems.item_type[id] = "Item"
-        print(id)
         return id
 
     def classify_item(self, img, debug=False):
