@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 from bottle import Bottle, redirect, request, template
 
-import fgosccalc
+import dropitemseditor
 import img2str
 from storage.filesystem import FileSystemStorage
 from storage.datastore import GoogleDatastoreStorage
@@ -99,25 +99,25 @@ def upload_post():
     logger.info('sc2: %s', sc2.itemlist)
 
     if owned_files:
-        _, owned_list = fgosccalc.read_owned_ss(owned_files, dropitems, svm)
+        _, owned_list = dropitemseditor.read_owned_ss(owned_files, dropitems, svm)
         logger.info('owned list: %s', owned_list)
-        owned_diff = fgosccalc.make_owned_diff(sc1.itemlist, sc2.itemlist, owned_list)
+        owned_diff = dropitemseditor.make_owned_diff(sc1.itemlist, sc2.itemlist, owned_list)
         logger.info('owned diff: %s', owned_diff)
     else:
         owned_diff = []
 
-    result_list = fgosccalc.make_diff(
+    result_list = dropitemseditor.make_diff(
         copy.deepcopy(sc1.itemlist),
         copy.deepcopy(sc2.itemlist),
         owned=owned_diff,
     )
     logger.info('result_list: %s', result_list)
 
-    questname, questdrop = fgosccalc.get_questinfo(sc1, sc2)
+    questname, questdrop = dropitemseditor.get_questinfo(sc1, sc2)
     logger.info('quest: %s', questname)
     logger.info('questdrop: %s', questdrop)
 
-    drops_diff = fgosccalc.DropsDiff(result_list, questname, questdrop)
+    drops_diff = dropitemseditor.DropsDiff(result_list, questname, questdrop)
     parsed_obj = drops_diff.parse(dropitems)
 
     dropdata = parsed_obj.as_json_data()
@@ -142,7 +142,7 @@ def upload_post():
     if len(owned_files) > 0:
         has_extra_im = True
         f = owned_files[0]
-        # fgosccalc.read_owned_ss() で終端まで読み取り済みなので
+        # dropitemseditor.read_owned_ss() で終端まで読み取り済みなので
         # seek 位置を先頭に戻してやらないと imdecode できない。
         f.seek(0)
         extra1_nparray = cv2.imdecode(get_np_array(f), 1)

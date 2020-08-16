@@ -327,6 +327,8 @@ def get_tweet_auto(args, api, last_id):
 if __name__ == '__main__':
     last_id = -1
     settingfile = setting_file_path()
+    # TODO 以下の config をロードする処理は lib/setting.py に
+    # まとめるのが望ましい。将来の課題とする。
     config = configparser.ConfigParser()
     try:
         config.read(settingfile)
