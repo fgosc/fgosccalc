@@ -9,7 +9,10 @@ from typing import List, Dict
 import copy
 import numpy as np
 from itertools import zip_longest
+import tweepy
+import configparser
 
+from calctweet import create_access_key_secret
 import img2str
 
 ID_GEM_MIN = 6001
@@ -475,6 +478,11 @@ def parse_args():
         '-o', '--owned',
         nargs='+',
         help='owned item scrennshot(s)',
+    )
+    parser.add_argument(
+        '-u', '--upload',
+        , action='store_true',
+        help='upload images on twiter',
     )
     parser.add_argument(
         '--loglevel',
