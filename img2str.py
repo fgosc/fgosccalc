@@ -614,6 +614,8 @@ class Item:
             pt = [pt[0] + offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
             pts.append(pt)
         line_lower_white = self.read_item(self.img_gray, pts)
+        if line_lower_white == "":
+            return -1
         return(int(line_lower_white))
 
     def gem_img2id(self, img, gem_dict):

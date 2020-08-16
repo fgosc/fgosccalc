@@ -213,7 +213,6 @@ class DropsDiff:
 
         for i, item in enumerate(self.item_list):
             if item["id"] == ID_UNDROPPED:
-                print("check")
                 if len(self.questdrops) > 0:
                     item_id = [k for k, v in dropitems.item_name.items() if v == self.questdrops[i]][0]
                     if dropitems.item_type[item_id] == "Craft Essence":
