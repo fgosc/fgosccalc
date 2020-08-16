@@ -11,6 +11,8 @@ import numpy as np
 from itertools import zip_longest
 import tweepy
 import configparser
+import re
+from io import BytesIO
 
 from calctweet import create_access_key_secret
 import img2str
@@ -148,7 +150,7 @@ class ParsedDropsDiff:
                 index += 1
         return data
 
-    def as_syukai_counter(self):
+    def as_syukai_counter(self, url):
         """
             周回カウンタ報告形式の文字列を返す
         """
@@ -172,11 +174,13 @@ class ParsedDropsDiff:
         if not questname:
             questname = '(クエスト名)'
         body = '\n'.join(lines)
+        if url != "":
+            url = '\n' + url
 
         return f"""
 【{questname}】000周
 {body}
-#FGO周回カウンタ http://aoshirobo.net/fatego/rc/
+#FGO周回カウンタ http://aoshirobo.net/fatego/rc/{url}
 """.lstrip()
 
 
@@ -486,7 +490,7 @@ def parse_args():
     )
     parser.add_argument(
         '-u', '--upload',
-        , action='store_true',
+        action='store_true',
         help='upload images on twiter',
     )
     parser.add_argument(
@@ -503,7 +507,77 @@ def parse_args():
     )
     return parser.parse_args()
 
+def set_twitter():
+    last_id = -1
+    settingfile = Path('setting.ini')
+    config = configparser.ConfigParser()
+    try:
+        config.read(settingfile)
+        section0 = "search"
+        section1 = "auth_info"
+        ACCESS_TOKEN = config.get(section1, "ACCESS_TOKEN")
+        ACCESS_SECRET = config.get(section1, "ACCESS_SECRET")
+        CONSUMER_KEY = config.get(section1, "CONSUMER_KEY")
+        CONSUMER_SECRET = config.get(section1, "CONSUMER_SECRET")
+        if section0 not in config.sections():
+            config.add_section(section0)
+        section0cfg = config[section0]
 
+        last_id = section0cfg.get("last_id", last_id)
+
+    except configparser.NoSectionError:
+        print("[エラー] setting.iniに不備があります。")
+        sys.exit(1)
+    if CONSUMER_KEY == "" or CONSUMER_SECRET == "":
+        print("[エラー] CONSUMER_KEYとCONSUMER_SECRETを設定してください")
+        print("[エラー] 管理者から得られない場合は個別に取得してください")
+        sys.exit(1)
+    if ACCESS_TOKEN == "" or ACCESS_SECRET == "":
+        create_access_key_secret(CONSUMER_KEY, CONSUMER_SECRET)
+
+    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+    auth.set_access_token(ACCESS_TOKEN, ACCESS_SECRET)
+    return tweepy.API(auth)
+
+
+def file2media_id(api, file):
+    quality = 85
+    f = Path(file)
+    img = cv2.imread(file)
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+    _, encimg = cv2.imencode(".jpg", img, encode_param)
+    res = api.media_upload(filename=f.stem + '.jpg', file=BytesIO(encimg))
+    return res.media_id
+
+def upload_file(args):
+    api = set_twitter()
+    media_ids = []
+
+    text = '画像のテスト投稿'
+    logger.debug('args.before: %s', args.before)
+    logger.debug('args.after: %s', args.after)
+    for before in args.before:
+        media_ids.append(file2media_id(api, before))
+    for after in args.after:
+        media_ids.append(file2media_id(api, after))
+    if len(args.before) == 1:
+        logger.debug('args.owned: %s', args.owned)
+        for owned in args.owned:
+            media_ids.append(file2media_id(api, owned))
+
+    logger.debug('media_ids: %s', media_ids)
+    status_img = api.update_status(status=text, media_ids=media_ids)
+    status_text = api.get_status(status_img.id, tweet_mode="extended")
+    logger.debug('%s', status_text.full_text)
+    pattern = "(?P<url>https://t.co/.+)$"
+    m1 = re.search(pattern, status_text.full_text)
+    if not m1:
+        url = ""
+    else:
+        url = re.sub(pattern, r"\g<url>", m1.group())
+    
+    return url
+    
 def main(args):
     dropitems = img2str.DropItems()
     svm = cv2.ml.SVM_load(str(img2str.training))
@@ -551,7 +625,10 @@ def main(args):
     obj = DropsDiff(newdic, questname, droplist)
     is_valid = obj.validate_dropitems()
     parsed_obj = obj.parse(dropitems)
-    output = parsed_obj.as_syukai_counter()
+    url = ""
+    if args.upload:
+        url = upload_file(args)
+    output = parsed_obj.as_syukai_counter(url)
 
     if not is_valid:
         logger.info('スクリーンショットからクエストを特定できません')
