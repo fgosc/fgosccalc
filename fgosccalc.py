@@ -320,6 +320,9 @@ def calc_pts(img_rgb):
         if right is not None:
             item_pts.append(right)
 
+    if len(item_pts) < 6:
+        logger.warning("正しい所持アイテムのスクショではありません")
+        return []
     # リスト中央のやつの面積と比較して明らかに面積がおかしいものは除外する
     center = int(len(item_pts) / 2)
     teacher_area = (item_pts[center][2] - item_pts[center][0]) * (item_pts[center][3] - item_pts[center][1])
@@ -342,6 +345,8 @@ def read_owned_ss(owned_files, dropitems, svm):
         item_pts = calc_pts(img_rgb)
         logger.debug("item_pts: %s", item_pts)
 
+        if item_pts == []:
+            return (-1, [])
         width_g = max([pts[2] for pts in item_pts]) - min([pts[0] for pts in item_pts])
         wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
         resizeScale = 1 / wscale
