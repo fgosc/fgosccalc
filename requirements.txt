@@ -4,7 +4,7 @@ opencv-contrib-python
 requests
 
 # only use in calctweet.py
-tweepy
+tweepy==3.8.0
 
 # only use in update.py
 tqdm
