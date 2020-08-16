@@ -14,7 +14,7 @@ import configparser
 import re
 from io import BytesIO
 
-from calctweet import create_access_key_secret
+from lib.twitter import create_access_key_secret
 import img2str
 
 ID_GEM_MIN = 6001
@@ -548,6 +548,7 @@ def file2media_id(api, file):
     _, encimg = cv2.imencode(".jpg", img, encode_param)
     res = api.media_upload(filename=f.stem + '.jpg', file=BytesIO(encimg))
     return res.media_id
+
 
 def upload_file(args):
     api = set_twitter()
