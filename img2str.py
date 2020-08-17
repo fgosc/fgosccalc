@@ -638,7 +638,10 @@ class Item:
         """
         hash_item = self.dropitems.compute_hash(img)  # 画像の距離
         if debug:
-            print(":np.array([" + str(list(hash_item[0])) + "], dtype='uint8'),")
+            hash_hex = ""
+            for h in hash_item[0]:
+                hash_hex = hash_hex + "{:02x}".format(h)
+            print(hash_hex)
         ids = {}
         # 既存のアイテムとの距離を比較
         for i in self.dropitems.dist_item.keys():
