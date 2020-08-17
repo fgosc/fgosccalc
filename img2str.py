@@ -649,7 +649,7 @@ class Item:
                 #  バーガーと脂の距離が10という例有り(IMG_2354)→14に
                 ids[i] = d
         if len(ids) > 0:
-            ids = sorted(ids.items(), key=lambda x: x[1])
+            ids = sorted(sorted(ids.items(), key=lambda x: x[0], reverse=True), key=lambda x: x[1])
             if debug:
                 print("Near IDs : {}".format(ids))
             id_tupple = next(iter(ids))
