@@ -64,18 +64,20 @@ def upload_get():
 
 @app.post('/upload')
 def upload_post():
-    file1 = request.files.get('file1')
-    file2 = request.files.get('file2')
+##    file1 = request.files.get('file1')
+##    file2 = request.files.get('file2')
+    file1 = request.files.getall('file1')
+    file2 = request.files.getall('file2')
     extra1 = request.files.get('extra1')
     extra2 = request.files.get('extra2')
 
-    logger.info('test file1')
-    if not is_valid_file(file1):
-        redirect('/')
-
-    logger.info('test file2')
-    if not is_valid_file(file2):
-        redirect('/')
+##    logger.info('test file1')
+##    if not is_valid_file(file1):
+##        redirect('/')
+##
+##    logger.info('test file2')
+##    if not is_valid_file(file2):
+##        redirect('/')
 
     owned_files = []
     if is_valid_file(extra1):
@@ -89,11 +91,21 @@ def upload_post():
 
     svm = cv2.ml.SVM_load(str(img2str.training))
 
-    im1 = cv2.imdecode(get_np_array(file1.file), 1)
-    sc1 = img2str.ScreenShot(im1, svm, dropitems)
+    sc_before = []
+    for f in file1:
+##    im1 = cv2.imdecode(get_np_array(file1.file), 1)
+##    sc1 = img2str.ScreenShot(im1, svm, dropitems)
+        im1 = cv2.imdecode(get_np_array(f.file), 1)
+        sc_before.append(img2str.ScreenShot(im1, svm, dropitems))
+    sc1 = dropitemseditor.merge_sc(sc_before)
 
-    im2 = cv2.imdecode(get_np_array(file2.file), 1)
-    sc2 = img2str.ScreenShot(im2, svm, dropitems)
+    sc_after = []
+    for f in file2:
+##    im2 = cv2.imdecode(get_np_array(file2.file), 1)
+##    sc2 = img2str.ScreenShot(im2, svm, dropitems)
+        im2 = cv2.imdecode(get_np_array(f.file), 1)
+        sc_after.append(img2str.ScreenShot(im2, svm, dropitems))
+    sc2 = dropitemseditor.merge_sc(sc_after)
 
     logger.info('sc1: %s', sc1.itemlist)
     logger.info('sc2: %s', sc2.itemlist)
