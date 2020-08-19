@@ -40,6 +40,8 @@
                 <span id="before-filename" class="file-name">
                   ファイルが選択されていません。
                 </span>
+                <span id="before-filename2" class="file-name is-hidden">
+                </span>
               </label>
             </div>
           </div>
@@ -57,6 +59,8 @@
                 </span>
                 <span id="after-filename" class="file-name">
                   ファイルが選択されていません。
+                </span>
+                <span id="after-filename2" class="file-name is-hidden">
                 </span>
               </label>
             </div>
@@ -149,6 +153,11 @@
         if (input.files.length > 0) {
           const fileName = document.getElementById(key + '-filename');
           fileName.textContent = input.files[0].name;
+        }
+        if (input.files.length > 1) {
+          const fileName2 = document.getElementById(key + '-filename2');
+          fileName2.textContent = input.files[1].name;
+          fileName2.className = 'file-name';
         }
       }
     }

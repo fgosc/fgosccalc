@@ -92,17 +92,23 @@ def upload_post():
     svm = cv2.ml.SVM_load(str(img2str.training))
 
     sc_before = []
-    for f in file1:
+    for i, f in enumerate(file1):
 ##    im1 = cv2.imdecode(get_np_array(file1.file), 1)
 ##    sc1 = img2str.ScreenShot(im1, svm, dropitems)
+        logger.info('test file1-%s', i)
+##        if not is_valid_file(f):
+##            redirect('/')
         im1 = cv2.imdecode(get_np_array(f.file), 1)
         sc_before.append(img2str.ScreenShot(im1, svm, dropitems))
     sc1 = dropitemseditor.merge_sc(sc_before)
 
     sc_after = []
-    for f in file2:
+    for i, f in enumerate(file2):
 ##    im2 = cv2.imdecode(get_np_array(file2.file), 1)
 ##    sc2 = img2str.ScreenShot(im2, svm, dropitems)
+        logger.info('test file2-%s', i)
+##        if not is_valid_file(f):
+##            redirect('/')
         im2 = cv2.imdecode(get_np_array(f.file), 1)
         sc_after.append(img2str.ScreenShot(im2, svm, dropitems))
     sc2 = dropitemseditor.merge_sc(sc_after)
