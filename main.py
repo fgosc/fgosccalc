@@ -92,25 +92,27 @@ def upload_post():
     svm = cv2.ml.SVM_load(str(img2str.training))
 
     sc_before = []
+    im1 = []
     for i, f in enumerate(file1):
 ##    im1 = cv2.imdecode(get_np_array(file1.file), 1)
 ##    sc1 = img2str.ScreenShot(im1, svm, dropitems)
         logger.info('test file1-%s', i)
 ##        if not is_valid_file(f):
 ##            redirect('/')
-        im1 = cv2.imdecode(get_np_array(f.file), 1)
-        sc_before.append(img2str.ScreenShot(im1, svm, dropitems))
+        im1.append(cv2.imdecode(get_np_array(f.file), 1))
+        sc_before.append(img2str.ScreenShot(im1[i], svm, dropitems))
     sc1 = dropitemseditor.merge_sc(sc_before)
 
     sc_after = []
+    im2 = []
     for i, f in enumerate(file2):
 ##    im2 = cv2.imdecode(get_np_array(file2.file), 1)
 ##    sc2 = img2str.ScreenShot(im2, svm, dropitems)
         logger.info('test file2-%s', i)
 ##        if not is_valid_file(f):
 ##            redirect('/')
-        im2 = cv2.imdecode(get_np_array(f.file), 1)
-        sc_after.append(img2str.ScreenShot(im2, svm, dropitems))
+        im2.append(cv2.imdecode(get_np_array(f.file), 1))
+        sc_after.append(img2str.ScreenShot(im2[i], svm, dropitems))
     sc2 = dropitemseditor.merge_sc(sc_after)
 
     logger.info('sc1: %s', sc1.itemlist)
@@ -152,8 +154,15 @@ def upload_post():
     logger.info('pairs: %s', before_after_pairs)
     contains_unknown_items = any([pair[0].startswith('item0') for pair in before_after_pairs])
 
-    before_im = nparray_to_imagebytes(im1)
-    after_im = nparray_to_imagebytes(im2)
+    before_im = nparray_to_imagebytes(im1[0])
+    after_im = nparray_to_imagebytes(im2[0])
+    has_2nd_im = False
+    before_2nd_im = None
+    after_2nd_im = None
+    if len(im1) > 1:
+        has_2nd_im = True
+        before_2nd_im= nparray_to_imagebytes(im1[1])
+        after_2nd_im = nparray_to_imagebytes(im2[1])
     has_extra_im = False
     extra1_im = None
     extra2_im = None
@@ -179,6 +188,9 @@ def upload_post():
         before_after_pairs=before_after_pairs,
         before_im=before_im,
         after_im=after_im,
+        has_2nd_im=has_2nd_im,
+        before_2nd_im=before_2nd_im,
+        after_2nd_im=after_2nd_im,           
         has_extra_im=has_extra_im,
         extra1_im=extra1_im,
         extra2_im=extra2_im,

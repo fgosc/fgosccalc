@@ -91,6 +91,21 @@
           </div>
         </div>
 
+      % if has_2nd_im:
+        <div class="tile is-ancestor">
+          <div class="tile is-parent">
+            <article class="tile is-child box">
+              <img class="image" src="data:image/jpeg;base64,{{ before_2nd_im }}">
+            </article>
+          </div>
+          <div class="tile is-parent">
+            <article class="tile is-child box">
+              <img class="image" src="data:image/jpeg;base64,{{ after_2nd_im }}">
+            </article>
+          </div>
+        </div>
+      % end
+
       % if has_extra_im:
         <div class="tile is-ancestor">
           <div class="tile is-parent">
