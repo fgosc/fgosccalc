@@ -2,6 +2,7 @@
 .PHONY: deploy deploy-prod
 .PHONY: app-deploy-staging app-deploy-production
 .PHONY: pre-deploy post-deploy
+.PHONY: sync
 
 build:
 	npm run build
@@ -24,3 +25,9 @@ pre-deploy: build
 post-deploy:
 	mv requirements.txt requirements-gcloud.txt
 	mv requirements-backup.txt requirements.txt
+
+sync:
+	git checkout master
+	git fetch origin --prune
+	git merge origin/master --ff
+	git submodule update --remote
