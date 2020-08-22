@@ -4,7 +4,6 @@
 """
 
 import argparse
-import configparser
 import logging
 import re
 import sys
@@ -12,11 +11,11 @@ from io import BytesIO
 from pathlib import Path
 
 import cv2
-import tweepy
 
 import img2str
-from lib.setting import setting_file_path
-from lib.twitter import create_access_key_secret
+##from lib.setting import setting_file_path
+##from lib.twitter import create_access_key_secret
+from lib.twitter import upload_file
 from dropitemseditor import (
     DropsDiff,
     get_questinfo,
@@ -67,81 +66,6 @@ def parse_args():
         help='output file [default: STDOUT]',
     )
     return parser.parse_args()
-
-
-def set_twitter():
-    last_id = -1
-    settingfile = setting_file_path()
-    # TODO 以下の config をロードする処理は lib/setting.py に
-    # まとめるのが望ましい。将来の課題とする。
-    config = configparser.ConfigParser()
-    try:
-        config.read(settingfile)
-        section0 = "search"
-        section1 = "auth_info"
-        ACCESS_TOKEN = config.get(section1, "ACCESS_TOKEN")
-        ACCESS_SECRET = config.get(section1, "ACCESS_SECRET")
-        CONSUMER_KEY = config.get(section1, "CONSUMER_KEY")
-        CONSUMER_SECRET = config.get(section1, "CONSUMER_SECRET")
-        if section0 not in config.sections():
-            config.add_section(section0)
-        section0cfg = config[section0]
-
-        last_id = section0cfg.get("last_id", last_id)
-
-    except configparser.NoSectionError:
-        print("[エラー] setting.iniに不備があります。")
-        sys.exit(1)
-    if CONSUMER_KEY == "" or CONSUMER_SECRET == "":
-        print("[エラー] CONSUMER_KEYとCONSUMER_SECRETを設定してください")
-        print("[エラー] 管理者から得られない場合は個別に取得してください")
-        sys.exit(1)
-    if ACCESS_TOKEN == "" or ACCESS_SECRET == "":
-        create_access_key_secret(CONSUMER_KEY, CONSUMER_SECRET)
-
-    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-    auth.set_access_token(ACCESS_TOKEN, ACCESS_SECRET)
-    return tweepy.API(auth)
-
-
-def file2media_id(api, file):
-    quality = 85
-    f = Path(file)
-    img = cv2.imread(file)
-    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-    _, encimg = cv2.imencode(".jpg", img, encode_param)
-    res = api.media_upload(filename=f.stem + '.jpg', file=BytesIO(encimg))
-    return res.media_id
-
-
-def upload_file(args):
-    api = set_twitter()
-    media_ids = []
-
-    text = '画像のテスト投稿'
-    logger.debug('args.before: %s', args.before)
-    logger.debug('args.after: %s', args.after)
-    for before in args.before:
-        media_ids.append(file2media_id(api, before))
-    for after in args.after:
-        media_ids.append(file2media_id(api, after))
-    if len(args.before) == 1:
-        logger.debug('args.owned: %s', args.owned)
-        for owned in args.owned:
-            media_ids.append(file2media_id(api, owned))
-
-    logger.debug('media_ids: %s', media_ids)
-    status_img = api.update_status(status=text, media_ids=media_ids)
-    status_text = api.get_status(status_img.id, tweet_mode="extended")
-    logger.debug('%s', status_text.full_text)
-    pattern = "(?P<url>https://t.co/.+)$"
-    m1 = re.search(pattern, status_text.full_text)
-    if not m1:
-        url = ""
-    else:
-        url = re.sub(pattern, r"\g<url>", m1.group())
-    
-    return url
 
 
 def main(args):
