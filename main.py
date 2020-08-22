@@ -97,8 +97,8 @@ def upload_post():
 ##    im1 = cv2.imdecode(get_np_array(file1.file), 1)
 ##    sc1 = img2str.ScreenShot(im1, svm, dropitems)
         logger.info('test file1-%s', i)
-##        if not is_valid_file(f):
-##            redirect('/')
+        if not is_valid_file(f):
+            redirect('/')
         im1.append(cv2.imdecode(get_np_array(f.file), 1))
         sc_before.append(img2str.ScreenShot(im1[i], svm, dropitems))
     sc1 = dropitemseditor.merge_sc(sc_before)

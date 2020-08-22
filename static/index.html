@@ -144,20 +144,30 @@
         alert("周回前後のスクリーンショットを指定してください。");
         return false;
       }
+      if (file1.files.length != file2.files.length) {
+        alert("周回前後で同数のスクリーンショットを指定してください。");
+        return false;
+      }
       return true;
     }
 
     function setOnChangeEvent(key) {
       const input = document.getElementById(key);
       input.onchange = () => {
-        if (input.files.length > 0) {
+        if (input.files.length > 2) {
+          alert("選択できるファイルは2枚までです。");
+        } else if (input.files.length > 1) {
           const fileName = document.getElementById(key + '-filename');
           fileName.textContent = input.files[0].name;
-        }
-        if (input.files.length > 1) {
           const fileName2 = document.getElementById(key + '-filename2');
           fileName2.textContent = input.files[1].name;
           fileName2.className = 'file-name';
+        } else if (input.files.length > 0) {
+          const fileName = document.getElementById(key + '-filename');
+          fileName.textContent = input.files[0].name;
+          const fileName2 = document.getElementById(key + '-filename2');
+          fileName2.textContent = ''
+          fileName2.className = 'file-name is-hidden';
         }
       }
     }
