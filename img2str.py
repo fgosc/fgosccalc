@@ -419,6 +419,10 @@ class ScreenShot:
             print(right_x, end=", ")
             print(bottom_y, end="")
             print("]]")
+        if upper_y < 0:
+            raise ValueError("上枠トリミングしすぎ")            
+        if left_x < 0:
+            raise ValueError("左枠トリミングしすぎ")            
 
         thimg = self.img_th_orig[upper_y:bottom_y, left_x:right_x]
         lx, rx = self.find_edge(thimg, reverse=True)
