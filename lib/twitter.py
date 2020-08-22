@@ -61,3 +61,32 @@ def create_access_key_secret(CONSUMER_KEY, CONSUMER_SECRET):
     settingfile = setting.setting_file_path()
     with open(settingfile, "w") as file:
         config.write(file)
+
+def upload_file(args) -> str:
+    api = set_twitter()
+    media_ids = []
+
+    text = '画像のテスト投稿'
+    logger.debug('args.before: %s', args.before)
+    logger.debug('args.after: %s', args.after)
+    for before in args.before:
+        media_ids.append(file2media_id(api, before))
+    for after in args.after:
+        media_ids.append(file2media_id(api, after))
+    if len(args.before) == 1:
+        logger.debug('args.owned: %s', args.owned)
+        for owned in args.owned:
+            media_ids.append(file2media_id(api, owned))
+
+    logger.debug('media_ids: %s', media_ids)
+    status_img = api.update_status(status=text, media_ids=media_ids)
+    status_text = api.get_status(status_img.id, tweet_mode="extended")
+    logger.debug('%s', status_text.full_text)
+    pattern = "(?P<url>https://t.co/.+)$"
+    m1 = re.search(pattern, status_text.full_text)
+    if not m1:
+        url = ""
+    else:
+        url = re.sub(pattern, r"\g<url>", m1.group())
+    
+    return url
