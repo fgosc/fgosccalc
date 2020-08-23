@@ -39,7 +39,7 @@ def set_twitter():
 
 def do_upload(befores, afters, owneds, func) -> str:
     logger.info('do_upload')
-    text = '画像のテスト投稿'
+    text = ''
     api = set_twitter()
     media_ids = []
     for before in befores:
