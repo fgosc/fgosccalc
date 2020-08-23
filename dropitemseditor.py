@@ -319,7 +319,8 @@ def calc_pts(img_rgb):
 
     item_pts = []
     for left, right in zip_longest(item_pts_l, item_pts_r):
-        item_pts.append(left)
+        if left is not None:
+            item_pts.append(left)
         if right is not None:
             item_pts.append(right)
 
