@@ -164,6 +164,7 @@
     var questname = '{{ questname }}';
     var runcount = '000';
     var data = JSON.parse('{{! dropdata }}');
+    var image_url = '{{ image_url }}';
   </script>
   <script src="/static/js/dist/report.js"></script>
 % end

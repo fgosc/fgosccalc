@@ -6,7 +6,6 @@ import base64
 import json
 import logging
 from pathlib import Path
-from urllib.parse import quote_plus
 
 import cv2
 import numpy as np
@@ -16,6 +15,7 @@ import dropitemseditor
 import img2str
 from storage.filesystem import FileSystemStorage
 from storage.datastore import GoogleDatastoreStorage
+from lib.twitter import upload_webfile
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -64,20 +64,10 @@ def upload_get():
 
 @app.post('/upload')
 def upload_post():
-##    file1 = request.files.get('file1')
-##    file2 = request.files.get('file2')
     file1 = request.files.getall('file1')
     file2 = request.files.getall('file2')
     extra1 = request.files.get('extra1')
     extra2 = request.files.get('extra2')
-
-##    logger.info('test file1')
-##    if not is_valid_file(file1):
-##        redirect('/')
-##
-##    logger.info('test file2')
-##    if not is_valid_file(file2):
-##        redirect('/')
 
     owned_files = []
     if is_valid_file(extra1):
@@ -94,8 +84,6 @@ def upload_post():
     sc_before = []
     im1 = []
     for i, f in enumerate(file1):
-##    im1 = cv2.imdecode(get_np_array(file1.file), 1)
-##    sc1 = img2str.ScreenShot(im1, svm, dropitems)
         logger.info('test file1-%s', i)
         if not is_valid_file(f):
             redirect('/')
@@ -106,11 +94,9 @@ def upload_post():
     sc_after = []
     im2 = []
     for i, f in enumerate(file2):
-##    im2 = cv2.imdecode(get_np_array(file2.file), 1)
-##    sc2 = img2str.ScreenShot(im2, svm, dropitems)
         logger.info('test file2-%s', i)
-##        if not is_valid_file(f):
-##            redirect('/')
+        if not is_valid_file(f):
+            redirect('/')
         im2.append(cv2.imdecode(get_np_array(f.file), 1))
         sc_after.append(img2str.ScreenShot(im2[i], svm, dropitems))
     sc2 = dropitemseditor.merge_sc(sc_after)
@@ -161,7 +147,7 @@ def upload_post():
     after_2nd_im = None
     if len(im1) > 1:
         has_2nd_im = True
-        before_2nd_im= nparray_to_imagebytes(im1[1])
+        before_2nd_im = nparray_to_imagebytes(im1[1])
         after_2nd_im = nparray_to_imagebytes(im2[1])
     has_extra_im = False
     extra1_im = None
@@ -180,6 +166,14 @@ def upload_post():
         f.seek(0)
         extra2_nparray = cv2.imdecode(get_np_array(f), 1)
         extra2_im = nparray_to_imagebytes(extra2_nparray)
+    owneds = []
+    if extra1_im is not None:
+        owned.apend(extra1_im)
+        if extra2_im is not None:
+            owned.apend(extra2_im)
+#    image_url = upload_webfile(im1, im2, owneds)
+    image_url = '[test str]'
+    logger.info('url: %s',image_url
 
     return template('result',
         result=makeup(result_list),
@@ -190,13 +184,14 @@ def upload_post():
         after_im=after_im,
         has_2nd_im=has_2nd_im,
         before_2nd_im=before_2nd_im,
-        after_2nd_im=after_2nd_im,           
+        after_2nd_im=after_2nd_im,
         has_extra_im=has_extra_im,
         extra1_im=extra1_im,
         extra2_im=extra2_im,
         questname=questname,
         dropdata=json.dumps(dropdata),
         contains_unknown_items=contains_unknown_items,
+        image_url=image_url,
     )
 
 

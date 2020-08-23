@@ -283,6 +283,7 @@ class QuestNameEditor extends React.Component {
   render() {
     const questname = this.props.questname
     const node = this.buildInputNode(questname)
+    const image_url= this.props.image_url
     return (
       <div className="field">
         <label className="label">周回場所</label>
@@ -507,6 +508,7 @@ class EditBox extends React.Component {
     const questname = props.questname
     const runcount = parseInt(props.runcount)
     const lines = props.lines
+    const image_url = props.image_url
 
     lines.map(line => {
       // report の値を計算しておく。
@@ -519,7 +521,8 @@ class EditBox extends React.Component {
       questname: questname,
       runcount: runcount,
       lines: lines,
-      reportText: this.buildReportText(questname, runcount, lines),
+      image_url: image_url,
+      reportText: this.buildReportText(questname, runcount, lines, image_url),
       canTweet: false,
     }
   }
@@ -535,7 +538,7 @@ class EditBox extends React.Component {
   handleQuestNameChange(questname) {
     this.setState((state) => ({
         questname: questname,
-        reportText: this.buildReportText(questname, state.runcount, state.lines),
+        reportText: this.buildReportText(questname, state.runcount, state.lines, stete.image_url),
         canTweet: false,
     }))
   }
@@ -543,7 +546,7 @@ class EditBox extends React.Component {
   handleRunCountChange(runcount) {
     this.setState((state) => ({
       runcount: runcount,
-      reportText: this.buildReportText(state.questname, runcount, state.lines),
+      reportText: this.buildReportText(state.questname, runcount, state.lines, stete.image_url),
       canTweet: false,
     }))
   }
@@ -566,7 +569,7 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, state.image_url),
       canTweet: false,
     }))
   }
@@ -587,7 +590,7 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, stete.image_url),
       canTweet: false,
     }))
   }
@@ -600,7 +603,7 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, imgae_url),
       canTweet: false,
     }))
   }
@@ -616,7 +619,7 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, state.image_url),
       canTweet: false,
     }))
   }
@@ -625,7 +628,7 @@ class EditBox extends React.Component {
     const newlines = this.state.lines.filter(line => { return line.id !== id })
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, state.image_url),
       canTweet: false,
     }))
   }
@@ -715,7 +718,7 @@ class EditBox extends React.Component {
     this.changeLineOrder(linesCopy, target[0], 'up')
     this.setState((state) => ({
       lines: linesCopy,
-      reportText: this.buildReportText(state.questname, state.runcount, linesCopy),
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy, state.image_url),
       canTweet: false,
     }))
   }
@@ -734,7 +737,7 @@ class EditBox extends React.Component {
     this.changeLineOrder(linesCopy, target[0], 'down')
     this.setState((state) => ({
       lines: linesCopy,
-      reportText: this.buildReportText(state.questname, state.runcount, linesCopy),
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy, state.image_url),
       canTweet: false,
     }))
   }
@@ -753,12 +756,12 @@ class EditBox extends React.Component {
     lines.push(newline)
     this.setState((state) => ({
       lines: lines,
-      reportText: this.buildReportText(state.questname, state.runcount, lines),
+      reportText: this.buildReportText(state.questname, state.runcount, lines, state.image_url),
       canTweet: false,
     }))
   }
 
-  buildReportText(questname, runcount, lines) {
+  buildReportText(questname, runcount, lines, image_url) {
     const reportText = lines
         .map(line => { return line.material + line.report })
         .join("-")
@@ -766,7 +769,8 @@ class EditBox extends React.Component {
 
     let value = `【${questname}】${runcount}周
 ${reportText}
-#FGO周回カウンタ https://aoshirobo.net/fatego/rc/`
+#FGO周回カウンタ https://aoshirobo.net/fatego/rc/
+${image_url}`
 
     const cutIfStartsWith = (expr, key) => {
       if (expr.startsWith(key)) {
