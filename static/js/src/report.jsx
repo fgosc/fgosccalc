@@ -283,7 +283,6 @@ class QuestNameEditor extends React.Component {
   render() {
     const questname = this.props.questname
     const node = this.buildInputNode(questname)
-    const image_url= this.props.image_url
     return (
       <div className="field">
         <label className="label">周回場所</label>
