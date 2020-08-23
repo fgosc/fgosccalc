@@ -72,5 +72,6 @@ def upload_file(args) -> str:
 
 
 def upload_webfile(befores, afters, owneds) -> str:
+    logger.info('check3')
     return do_upload(befores, afters,
                      owneds, img2media_id)

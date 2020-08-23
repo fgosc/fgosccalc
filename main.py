@@ -168,11 +168,14 @@ def upload_post():
         extra2_im = nparray_to_imagebytes(extra2_nparray)
     owneds = []
     if extra1_im is not None:
-        owned.apend(extra1_im)
+        owneds.append(extra1_im)
         if extra2_im is not None:
-            owned.apend(extra2_im)
-#    image_url = upload_webfile(im1, im2, owneds)
-    image_url = '[test str]'
+            owneds.append(extra2_im)
+    try:
+        image_url = upload_webfile(im1, im2, owneds)
+    except:
+        logger.warning("uploda img to twitter failed")
+        image_url = ''
     logger.info('url: %s', image_url)
 
     return template('result',

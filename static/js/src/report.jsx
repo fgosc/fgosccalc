@@ -509,7 +509,6 @@ class EditBox extends React.Component {
     const runcount = parseInt(props.runcount)
     const lines = props.lines
     const image_url = props.image_url
-    alert(image_url)
 
     lines.map(line => {
       // report の値を計算しておく。
@@ -539,7 +538,7 @@ class EditBox extends React.Component {
   handleQuestNameChange(questname) {
     this.setState((state) => ({
         questname: questname,
-        reportText: this.buildReportText(questname, state.runcount, state.lines, stete.image_url),
+        reportText: this.buildReportText(questname, state.runcount, state.lines, state.image_url),
         canTweet: false,
     }))
   }
@@ -547,7 +546,7 @@ class EditBox extends React.Component {
   handleRunCountChange(runcount) {
     this.setState((state) => ({
       runcount: runcount,
-      reportText: this.buildReportText(state.questname, runcount, state.lines, stete.image_url),
+      reportText: this.buildReportText(state.questname, runcount, state.lines, state.image_url),
       canTweet: false,
     }))
   }
@@ -591,7 +590,7 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines, stete.image_url),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, state.image_url),
       canTweet: false,
     }))
   }
