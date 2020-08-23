@@ -13,8 +13,8 @@ from . import setting
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
-JPEG_QUAITY = 85
-ENCODE_PARAM = [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUAITY]
+JPEG_QUALITY = 85
+ENCODE_PARAM = [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUALITY]
 
 
 def img2media_id(api, img):

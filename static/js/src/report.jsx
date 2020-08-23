@@ -603,7 +603,7 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines, state.imgae_url),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, state.image_url),
       canTweet: false,
     }))
   }
