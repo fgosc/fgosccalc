@@ -13,13 +13,13 @@ from . import setting
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
-JPEG_QUALITY = 85
-ENCODE_PARAM = [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUALITY]
+JPEG_QUAITY = 85
+ENCODE_PARAM = [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUAITY]
 
 
 def img2media_id(api, img):
-    _, encimg = cv2.imencode(".jpg", img, ENCODE_PARAM)
-    res = api.media_upload(filename='fgo_screenshot.jpg', file=BytesIO(encimg))
+#    _, encimg = cv2.imencode(".jpg", img, ENCODE_PARAM)
+    res = api.media_upload(filename='fgo_screenshot.jpg', file=BytesIO(img))
     logger.info('res.media_id: %s', res.media_id)
     return res.media_id
 
@@ -39,7 +39,7 @@ def set_twitter():
 
 def do_upload(befores, afters, owneds, func) -> str:
     logger.info('do_upload')
-    text = ''
+    text = '画像のテスト投稿'
     api = set_twitter()
     media_ids = []
     for before in befores:
@@ -72,6 +72,5 @@ def upload_file(args) -> str:
 
 
 def upload_webfile(befores, afters, owneds) -> str:
-    logger.info('check3')
     return do_upload(befores, afters,
                      owneds, img2media_id)

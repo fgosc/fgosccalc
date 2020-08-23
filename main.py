@@ -140,15 +140,23 @@ def upload_post():
     logger.info('pairs: %s', before_after_pairs)
     contains_unknown_items = any([pair[0].startswith('item0') for pair in before_after_pairs])
 
-    before_im = nparray_to_imagebytes(im1[0])
-    after_im = nparray_to_imagebytes(im2[0])
+    before_jpeg = nparray_to_jpeg(im1[0])
+    before_im = jpeg_to_imagebytes(before_jpeg)
+    befores = [before_jpeg]
+    after_jpeg = nparray_to_jpeg(im2[0])
+    after_im = jpeg_to_imagebytes(after_jpeg)
+    afters = [before_jpeg]
     has_2nd_im = False
     before_2nd_im = None
     after_2nd_im = None
     if len(im1) > 1:
         has_2nd_im = True
-        before_2nd_im = nparray_to_imagebytes(im1[1])
-        after_2nd_im = nparray_to_imagebytes(im2[1])
+        before_2nd_jpeg = nparray_to_jpeg(im1[1])
+        before_2nd_im = jpeg_to_imagebytes(before_2nd_jpeg)
+        befores.append(before_2nd_jpeg)
+        after_2nd_jpeg = nparray_to_jpeg(im2[1])
+        after_2nd_im = jpeg_to_imagebytes(after_2nd_jpeg)
+        afters.append(after_2nd_jpeg)
     has_extra_im = False
     extra1_im = None
     extra2_im = None
@@ -159,20 +167,22 @@ def upload_post():
         # seek 位置を先頭に戻してやらないと imdecode できない。
         f.seek(0)
         extra1_nparray = cv2.imdecode(get_np_array(f), 1)
-        extra1_im = nparray_to_imagebytes(extra1_nparray)
+        extra1_jpeg = nparray_to_jpeg(extra1_nparray)
+        extra1_im = jpeg_to_imagebytes(extra1_jpeg)
     if len(owned_files) > 1:
         f = owned_files[1]
         # 上記と同じ理由で seek(0) が必要。
         f.seek(0)
         extra2_nparray = cv2.imdecode(get_np_array(f), 1)
-        extra2_im = nparray_to_imagebytes(extra2_nparray)
+        extra2_jpeg = nparray_to_jpeg(extra2_nparray)
+        extra2_im = jpeg_to_imagebytes(extra2_jpeg)
     owneds = []
     if extra1_im is not None:
-        owneds.append(extra1_im)
+        owneds.append(extra1_jpeg)
         if extra2_im is not None:
-            owneds.append(extra2_im)
+            owneds.append(extra2_jpeg)
     try:
-        image_url = upload_webfile(im1, im2, owneds)
+        image_url = upload_webfile(befores, afters, owneds)
     except:
         logger.warning("uploda img to twitter failed")
         image_url = ''
@@ -196,6 +206,18 @@ def upload_post():
         contains_unknown_items=contains_unknown_items,
         image_url=image_url,
     )
+
+
+def nparray_to_jpeg(im):
+    ok, encoded = cv2.imencode('.jpg', im)
+    if ok:
+        return encoded
+    else:
+        return None
+
+
+def jpeg_to_imagebytes(encoded_im):
+    return base64.b64encode(encoded_im.tobytes())
 
 
 def nparray_to_imagebytes(im):
