@@ -173,7 +173,7 @@ def upload_post():
             owned.apend(extra2_im)
 #    image_url = upload_webfile(im1, im2, owneds)
     image_url = '[test str]'
-    logger.info('url: %s',image_url
+    logger.info('url: %s', image_url)
 
     return template('result',
         result=makeup(result_list),

@@ -509,6 +509,7 @@ class EditBox extends React.Component {
     const runcount = parseInt(props.runcount)
     const lines = props.lines
     const image_url = props.image_url
+    alert(image_url)
 
     lines.map(line => {
       // report の値を計算しておく。
@@ -603,7 +604,7 @@ class EditBox extends React.Component {
     const newlines = this.rebuildLines(this.state.lines, hook, id)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines, imgae_url),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, state.imgae_url),
       canTweet: false,
     }))
   }
@@ -850,6 +851,6 @@ ${image_url}`
 }
 
 // 初期値の questname, runcount, data は html 側で定義されている前提
-const root = <EditBox questname={questname} runcount={runcount} lines={data} />
+const root = <EditBox questname={questname} runcount={runcount} lines={data} image_url={image_url} />
 
 ReactDOM.render(root, document.getElementById('app0'))
