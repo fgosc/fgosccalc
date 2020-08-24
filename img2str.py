@@ -1,12 +1,21 @@
 #!/usr/bin/env python3
-import sys
-import cv2
 from pathlib import Path
-import numpy as np
 import argparse
-from storage.filesystem import FileSystemStorage
 import json
 import math
+import logging
+import sys
+import csv
+
+import numpy as np
+import cv2
+import requests
+
+from storage.filesystem import FileSystemStorage
+
+logger = logging.getLogger()
+logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
+url_quest = "https://api.atlasacademy.io/nice/JP/quest/"
 
 progname = "img2str"
 version = "0.2.0"
@@ -155,10 +164,7 @@ class ScreenShot:
             cv2.imwrite('game_screen.png', game_screen)
 
         height_g, width_g, _ = game_screen.shape
-        if debug:
-            print("cutting image size:", end="")
-            print(width_g, end="x")
-            print(height_g)
+        logger.debug("cutting image size %s x %s", width_g, height_g)
         wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
         resizeScale = 1 / wscale
 
@@ -200,14 +206,11 @@ class ScreenShot:
             # アイテム枠のヒストグラム調査
             if self.is_empty_box(item_img_hsv):
                 break
-            if debug:
-                print("\n[Item{} Information]".format(i))
+            logger.debug("[Item %d Information]", i)
             item = Item(item_img_rgb, item_img_hsv, item_img_gray, svm,
                         dropitems, through_item, template, debug)
             if ID_STANDARD_ITEM_MIN <= item.id <= ID_STANDARD_ITEM_MAX and numbered is False:
                 break
-            if debug:
-                print(item.name)
             self.items.append(item)
 
         self.itemlist = self.makeitemlist()
@@ -358,9 +361,7 @@ class ScreenShot:
                 pts = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
                 if 4.2 < ret[2] / ret[3] < 4.4:
                     item_pts.append(pts)
-        if debug:
-            print("エネミータブの位置: ", end="")
-            print(item_pts)
+        logger.debug("エネミータブの位置: %s", item_pts)
         if len(item_pts) == 0:
             raise ValueError("エネミータブ無し")
 
@@ -385,9 +386,7 @@ class ScreenShot:
                    and enemytab_pts[2] - enemytab_pts[0] > ret[2]:
                     closebutton_pts.append(pts)
         closebutton_pts.sort()
-        if debug:
-            print("閉じるボタンの位置: ", end="")
-            print(closebutton_pts)
+        logger.debug("閉じるボタンの位置: %s", closebutton_pts)
         if len(closebutton_pts) == 0:
             raise ValueError("閉じるボタン無し")
 
@@ -412,17 +411,12 @@ class ScreenShot:
         upper_y = enemytab_pts[3]
         bottom_y = enemytab_pts[3] + int(1250 * (enemytab_pts[3] - enemytab_pts[1]) / 175)
 
-        if debug:
-            print("game_screenの座標: [[", end="")
-            print(left_x, end=", ")
-            print(upper_y, end=", ")
-            print(right_x, end=", ")
-            print(bottom_y, end="")
-            print("]]")
+        logger.debug("game_screenの座標: [%d, %d, %d, %d]",
+                     left_x, upper_y, right_x, bottom_y)
         if upper_y < 0:
-            raise ValueError("上枠トリミングしすぎ")            
+            raise ValueError("上枠トリミングしすぎ")
         if left_x < 0:
-            raise ValueError("左枠トリミングしすぎ")            
+            raise ValueError("左枠トリミングしすぎ")
 
         thimg = self.img_th_orig[upper_y:bottom_y, left_x:right_x]
         lx, rx = self.find_edge(thimg, reverse=True)
@@ -522,10 +516,10 @@ class Item:
         self.dropitems = dropitems
         self.template = template
         self.dropnum = self.ocr_digit(debug)
-        if debug:
-            print("ドロップ数: {}".format(self.dropnum))
         self.id = self.classify_item(img_rgb, debug)
         self.name = dropitems.item_name[self.id]
+        logger.info("アイテム名: %s", self.name)
+        logger.info("ドロップ数: %s", self.dropnum)
         self.dropPriority = dropitems.item_dropPriority[self.id]
 
     def is_undropped_box(self, img_hsv):
@@ -560,8 +554,6 @@ class Item:
         offset_y = syoji_pt[1] - 281
 
         # 7桁
-        if debug:
-            print("7桁読み込み")
         pts7 = [[141, 303, 162, 335],
                 [169, 303, 193, 335],
                 [189, 303, 212, 335],
@@ -574,11 +566,10 @@ class Item:
             pt = [pt[0] + offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
             pts.append(pt)
         line_lower_white = self.read_item(self.img_gray, pts)
+        logger.debug("7桁読み込み %s", line_lower_white)
         if len(line_lower_white) == 7 and line_lower_white.isdecimal():
             return int(line_lower_white)
         # 6桁
-        if debug:
-            print("6桁読み込み")
         pts6 = [[124, 292, 152, 335],
                 [151, 292, 182, 335],
                 [177, 292, 208, 335],
@@ -591,11 +582,10 @@ class Item:
             pt = [pt[0] + offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
             pts.append(pt)
         line_lower_white = self.read_item(self.img_gray, pts)
+        logger.debug("6桁読み込み %s", line_lower_white)
         if len(line_lower_white) == 6 and line_lower_white.isdecimal():
             return int(line_lower_white)
         # 5桁
-        if debug:
-            print("5桁読み込み")
         pts5 = [[135, 289, 167, 333],
                 [165, 289, 200, 333],
                 [207, 289, 240, 333],
@@ -606,6 +596,7 @@ class Item:
             pt = [pt[0] + offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
             pts.append(pt)
         line_lower_white = self.read_item(self.img_gray, pts)
+        logger.debug("5桁読み込み %s", line_lower_white)
         if len(line_lower_white) == 5 and line_lower_white.isdecimal():
             return int(line_lower_white)
         # 4桁以下
@@ -641,11 +632,10 @@ class Item:
         imgとの距離を比較して近いアイテムを求める
         """
         hash_item = self.dropitems.compute_hash(img)  # 画像の距離
-        if debug:
-            hash_hex = ""
-            for h in hash_item[0]:
-                hash_hex = hash_hex + "{:02x}".format(h)
-            print(hash_hex)
+        hash_hex = ""
+        for h in hash_item[0]:
+            hash_hex = hash_hex + "{:02x}".format(h)
+        logger.debug("phash: %s", hash_hex)
         ids = {}
         # 既存のアイテムとの距離を比較
         for i in self.dropitems.dist_item.keys():
@@ -657,8 +647,7 @@ class Item:
                 ids[i] = d
         if len(ids) > 0:
             ids = sorted(sorted(ids.items(), key=lambda x: x[0], reverse=True), key=lambda x: x[1])
-            if debug:
-                print("Near IDs : {}".format(ids))
+            logger.debug("Near IDs:  %s", ids)
             id_tupple = next(iter(ids))
             id = id_tupple[0]
             if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
@@ -700,6 +689,7 @@ class Item:
                 itemfiles[i] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
+            logger.debug("itemfiles: %s", itemfiles)
             try:
                 item = next(iter(itemfiles))
                 return item[0]
@@ -815,39 +805,83 @@ def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
         return None
 
 
-if __name__ == '__main__':
+def parse_args():
     # オプションの解析
     parser = argparse.ArgumentParser(description='FGOの戦利品画像を読み取る')
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument('file', help='戦利品スクショ')    # 必須の引数を追加
     parser.add_argument('-d', '--debug', help='デバッグ情報を出力', action='store_true')
+    parser.add_argument('--csv', help='fgoscdata用csv形式で出力', action='store_true')
+    parser.add_argument('-q', '--questid', type=int)
+    parser.add_argument('--loglevel', choices=('warning', 'debug', 'info'), default='warning')
     parser.add_argument('--version', action='version', version=progname + " " + version)
+    return parser.parse_args()
 
-    args = parser.parse_args()    # 引数を解析
 
+if __name__ == '__main__':
+    args = parse_args()
+    logger.setLevel(args.loglevel.upper())
+    logger.info('loglevel: %s', args.loglevel)
+
+    if args.questid:
+        if not (93000001 < args.questid < 94999999):
+            logger.critical('無効な questid です: %d', args.questid)
+            exit(1)
+        r_get = requests.get(url_quest + str(args.questid) + "/1")
+        if r_get.status_code == 404:
+            logger.critical('無効な questid です: %d', args.questid)
+            exit(1)
+        quest = r_get.json()
+        logger.debug("quest: %s", quest)
+        
     dropitems = DropItems()
     if training.exists() is False:
-        print("[エラー]property.xml が存在しません")
-        print("python makeprop.py を実行してください")
-        sys.exit(1)
+        logger.crytical("property.xml が存在しません")
+        logger.crytical("python makeprop.py を実行してください")
+        exit(1)
     svm = cv2.ml.SVM_load(str(training))
     file = Path(args.file)
     img_rgb = imread(str(file))
     sc = ScreenShot(img_rgb, svm, dropitems, args.debug)
     if len(sc.quest_list) >= 2:
-        print("周回場所の候補が複数あります")
-        print(sc.quest_list)
-    if args.debug:
-        print(sc.itemlist)
-    if len(sc.quest_list) == 1:
-        result = "【" + sc.quest_output + "】"
+        logger.warning("周回場所の候補が複数あります")
+        logger.warning("sc.quest_list: %s", sc.quest_list)
+    logger.debug("sc.itemlist: %s", sc.itemlist)
+    if args.csv:
+        csv_data = [""]
+        if len(sc.quest_list) == 1:
+            # short name 用に2回加える
+            if args.questid:
+                csv_data.append(quest["name"])
+                csv_data.append(quest["name"])
+            else:
+                csv_data.append(sc.quest_output)
+                csv_data.append(sc.quest_output)
+        else:
+            csv_data.append("")
+            csv_data.append("")
+        for item in sc.itemlist:
+            try:
+                name = dropitems.item_shortname[item["id"]]
+                if name.endswith("礼装"):
+                    name = item["name"]
+            except KeyError:
+                name = item["name"]
+            csv_data.append(name)
+        writer = csv.writer(sys.stdout)
+        writer.writerow(csv_data)
     else:
-        result = ""
-    for item in sc.itemlist:
-        if item["name"] not in ["未ドロップ", "所持数無しアイテム"]:
+        if args.questid:
+            result = "【" + quest["name"] + "】"
+        else:
+            if len(sc.quest_list) == 1:
+                result = "【" + sc.quest_output + "】"
+            else:
+                result = ""
+        for item in sc.itemlist:
             result = result + item["name"] + ("_" if item["name"][-1].isdigit() else "") + str(item["dropnum"]) + '-'
-    if len(result) > 0:
-        result = result[:-1]
-    print(result)
+        if len(result) > 0:
+            result = result[:-1]
+        print(result)
     if sc.error != "":
-        print(sc.error)
+        logger.error(sc.error)
