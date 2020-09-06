@@ -32,6 +32,8 @@ ID_SECRET_GEM_MIN = 6201
 ID_SECRET_GEM_MAX = 6207
 ID_PIECE_MIN = 7001
 ID_MONUMENT_MAX = 7107
+ID_2ZORO_DICE = 94047708
+ID_3ZORO_DICE = 94047709
 ID_START = 95000000
 ID_EXP_MIN = 9700100
 ID_EXP_MAX = 9707500
@@ -627,6 +629,18 @@ class Item:
         except StopIteration:
             return ""
 
+    def zorodice2id(self, img):
+        """
+        2ゾロダイスと3ゾロダイスを判別する
+        """
+        threshold = 100
+        im_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # 二値化(閾値100を超えた画素を255にする。)
+        _, img_th = cv2.threshold(im_gray, threshold, 255, cv2.THRESH_BINARY)
+        if ScreenShot.calc_black_whiteArea(img_th[63:115, 127:187]) > 99:
+            return ID_2ZORO_DICE
+        return ID_3ZORO_DICE
+
     def classify_standard_item(self, img, debug=False):
         """
         imgとの距離を比較して近いアイテムを求める
@@ -669,6 +683,8 @@ class Item:
                     id = int(str(id)[0] + "1" + str(id)[2:])
                 else:
                     id = int(str(id)[0] + "0" + str(id)[2:])
+            elif ID_2ZORO_DICE <= id <= ID_3ZORO_DICE:
+                id = self.zorodice2id(img)
 
             return id
 
@@ -833,7 +849,7 @@ if __name__ == '__main__':
             exit(1)
         quest = r_get.json()
         logger.debug("quest: %s", quest)
-        
+
     dropitems = DropItems()
     if training.exists() is False:
         logger.crytical("property.xml が存在しません")
