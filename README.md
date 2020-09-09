@@ -36,6 +36,12 @@ Python 3.7以降
 ```
 pip install -r requirements.txt`
 ```
+
+fgoscdata を使えるようにする
+```
+$ git submodule update --init
+```
+
 makeprop.py を1度だけ実行
 
 ```
