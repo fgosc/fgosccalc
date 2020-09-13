@@ -307,8 +307,7 @@ def calc_pts(img_rgb):
         if area > 10000:
             ret = cv2.boundingRect(cnt)
             pts = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
-    #        print(ret[2]/ret[3])
-            if 4.2 < ret[2] / ret[3] < 4.4:
+            if 4.1 < ret[2] / ret[3] < 4.4:
                 if ret[0] + ret[2] / 2 < width / 2:
                     item_pts_l.append(pts)
                 else:
