@@ -267,6 +267,7 @@ class OwnedItem(img2str.Item):
     def __init__(self, img_rgb, dropitems, debug=False):
 
         self.dropitems = dropitems
+        self.background = img2str.classify_background(img_rgb, self.dropitems)
         self.id = self.classify_standard_item(img_rgb, debug=False)
 
 

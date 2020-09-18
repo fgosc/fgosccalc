@@ -823,9 +823,13 @@ def img_merge(img1, img2, img3):
     return cv2.merge((img_blue_c, img_green_c, img_red_c))
 
 def make_img4hist(img):
-    img1 = img[12:20, 29:283]
-    img2 = img[29:273, 11:17]
-    img3 = img[29:273, 297:303]
+    height, width = img.shape[:2]
+    img1 = img[int(12/344*height):int(20/341*height),
+               int(29/314*width):int(283/314*width)]
+    img2 = img[int(29/341*height):int(273/341*height),
+               int(11/314*width):int(17/314*width)]
+    img3 = img[int(29/341*height):int(273/341*height),
+               int(297/314*width):int(303/314*width)]
 
     return img_merge(img1, img2, img3)
 
