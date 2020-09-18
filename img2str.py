@@ -837,7 +837,6 @@ def classify_background(img_rgb, dropitems):
     """
     背景判別
     """
-    cv2.imwrite("tes2020.png", img_rgb)
     img = make_img4hist(img_rgb)
     target_hist = img_hist(img)
     sig_img = img_to_sig(target_hist)
