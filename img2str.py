@@ -70,11 +70,19 @@ class DropItems:
     item_shortname = {item["id"]: item["shortname"] for item in drop_item if "shortname" in item.keys()}
     item_type = {item["id"]: item["type"] for item in drop_item if "type" in item.keys()}
     item_dropPriority = {item["id"]: item["dropPriority"] for item in drop_item}
+    item_background = {item["id"]: item["background"] for item in drop_item
+                   if "background" in item.keys()}
     dist_item = {item["id"]: item["phash"] for item in drop_item if "phash" in item.keys()}
     dist_secret_gem = {item["id"]: item["phash_class"] for item in drop_item if ID_SECRET_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX and "phash_class" in item.keys()}
     dist_magic_gem = {item["id"]: item["phash_class"] for item in drop_item if ID_MAGIC_GEM_MIN <= item["id"] <= ID_MAGIC_GEM_MAX and "phash_class" in item.keys()}
     dist_gem = {item["id"]: item["phash_class"] for item in drop_item if ID_GEM_MIN <= item["id"] <= ID_GEM_MAX and "phash_class" in item.keys()}
     exp_list = [item["shortname"] for item in drop_item if ID_EXP_MIN <= item["id"] < ID_EXP_MAX]
+
+    npz = np.load(Path(__file__).resolve().parent / Path('background.npz'))
+    sig_zero = npz["sig_zero"]
+    sig_gold = npz["sig_gold"]
+    sig_silver = npz["sig_silver"]
+    sig_bronze = npz["sig_bronze"]
 
     dist_local = {
     }
@@ -189,7 +197,7 @@ class ScreenShot:
             self.error = str(e)
 
         self.items = []
-        template = cv2.imread('syoji_silber.png', 0)  # Item内でも使用
+        template = imread(Path(__file__).resolve().parent / 'syoji_silber.png', 0)  # Item内でも使用
         self.template = template
 
         ce_zone = True
@@ -518,6 +526,8 @@ class Item:
         self.dropitems = dropitems
         self.template = template
         self.dropnum = self.ocr_digit(debug)
+        self.background = classify_background(img_rgb, self.dropitems)
+        logger.info("background: %s", self.background)
         self.id = self.classify_item(img_rgb, debug)
         self.name = dropitems.item_name[self.id]
         logger.info("アイテム名: %s", self.name)
@@ -654,11 +664,17 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in self.dropitems.dist_item.keys():
             d = Item.hasher.compare(hash_item, hex2hash(self.dropitems.dist_item[i]))
-            if d <= 15:
-                #  #21 の修正のため15→14に変更して様子見
-                #  ポイントと種の距離が8という例有り(IMG_0274)→16に
-                #  バーガーと脂の距離が10という例有り(IMG_2354)→14に
-                ids[i] = d
+            if i in self.dropitems.item_background.keys():
+                item_bg = self.dropitems.item_background[i]
+                if d <= 15  and item_bg == self.background:
+                    #  #21 の修正のため15→14に変更して様子見
+                    #  ポイントと種の距離が8という例有り(IMG_0274)→16に
+                    #  バーガーと脂の距離が10という例有り(IMG_2354)→14に
+                    ids[i] = d
+            else:
+                if d <= 15:
+                    ids[i] = d
+
         if len(ids) > 0:
             ids = sorted(sorted(ids.items(), key=lambda x: x[0], reverse=True), key=lambda x: x[1])
             logger.debug("Near IDs:  %s", ids)
@@ -670,19 +686,6 @@ class Item:
                 id = self.gem_img2id(img, self.dropitems.dist_magic_gem)
             elif ID_GEM_MIN <= id <= ID_GEM_MAX:
                 id = self.gem_img2id(img, self.dropitems.dist_gem)
-            elif ID_PIECE_MIN <= id <= ID_MONUMENT_MAX:
-                #  ヒストグラム
-                img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-                h, w = img_hsv.shape[:2]
-                img_hsv = img_hsv[int(h / 2 - 10):int(h / 2 + 10),
-                                  int(w / 2 - 10):int(w / 2 + 10)]
-                hist_s = cv2.calcHist([img_hsv], [1],
-                                      None, [256], [0, 256])  # Bのヒストグラムを計算
-                minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
-                if maxLoc[1] > 128:
-                    id = int(str(id)[0] + "1" + str(id)[2:])
-                else:
-                    id = int(str(id)[0] + "0" + str(id)[2:])
             elif ID_2ZORO_DICE <= id <= ID_3ZORO_DICE:
                 id = self.zorodice2id(img)
 
@@ -799,6 +802,71 @@ class Item:
             lines = lines + chr(result)
 
         return lines[::-1]
+
+def img_merge(img1, img2, img3):
+    img_blue_c1, img_green_c1, img_red_c1 = cv2.split(img1)
+    img_blue_c2, img_green_c2, img_red_c2 = cv2.split(img2)
+    img_blue_c3, img_green_c3, img_red_c3 = cv2.split(img3)
+
+    img_blue_c = img_blue_c1.ravel()
+    img_blue_c = np.append(img_blue_c, img_blue_c2.ravel())
+    img_blue_c = np.append(img_blue_c, img_blue_c3.ravel())
+
+    img_green_c = img_green_c1.ravel()
+    img_green_c = np.append(img_green_c, img_green_c2.ravel())
+    img_green_c = np.append(img_green_c, img_green_c3.ravel())
+
+    img_red_c = img_red_c1.ravel()
+    img_red_c = np.append(img_red_c, img_red_c2.ravel())
+    img_red_c = np.append(img_red_c, img_red_c3.ravel())
+
+    return cv2.merge((img_blue_c, img_green_c, img_red_c))
+
+def make_img4hist(img):
+    img1 = img[12:20, 29:283]
+    img2 = img[29:273, 11:17]
+    img3 = img[29:273, 297:303]
+
+    return img_merge(img1, img2, img3)
+
+def classify_background(img_rgb, dropitems):
+    """
+    背景判別
+    """
+    img = make_img4hist(img_rgb)
+    target_hist = img_hist(img)
+    sig_img = img_to_sig(target_hist)
+    bg_dist = []
+    zdist, _, flow = cv2.EMD(sig_img, dropitems.sig_zero, cv2.DIST_L2)
+    bg_dist.append({"background": "zero", "dist": zdist})
+    gdist, _, flow = cv2.EMD(sig_img, dropitems.sig_gold, cv2.DIST_L2)
+    bg_dist.append({"background": "gold", "dist": gdist})
+    sdist, _, flow = cv2.EMD(sig_img, dropitems.sig_silver, cv2.DIST_L2)
+    bg_dist.append({"background": "silver", "dist": sdist})
+    bdist, _, flow = cv2.EMD(sig_img, dropitems.sig_bronze, cv2.DIST_L2)
+    bg_dist.append({"background": "bronze", "dist": bdist})
+    bg_dist = sorted(bg_dist, key=lambda x: x['dist'])
+    logger.debug("background dist: %s", bg_dist)
+    return (bg_dist[0]["background"])
+
+
+def img_to_sig(arr):
+    # cv2.EMDに渡す値は単精度浮動小数点数
+    sig = np.empty((arr.size, 3), dtype=np.float32)
+    count = 0
+    for i in range(arr.shape[0]):
+        for j in range(arr.shape[1]):
+            sig[count] = np.array([arr[i, j], i, j])
+            count += 1
+    return sig
+
+
+def img_hist(img):
+    hist1 = cv2.calcHist([img], [0], None, [256], [0, 256])
+    hist2 = cv2.calcHist([img], [1], None, [256], [0, 256])
+    hist3 = cv2.calcHist([img], [2], None, [256], [0, 256])
+
+    return np.hstack((hist1, hist2, hist3))
 
 
 def hex2hash(hexstr):
