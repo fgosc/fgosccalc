@@ -214,7 +214,7 @@ class ScreenShot:
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             # アイテム枠のヒストグラム調査
-            if self.is_empty_box(item_img_hsv):
+            if self.is_empty_box(item_img_gray):
                 break
             logger.debug("[Item %d Information]", i)
             item = Item(item_img_rgb, item_img_hsv, item_img_gray, svm,
@@ -253,15 +253,16 @@ class ScreenShot:
 
         return whiteAreaRatio
 
-    def is_empty_box(self, img_hsv):
+    def is_empty_box(self, img_gray):
         """
         アイテムボックスにアイテムが無いことを判別する
         """
-        lower = np.array([50, 20, 100])
-        upper = np.array([200, 200, 255])
+        threshold = 120
+        ret, th = cv2.threshold(img_gray, threshold, 255, cv2.THRESH_BINARY)
 
-        img_mask = cv2.inRange(img_hsv, lower, upper)
-        if ScreenShot.calc_black_whiteArea(img_mask) > 99:
+        if ScreenShot.calc_black_whiteArea(th) > 99:
+            return True
+        elif ScreenShot.calc_black_whiteArea(th) < 1:
             return True
         return False
 
