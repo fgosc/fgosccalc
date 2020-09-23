@@ -44,7 +44,8 @@ ID_EVNET = 94000000
 
 # アイテム下部の文字認証用
 training = Path(__file__).resolve().parent / Path("property.xml")
-defaultItemStorage = FileSystemStorage(Path(__file__).resolve().parent / Path("item/"))
+item_path = Path(__file__).resolve().parent / Path("item/")
+defaultItemStorage = FileSystemStorage(item_path)
 drop_file = Path(__file__).resolve().parent / Path("fgoscdata/hash_drop.json")
 quest_dir = Path(__file__).resolve().parent / Path("fgoscdata/data/json/")
 
@@ -62,27 +63,56 @@ class DropItems:
             with open(questfile, encoding='UTF-8') as f:
                 quest = json.load(f)
                 freequest = freequest + quest
-        except:
-            print("{}: ファイルが読み込めません".format(questfile))
+        except Exception as e:
+            print("{}: ファイルが読み込めません: {}".format(e, questfile))
 
     # JSONファイルから各辞書を作成
     item_name = {item["id"]: item["name"] for item in drop_item}
-    item_shortname = {item["id"]: item["shortname"] for item in drop_item if "shortname" in item.keys()}
-    item_type = {item["id"]: item["type"] for item in drop_item if "type" in item.keys()}
-    item_dropPriority = {item["id"]: item["dropPriority"] for item in drop_item}
-    item_background = {item["id"]: item["background"] for item in drop_item
-                   if "background" in item.keys()}
-    dist_item = {item["id"]: item["phash"] for item in drop_item if "phash" in item.keys()}
-    dist_secret_gem = {item["id"]: item["phash_class"] for item in drop_item if ID_SECRET_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX and "phash_class" in item.keys()}
-    dist_magic_gem = {item["id"]: item["phash_class"] for item in drop_item if ID_MAGIC_GEM_MIN <= item["id"] <= ID_MAGIC_GEM_MAX and "phash_class" in item.keys()}
-    dist_gem = {item["id"]: item["phash_class"] for item in drop_item if ID_GEM_MIN <= item["id"] <= ID_GEM_MAX and "phash_class" in item.keys()}
-    exp_list = [item["shortname"] for item in drop_item if ID_EXP_MIN <= item["id"] < ID_EXP_MAX]
+    item_shortname = {
+                      item["id"]: item["shortname"] for item in drop_item
+                      if "shortname" in item.keys()
+                      }
+    item_type = {
+                 item["id"]: item["type"] for item in drop_item
+                 if "type" in item.keys()
+                }
+    item_dropPriority = {
+                         item["id"]: item["dropPriority"]
+                         for item in drop_item
+                        }
+    item_background = {
+                       item["id"]: item["background"] for item in drop_item
+                       if "background" in item.keys()
+                      }
+    dist_item = {
+                 item["id"]: item["phash"] for item in drop_item
+                 if "phash" in item.keys()
+                }
+    dist_secret_gem = {
+                       item["id"]: item["phash_class"] for item in drop_item
+                       if ID_SECRET_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX
+                       and "phash_class" in item.keys()
+                      }
+    dist_magic_gem = {
+                      item["id"]: item["phash_class"] for item in drop_item
+                      if ID_MAGIC_GEM_MIN <= item["id"] <= ID_MAGIC_GEM_MAX
+                      and "phash_class" in item.keys()
+                     }
+    dist_gem = {
+                item["id"]: item["phash_class"] for item in drop_item
+                if ID_GEM_MIN <= item["id"] <= ID_GEM_MAX
+                and "phash_class" in item.keys()
+                }
+    exp_list = [
+                item["shortname"] for item in drop_item
+                if ID_EXP_MIN <= item["id"] < ID_EXP_MAX
+               ]
 
     npz = np.load(Path(__file__).resolve().parent / Path('background.npz'))
-    sig_zero = npz["sig_zero"]
-    sig_gold = npz["sig_gold"]
-    sig_silver = npz["sig_silver"]
-    sig_bronze = npz["sig_bronze"]
+    hist_zero = npz["hist_zero"]
+    hist_gold = npz["hist_gold"]
+    hist_silver = npz["hist_silver"]
+    hist_bronze = npz["hist_bronze"]
 
     dist_local = {
     }
@@ -157,7 +187,8 @@ class ScreenShot:
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         th, self.img_th_orig = cv2.threshold(self.img_gray_orig,
                                              0, 255,
-                                             cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                                             cv2.THRESH_BINARY
+                                             + cv2.THRESH_OTSU)
         self.height, self.width = img_rgb.shape[:2]
 
         self.error = ""
@@ -179,9 +210,17 @@ class ScreenShot:
         resizeScale = 1 / wscale
 
         if resizeScale > 1:
-            self.img_rgb = cv2.resize(game_screen, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
+            self.img_rgb = cv2.resize(
+                                      game_screen, (0, 0),
+                                      fx=resizeScale, fy=resizeScale,
+                                      interpolation=cv2.INTER_CUBIC
+                                     )
         else:
-            self.img_rgb = cv2.resize(game_screen, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+            self.img_rgb = cv2.resize(
+                                      game_screen, (0, 0),
+                                      fx=resizeScale, fy=resizeScale,
+                                      interpolation=cv2.INTER_AREA
+                                     )
 
         if debug:
             cv2.imwrite('game_screen_resize.png', self.img_rgb)
@@ -197,7 +236,8 @@ class ScreenShot:
             self.error = str(e)
 
         self.items = []
-        template = imread(Path(__file__).resolve().parent / 'syoji_silber.png', 0)  # Item内でも使用
+        syojifile = Path(__file__).resolve().parent / 'syoji_silber.png'
+        template = imread(syojifile, 0)  # Item内でも使用
         self.template = template
 
         ce_zone = True
@@ -208,9 +248,18 @@ class ScreenShot:
                 ce_zone = False
             through_item = True if (not numbered and not ce_zone) else False
 
-            item_img_rgb = self.img_rgb[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
-            item_img_gray = self.img_gray[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
-            item_img_hsv = self.img_hsv[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
+            item_img_rgb = self.img_rgb[
+                                        pt[1] + offset_y: pt[3] + offset_y,
+                                        pt[0] + offset_x: pt[2] + offset_x
+                                       ]
+            item_img_gray = self.img_gray[
+                                          pt[1] + offset_y: pt[3] + offset_y,
+                                          pt[0] + offset_x: pt[2] + offset_x
+                                         ]
+            item_img_hsv = self.img_hsv[
+                                        pt[1] + offset_y: pt[3] + offset_y,
+                                        pt[0] + offset_x: pt[2] + offset_x
+                                       ]
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             # アイテム枠のヒストグラム調査
@@ -219,7 +268,8 @@ class ScreenShot:
             logger.debug("[Item %d Information]", i)
             item = Item(item_img_rgb, item_img_hsv, item_img_gray, svm,
                         dropitems, through_item, template, debug)
-            if ID_STANDARD_ITEM_MIN <= item.id <= ID_STANDARD_ITEM_MAX and numbered is False:
+            if ID_STANDARD_ITEM_MIN <= item.id <= ID_STANDARD_ITEM_MAX \
+               and numbered is False:
                 break
             self.items.append(item)
 
@@ -316,12 +366,20 @@ class ScreenShot:
         """
         クエスト名を決定
         """
-        itemlist = [{"id": i["id"], "name":i["name"]} for i in self.itemlist if i["id"] != ID_NO_POSESSION]
+        itemlist = [
+                    {"id": i["id"], "name":i["name"]} for i in self.itemlist
+                    if i["id"] != ID_NO_POSESSION
+                   ]
         self.quest = ""   # 周回カウンタに合わせたクエスト名
         self.quests = []  # 周回カウンタに合わせたクエスト名(複数対応)
         # reversed するのは 未確認座標X-Cを未確認座標X-Bより先に認識させるため
         for quest in reversed(self.dropitems.freequest):
-            droplist = [{"id": i["id"], "name": i["name"]} for i in quest["drop"] if not i["type"] in ["Point", "Exp. UP"] or i["name"] == "QP"]
+            droplist = [
+                        {"id": i["id"], "name": i["name"]}
+                        for i in quest["drop"]
+                        if not i["type"] in ["Point", "Exp. UP"]
+                        or i["name"] == "QP"
+                       ]
             if self.compare_drop(itemlist, droplist):
                 self.droplist = [i["name"] for i in quest["drop"]]
                 if self.quest == "":
@@ -337,7 +395,10 @@ class ScreenShot:
     def make_quest_output(self, quest, debug=False):
         output = ""
         if quest != "":
-            quest_list = [q["name"] for q in self.dropitems.freequest if q["place"] == quest["place"]]
+            quest_list = [
+                          q["name"] for q in self.dropitems.freequest
+                          if q["place"] == quest["place"]
+                         ]
             if math.floor(quest["id"] / 100) * 100 == ID_NORTH_AMERICA:
                 output = quest["place"] + " " + quest["name"]
             elif math.floor(quest["id"] / 100) * 100 == ID_SYURENJYO:
@@ -359,7 +420,11 @@ class ScreenShot:
         lower = np.array([0, 0, 0])
         upper = np.array([16, 16, 16])  # ほぼ黒
         img_mask = cv2.inRange(self.img_rgb_orig, lower, upper)
-        contours = cv2.findContours(img_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours = cv2.findContours(
+                                    img_mask,
+                                    cv2.RETR_EXTERNAL,
+                                    cv2.CHAIN_APPROX_SIMPLE
+                                   )[0]
 
         if debug:
             cv2.imwrite("img_mask.png", img_mask)
@@ -386,14 +451,19 @@ class ScreenShot:
         upper_w = np.array([255, 255, 255])
         img_mask_w = cv2.inRange(self.img_rgb_orig, lower_w, upper_w)
         closebutton_pts = []
-        contours = cv2.findContours(img_mask_w, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours = cv2.findContours(
+                                    img_mask_w,
+                                    cv2.RETR_EXTERNAL,
+                                    cv2.CHAIN_APPROX_SIMPLE
+                                   )[0]
         for cnt in contours:
             area = cv2.contourArea(cnt)
             if area > 2:
                 ret = cv2.boundingRect(cnt)
                 pts = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
                 if pts[1] > self.height / 2 \
-                   and 4.5 < ret[2] / ret[3] < 4.9 and enemytab_pts[0] < pts[2] < enemytab_pts[2] \
+                   and 4.5 < ret[2] / ret[3] < 4.9 \
+                   and enemytab_pts[0] < pts[2] < enemytab_pts[2] \
                    and enemytab_pts[2] - enemytab_pts[0] > ret[2]:
                     closebutton_pts.append(pts)
         closebutton_pts.sort()
@@ -412,15 +482,15 @@ class ScreenShot:
         2. 「エネミー」タブの位置情報から「閉じる」ボタンの位置を探す
         3. 「エネミー」タブの右端と「閉じる」ボタンの中心からcut imageの左端を決める
         """
-        enemytab_pts = self.detect_enemy_tab(debug)
-        closebutton_pts = self.detect_close_button(enemytab_pts, debug)
+        e_pts = self.detect_enemy_tab(debug)
+        c_pts = self.detect_close_button(e_pts, debug)
 
-        right_x = enemytab_pts[2]
-        center_x = closebutton_pts[0] + int((closebutton_pts[2] - closebutton_pts[0]) / 2)
+        right_x = e_pts[2]
+        center_x = c_pts[0] + int((c_pts[2] - c_pts[0]) / 2)
         window_widhth = (right_x - center_x) * 2
         left_x = right_x - window_widhth
-        upper_y = enemytab_pts[3]
-        bottom_y = enemytab_pts[3] + int(1250 * (enemytab_pts[3] - enemytab_pts[1]) / 175)
+        upper_y = e_pts[3]
+        bottom_y = e_pts[3] + int(1250 * (e_pts[3] - e_pts[1]) / 175)
 
         logger.debug("game_screenの座標: [%d, %d, %d, %d]",
                      left_x, upper_y, right_x, bottom_y)
@@ -450,7 +520,9 @@ class ScreenShot:
             itemlist.append(itemdic)
         return itemlist
 
-    def generate_item_pts(self, criteria_left, criteria_top, item_width, item_height, margin_width, margin_height):
+    def generate_item_pts(self, criteria_left, criteria_top,
+                          item_width, item_height,
+                          margin_width, margin_height):
         """
             ScreenShot#booty_pts() が返すべき座標リストを生成する。
             全戦利品画像が等間隔に並んでいることを仮定している。
@@ -463,18 +535,33 @@ class ScreenShot:
             margin_height ... 戦利品画像間の height
         """
         pts = []
-        current = (criteria_left, criteria_top, criteria_left + item_width, criteria_top + item_height)
+        current = (
+                   criteria_left,
+                   criteria_top,
+                   criteria_left + item_width,
+                   criteria_top + item_height
+                  )
         for j in range(3):
             # top, bottom の y座標を計算
             current_top = criteria_top + (item_height + margin_height) * j
             current_bottom = current_top + item_height
             # x座標を左端に固定
-            current = (criteria_left, current_top, criteria_left + item_width, current_bottom)
+            current = (
+                       criteria_left,
+                       current_top,
+                       criteria_left + item_width,
+                       current_bottom
+                      )
             for i in range(4):
                 # y座標を固定したままx座標をスライドさせていく
                 current_left = criteria_left + (item_width + margin_width) * i
                 current_right = current_left + item_width
-                current = (current_left, current_top, current_right, current_bottom)
+                current = (
+                           current_left,
+                           current_top,
+                           current_right,
+                           current_bottom
+                          )
                 pts.append(current)
         return pts
 
@@ -488,15 +575,18 @@ class ScreenShot:
         pts = [[42 - edge, 163 - edge, 42 + width + edge, 163 + width + 34],
                [395 - edge, 163 - edge, 395 + width + edge, 163 + width + 34],
                [747 - edge, 163 - edge, 747 + width + edge, 163 + width + 34],
-               [1100 - edge, 163 - edge, 1100 + width + edge, 163 + width + 34],
+               [1100 - edge,
+                163 - edge, 1100 + width + edge, 163 + width + 34],
                [42 - edge, 523 - edge, 42 + width + edge, 523 + width + 34],
                [395 - edge, 523 - edge, 395 + width + edge, 523 + width + 34],
                [747 - edge, 523 - edge, 747 + width + edge, 523 + width + 34],
-               [1100 - edge, 523 - edge, 1100 + width + edge, 523 + width + 34],
+               [1100 - edge, 523 - edge,
+                1100 + width + edge, 523 + width + 34],
                [42 - edge, 883 - edge, 42 + width + edge, 883 + width + 34],
                [395 - edge, 883 - edge, 395 + width + edge, 883 + width + 34],
                [747 - edge, 883 - edge, 747 + width + edge, 883 + width + 34],
-               [1100 - edge, 883 - edge, 1100 + width + edge, 883 + width + 34],
+               [1100 - edge, 883 - edge,
+                1100 + width + edge, 883 + width + 34],
                ]
 
         return pts
@@ -516,7 +606,9 @@ class ScreenShotBefore(ScreenShot):
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         th, self.img_th_orig = cv2.threshold(self.img_gray_orig,
                                              0, 255,
-                                             cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                                             cv2.THRESH_BINARY
+                                             + cv2.THRESH_OTSU
+                                             )
         self.height, self.width = img_rgb.shape[:2]
 
         self.error = ""
@@ -538,9 +630,21 @@ class ScreenShotBefore(ScreenShot):
         resizeScale = 1 / wscale
 
         if resizeScale > 1:
-            self.img_rgb = cv2.resize(game_screen, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
+            self.img_rgb = cv2.resize(
+                                      game_screen,
+                                      (0, 0),
+                                      fx=resizeScale,
+                                      fy=resizeScale,
+                                      interpolation=cv2.INTER_CUBIC
+                                      )
         else:
-            self.img_rgb = cv2.resize(game_screen, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+            self.img_rgb = cv2.resize(
+                                      game_screen,
+                                      (0, 0),
+                                      fx=resizeScale,
+                                      fy=resizeScale,
+                                      interpolation=cv2.INTER_AREA
+                                      )
 
         if debug:
             cv2.imwrite('game_screen_resize.png', self.img_rgb)
@@ -556,7 +660,8 @@ class ScreenShotBefore(ScreenShot):
             self.error = str(e)
 
         self.items = []
-        template = imread(Path(__file__).resolve().parent / 'syoji_silber.png', 0)  # Item内でも使用
+        syojifile = Path(__file__).resolve().parent / 'syoji_silber.png'
+        template = imread(syojifile, 0)  # Item内でも使用
         self.template = template
 
         ce_zone = True
@@ -567,9 +672,18 @@ class ScreenShotBefore(ScreenShot):
                 ce_zone = False
             through_item = True if (not numbered and not ce_zone) else False
 
-            item_img_rgb = self.img_rgb[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
-            item_img_gray = self.img_gray[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
-            item_img_hsv = self.img_hsv[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
+            item_img_rgb = self.img_rgb[
+                                        pt[1] + offset_y: pt[3] + offset_y,
+                                        pt[0] + offset_x: pt[2] + offset_x
+                                        ]
+            item_img_gray = self.img_gray[
+                                          pt[1] + offset_y: pt[3] + offset_y,
+                                          pt[0] + offset_x: pt[2] + offset_x
+                                          ]
+            item_img_hsv = self.img_hsv[
+                                        pt[1] + offset_y: pt[3] + offset_y,
+                                        pt[0] + offset_x: pt[2] + offset_x
+                                        ]
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             # アイテム枠のヒストグラム調査
@@ -577,8 +691,10 @@ class ScreenShotBefore(ScreenShot):
                 break
             logger.debug("[Item %d Information]", i)
             item = ItemBefore(item_img_rgb, item_img_hsv, item_img_gray, svm,
-                        dropitems, through_item, template, itemilst[i], debug)
-            if ID_STANDARD_ITEM_MIN <= item.id <= ID_STANDARD_ITEM_MAX and numbered is False:
+                              dropitems, through_item,
+                              template, itemilst[i], debug)
+            if ID_STANDARD_ITEM_MIN <= item.id <= ID_STANDARD_ITEM_MAX \
+               and numbered is False:
                 break
             self.items.append(item)
 
@@ -591,7 +707,9 @@ class ScreenShotBefore(ScreenShot):
 class Item:
     hasher = cv2.img_hash.PHash_create()
 
-    def __init__(self, img_rgb, img_hsv, img_gray, svm, dropitems, through_item, template, debug=False):
+    def __init__(self, img_rgb, img_hsv, img_gray,
+                 svm, dropitems, through_item,
+                 template, debug=False):
         if self.is_undropped_box(img_hsv):
             self.id = ID_UNDROPPED
             self.name = "未ドロップ"
@@ -640,7 +758,11 @@ class Item:
         """
         # 所持の座標を算出
         w, h = self.template.shape[::-1]
-        res = cv2.matchTemplate(self.img_gray, self.template, cv2.TM_CCOEFF_NORMED)
+        res = cv2.matchTemplate(
+                                self.img_gray,
+                                self.template,
+                                cv2.TM_CCOEFF_NORMED
+                                )
         threshold = 0.7
         loc = np.where(res >= threshold)
         syoji_pt = []
@@ -662,7 +784,10 @@ class Item:
                 [278, 303, 300, 335]]
         pts = []
         for pt in pts7:
-            pt = [pt[0] + offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
+            pt = [
+                  pt[0] + offset_x, pt[1] + offset_y,
+                  pt[2] + offset_x, pt[3] + offset_y
+                  ]
             pts.append(pt)
         line_lower_white = self.read_item(self.img_gray, pts)
         logger.debug("7桁読み込み %s", line_lower_white)
@@ -678,7 +803,10 @@ class Item:
 
         pts = []
         for pt in pts6:
-            pt = [pt[0] + offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
+            pt = [
+                  pt[0] + offset_x, pt[1] + offset_y,
+                  pt[2] + offset_x, pt[3] + offset_y
+                  ]
             pts.append(pt)
         line_lower_white = self.read_item(self.img_gray, pts)
         logger.debug("6桁読み込み %s", line_lower_white)
@@ -692,7 +820,10 @@ class Item:
                 [269, 289, 300, 333]]
         pts = []
         for pt in pts5:
-            pt = [pt[0] + offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
+            pt = [
+                  pt[0] + offset_x, pt[1] + offset_y,
+                  pt[2] + offset_x, pt[3] + offset_y
+                  ]
             pts.append(pt)
         line_lower_white = self.read_item(self.img_gray, pts)
         logger.debug("5桁読み込み %s", line_lower_white)
@@ -705,7 +836,10 @@ class Item:
                 [263, 285, 300, 333]]
         pts = []
         for pt in pts4:
-            pt = [pt[0] + offset_x, pt[1] + offset_y, pt[2] + offset_x, pt[3] + offset_y]
+            pt = [
+                  pt[0] + offset_x, pt[1] + offset_y,
+                  pt[2] + offset_x, pt[3] + offset_y
+                  ]
             pts.append(pt)
         line_lower_white = self.read_item(self.img_gray, pts)
         if line_lower_white == "":
@@ -750,10 +884,13 @@ class Item:
         ids = {}
         # 既存のアイテムとの距離を比較
         for i in self.dropitems.dist_item.keys():
-            d = Item.hasher.compare(hash_item, hex2hash(self.dropitems.dist_item[i]))
+            d = Item.hasher.compare(
+                                    hash_item,
+                                    hex2hash(self.dropitems.dist_item[i])
+                                    )
             if i in self.dropitems.item_background.keys():
                 item_bg = self.dropitems.item_background[i]
-                if d <= 15  and item_bg == self.background:
+                if d <= 15 and item_bg == self.background:
                     #  #21 の修正のため15→14に変更して様子見
                     #  ポイントと種の距離が8という例有り(IMG_0274)→16に
                     #  バーガーと脂の距離が10という例有り(IMG_2354)→14に
@@ -763,7 +900,14 @@ class Item:
                     ids[i] = d
 
         if len(ids) > 0:
-            ids = sorted(sorted(ids.items(), key=lambda x: x[0], reverse=True), key=lambda x: x[1])
+            ids = sorted(
+                         sorted(
+                                ids.items(),
+                                key=lambda x: x[0],
+                                reverse=True
+                                ),
+                         key=lambda x: x[1]
+                         )
             logger.debug("Near IDs:  %s", ids)
             id_tupple = next(iter(ids))
             id = id_tupple[0]
@@ -852,8 +996,12 @@ class Item:
         """
         height, width = img_rgb.shape[:2]
 
-        img = img_rgb[int((145 - 16 - 60) / 2 / 145 * height) + 5:int((145 - 16 + 60) / 2 / 145 * height) + 5,
-                      int((132 - 52) / 2 / 132 * width):int((132 + 52) / 2 / 132 * width)]
+        img = img_rgb[
+                      int((145 - 16 - 60) / 2 / 145 * height) + 5:
+                      int((145 - 16 + 60) / 2 / 145 * height) + 5,
+                      int((132 - 52) / 2 / 132 * width):
+                      int((132 + 52) / 2 / 132 * width)
+                      ]
         #  cv2.imshow("img", cv2.resize(img, dsize=None, fx=4.5, fy=4.5))
         #  cv2.waitKey(0)
         #  cv2.destroyAllWindows()
@@ -879,7 +1027,13 @@ class Item:
 #            cv2.waitKey(0)
 #            cv2.destroyAllWindows()
             tmpimg = cv2.resize(tmpimg, (win_size))
-            hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
+            hog = cv2.HOGDescriptor(
+                                    win_size,
+                                    block_size,
+                                    block_stride,
+                                    cell_size,
+                                    bins
+                                    )
             char.append(hog.compute(tmpimg))
             char = np.array(char)
             pred = self.svm.predict(char)
@@ -892,7 +1046,9 @@ class Item:
 
 
 class ItemBefore(Item):
-    def __init__(self, img_rgb, img_hsv, img_gray, svm, dropitems, through_item, template, item, debug=False):
+    def __init__(self, img_rgb, img_hsv, img_gray, svm,
+                 dropitems, through_item, template, item,
+                 debug=False):
         if self.is_undropped_box(img_hsv):
             self.id = ID_UNDROPPED
             self.name = "未ドロップ"
@@ -918,7 +1074,11 @@ class ItemBefore(Item):
         # ここから書き換える
         # 画像と周回前アイテムとの距離が閾値以下ならそのアイテムにする
         hash_item = self.dropitems.compute_hash(self.img_rgb)  # 画像の距離
-        d = ItemBefore.hasher.compare(hash_item, hex2hash(self.dropitems.dist_item[item["id"]]))
+        hash_id = self.dropitems.dist_item[item["id"]]
+        d = ItemBefore.hasher.compare(
+                                      hash_item,
+                                      hex2hash(hash_id)
+                                      )
         if d <= 15:
             self.id = item["id"]
             self.name = item["name"]
@@ -952,16 +1112,17 @@ def img_merge(img1, img2, img3):
 
     return cv2.merge((img_blue_c, img_green_c, img_red_c))
 
+
 def make_img4hist(img):
     height, width = img.shape[:2]
-    img1 = img[int(12/344*height):int(20/341*height),
+    img1 = img[int(12/314*width):int(20/314*width),
                int(29/314*width):int(283/314*width)]
-    img2 = img[int(29/341*height):int(273/341*height),
+    img2 = img[int(29/314*width):int(273/314*width),
                int(11/314*width):int(17/314*width)]
-    img3 = img[int(29/341*height):int(273/341*height),
+    img3 = img[int(29/314*width):int(273/314*width),
                int(297/314*width):int(303/314*width)]
-
     return img_merge(img1, img2, img3)
+
 
 def classify_background(img_rgb, dropitems):
     """
@@ -969,30 +1130,27 @@ def classify_background(img_rgb, dropitems):
     """
     img = make_img4hist(img_rgb)
     target_hist = img_hist(img)
-    sig_img = img_to_sig(target_hist)
-    bg_dist = []
-    zdist, _, flow = cv2.EMD(sig_img, dropitems.sig_zero, cv2.DIST_L2)
-    bg_dist.append({"background": "zero", "dist": zdist})
-    gdist, _, flow = cv2.EMD(sig_img, dropitems.sig_gold, cv2.DIST_L2)
-    bg_dist.append({"background": "gold", "dist": gdist})
-    sdist, _, flow = cv2.EMD(sig_img, dropitems.sig_silver, cv2.DIST_L2)
-    bg_dist.append({"background": "silver", "dist": sdist})
-    bdist, _, flow = cv2.EMD(sig_img, dropitems.sig_bronze, cv2.DIST_L2)
-    bg_dist.append({"background": "bronze", "dist": bdist})
-    bg_dist = sorted(bg_dist, key=lambda x: x['dist'])
-    logger.debug("background dist: %s", bg_dist)
-    return (bg_dist[0]["background"])
+    bg_score = []
+    score_z = calc_hist_score(target_hist, dropitems.hist_zero)
+    bg_score.append({"background": "zero", "dist": score_z})
+    score_g = calc_hist_score(target_hist, dropitems.hist_gold)
+    bg_score.append({"background": "gold", "dist": score_g})
+    score_s = calc_hist_score(target_hist, dropitems.hist_silver)
+    bg_score.append({"background": "silver", "dist": score_s})
+    score_b = calc_hist_score(target_hist, dropitems.hist_bronze)
+    bg_score.append({"background": "bronze", "dist": score_b})
+
+    bg_score = sorted(bg_score, key=lambda x: x['dist'])
+    logger.debug("background dist: %s", bg_score)
+    return (bg_score[0]["background"])
 
 
-def img_to_sig(arr):
-    # cv2.EMDに渡す値は単精度浮動小数点数
-    sig = np.empty((arr.size, 3), dtype=np.float32)
-    count = 0
-    for i in range(arr.shape[0]):
-        for j in range(arr.shape[1]):
-            sig[count] = np.array([arr[i, j], i, j])
-            count += 1
-    return sig
+def calc_hist_score(hist1, hist2):
+    scores = []
+    for channel1, channel2 in zip(hist1, hist2):
+        score = cv2.compareHist(channel1, channel2, cv2.HISTCMP_BHATTACHARYYA)
+        scores.append(score)
+    return np.mean(scores)
 
 
 def img_hist(img):
@@ -1000,7 +1158,7 @@ def img_hist(img):
     hist2 = cv2.calcHist([img], [1], None, [256], [0, 256])
     hist3 = cv2.calcHist([img], [2], None, [256], [0, 256])
 
-    return np.hstack((hist1, hist2, hist3))
+    return hist1, hist2, hist3
 
 
 def hex2hash(hexstr):
@@ -1029,10 +1187,22 @@ def parse_args():
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument('file', help='戦利品スクショ')    # 必須の引数を追加
     parser.add_argument('-d', '--debug', help='デバッグ情報を出力', action='store_true')
-    parser.add_argument('--csv', help='fgoscdata用csv形式で出力', action='store_true')
+    parser.add_argument(
+                        '--csv',
+                        help='fgoscdata用csv形式で出力',
+                        action='store_true'
+                        )
     parser.add_argument('-q', '--questid', type=int)
-    parser.add_argument('--loglevel', choices=('warning', 'debug', 'info'), default='warning')
-    parser.add_argument('--version', action='version', version=progname + " " + version)
+    parser.add_argument(
+                        '--loglevel',
+                        choices=('warning', 'debug', 'info'),
+                        default='warning'
+                        )
+    parser.add_argument(
+                        '--version',
+                        action='version',
+                        version=progname + " " + version
+                        )
     return parser.parse_args()
 
 
@@ -1097,7 +1267,11 @@ if __name__ == '__main__':
             else:
                 result = ""
         for item in sc.itemlist:
-            result = result + item["name"] + ("_" if item["name"][-1].isdigit() else "") + str(item["dropnum"]) + '-'
+            result = result \
+                     + item["name"] \
+                     + ("_" if item["name"][-1].isdigit() else "") \
+                     + str(item["dropnum"]) \
+                     + '-'
         if len(result) > 0:
             result = result[:-1]
         print(result)
