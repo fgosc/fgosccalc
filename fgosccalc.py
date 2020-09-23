@@ -23,6 +23,7 @@ from dropitemseditor import (
     make_owned_diff,
     merge_sc,
     read_owned_ss,
+    detect_missing_item
 )
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -71,30 +72,35 @@ def parse_args():
 def main(args):
     dropitems = img2str.DropItems()
     svm = cv2.ml.SVM_load(str(img2str.training))
-    sc_before = []
-    for f in args.before:
-        file = Path(f)
-        img_rgb = img2str.imread(str(file))
-        sc_before.append(img2str.ScreenShot(img_rgb, svm, dropitems))
-    sc1 = merge_sc(sc_before)
+    # 素材が埋まっている可能性が高い周回後スクショから認識する
     sc_after = []
     for f in args.after:
         file = Path(f)
         img_rgb = img2str.imread(str(file))
         sc_after.append(img2str.ScreenShot(img_rgb, svm, dropitems))
     sc2 = merge_sc(sc_after)
-
-    logger.debug('sc_before0: %s', sc_before[0].itemlist)
-    if len(sc_before) == 2:
-        logger.debug('sc_before1: %s', sc_before[1].itemlist)
-    logger.debug('sc1: %s', sc1.itemlist)
     logger.debug('sc_after0: %s', sc_after[0].itemlist)
     if len(sc_after) == 2:
         logger.debug('sc_after1: %s', sc_after[1].itemlist)
     logger.debug('sc2: %s', sc2.itemlist)
 
+    sc_before = []
+    for i, f in enumerate(args.before):
+        file = Path(f)
+        img_rgb = img2str.imread(str(file))
+        sc_before.append(img2str.ScreenShotBefore(img_rgb, svm, dropitems, sc_after[i].itemlist))
+    sc1 = merge_sc(sc_before)
+
+    logger.debug('sc_before0: %s', sc_before[0].itemlist)
+    if len(sc_before) == 2:
+        logger.debug('sc_before1: %s', sc_before[1].itemlist)
+    logger.debug('sc1: %s', sc1.itemlist)
+
+    # 足りないアイテムを求める
+    miss_items = detect_missing_item(sc2, sc1)
+ 
     if args.owned:
-        code, owned_list = read_owned_ss(args.owned, dropitems, svm)
+        code, owned_list = read_owned_ss(args.owned, dropitems, svm, miss_items)
     else:
         code = -1
 

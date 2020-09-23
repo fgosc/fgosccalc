@@ -89,17 +89,20 @@ def upload_post():
 
     svm = cv2.ml.SVM_load(str(img2str.training))
 
-    im1 = cv2.imdecode(get_np_array(file1.file), 1)
-    sc1 = img2str.ScreenShot(im1, svm, dropitems)
-
     im2 = cv2.imdecode(get_np_array(file2.file), 1)
     sc2 = img2str.ScreenShot(im2, svm, dropitems)
+
+    im1 = cv2.imdecode(get_np_array(file1.file), 1)
+    sc1 = img2str.ScreenShotBefore(im1, svm, dropitems, sc2.itemlist)
+
 
     logger.info('sc1: %s', sc1.itemlist)
     logger.info('sc2: %s', sc2.itemlist)
 
+    miss_items = dropitemseditor.detect_missing_item(sc2, sc1)
+
     if owned_files:
-        _, owned_list = dropitemseditor.read_owned_ss(owned_files, dropitems, svm)
+        _, owned_list = dropitemseditor.read_owned_ss(owned_files, dropitems, svm, miss_items)
         logger.info('owned list: %s', owned_list)
         owned_diff = dropitemseditor.make_owned_diff(sc1.itemlist, sc2.itemlist, owned_list)
         logger.info('owned diff: %s', owned_diff)
