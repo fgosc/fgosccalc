@@ -502,6 +502,92 @@ class ScreenShot:
         return pts
 
 
+class ScreenShotBefore(ScreenShot):
+    '''
+    周回後のスクリーンショットを認識してアイテムが「分かってる」状態の
+    周回前スクリーンショット
+    '''
+    def __init__(self, img_rgb, svm, dropitems, itemilst, debug=False):
+        # TRAINING_IMG_WIDTHは3840x2160の解像度をベースにしている
+        TRAINING_IMG_WIDTH = 1514
+        self.dropitems = dropitems
+        self.img_rgb_orig = img_rgb
+        self.img_hsv_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
+        self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
+        th, self.img_th_orig = cv2.threshold(self.img_gray_orig,
+                                             0, 255,
+                                             cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        self.height, self.width = img_rgb.shape[:2]
+
+        self.error = ""
+        try:
+            game_screen = self.extract_game_screen(debug)
+        except ValueError as e:
+            self.error = str(e)
+            self.itemlist = []
+            self.quest_output = ""
+            self.quest_list = []
+            return
+
+        if debug:
+            cv2.imwrite('game_screen.png', game_screen)
+
+        height_g, width_g, _ = game_screen.shape
+        logger.debug("cutting image size %s x %s", width_g, height_g)
+        wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
+        resizeScale = 1 / wscale
+
+        if resizeScale > 1:
+            self.img_rgb = cv2.resize(game_screen, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
+        else:
+            self.img_rgb = cv2.resize(game_screen, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+
+        if debug:
+            cv2.imwrite('game_screen_resize.png', self.img_rgb)
+
+        self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
+        self.img_hsv = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2HSV)
+
+        item_pts = []
+        self.error = ""
+        try:
+            item_pts = self.img2points()
+        except ValueError as e:
+            self.error = str(e)
+
+        self.items = []
+        template = imread(Path(__file__).resolve().parent / 'syoji_silber.png', 0)  # Item内でも使用
+        self.template = template
+
+        ce_zone = True
+        for i, pt in enumerate(item_pts):
+            tmp_img_gray = self.img_gray[pt[1]: pt[3], pt[0]: pt[2]]
+            numbered, offset_x, offset_y = self.calc_offset(tmp_img_gray)
+            if numbered:
+                ce_zone = False
+            through_item = True if (not numbered and not ce_zone) else False
+
+            item_img_rgb = self.img_rgb[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
+            item_img_gray = self.img_gray[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
+            item_img_hsv = self.img_hsv[pt[1] + offset_y: pt[3] + offset_y, pt[0] + offset_x: pt[2] + offset_x]
+            if debug:
+                cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
+            # アイテム枠のヒストグラム調査
+            if self.is_empty_box(item_img_gray):
+                break
+            logger.debug("[Item %d Information]", i)
+            item = ItemBefore(item_img_rgb, item_img_hsv, item_img_gray, svm,
+                        dropitems, through_item, template, itemilst[i], debug)
+            if ID_STANDARD_ITEM_MIN <= item.id <= ID_STANDARD_ITEM_MAX and numbered is False:
+                break
+            self.items.append(item)
+
+        self.itemlist = self.makeitemlist()
+        self.deside_freequestname()
+        self.quest_output = self.make_quest_output(self.quest)
+        self.quest_list = self.make_quest_list()
+
+
 class Item:
     hasher = cv2.img_hash.PHash_create()
 
@@ -803,6 +889,49 @@ class Item:
             lines = lines + chr(result)
 
         return lines[::-1]
+
+
+class ItemBefore(Item):
+    def __init__(self, img_rgb, img_hsv, img_gray, svm, dropitems, through_item, template, item, debug=False):
+        if self.is_undropped_box(img_hsv):
+            self.id = ID_UNDROPPED
+            self.name = "未ドロップ"
+            self.dropnum = 0
+            self.dropPriority = 0
+            return
+        if through_item:
+            self.id = ID_NO_POSESSION
+            self.name = "所持数無しアイテム"
+            self.dropnum = 0
+            self.dropPriority = 0
+            return
+
+        self.img_rgb = img_rgb
+        self.img_gray = img_gray
+        self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
+        self.height, self.width = img_rgb.shape[:2]
+        self.svm = svm
+        self.dropitems = dropitems
+        self.template = template
+        self.dropnum = self.ocr_digit(debug)
+
+        # ここから書き換える
+        # 画像と周回前アイテムとの距離が閾値以下ならそのアイテムにする
+        hash_item = self.dropitems.compute_hash(self.img_rgb)  # 画像の距離
+        d = ItemBefore.hasher.compare(hash_item, hex2hash(self.dropitems.dist_item[item["id"]]))
+        if d <= 15:
+            self.id = item["id"]
+            self.name = item["name"]
+            self.dropPriority = item["dropPriority"]
+        else:
+            self.background = classify_background(img_rgb, self.dropitems)
+            logger.info("background: %s", self.background)
+            self.id = self.classify_item(img_rgb, debug)
+            self.name = dropitems.item_name[self.id]
+            logger.info("アイテム名: %s", self.name)
+            logger.info("ドロップ数: %s", self.dropnum)
+            self.dropPriority = dropitems.item_dropPriority[self.id]
+
 
 def img_merge(img1, img2, img3):
     img_blue_c1, img_green_c1, img_red_c1 = cv2.split(img1)

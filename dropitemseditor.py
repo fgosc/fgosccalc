@@ -339,11 +339,14 @@ def calc_pts(img_rgb):
     return new_item_pts
 
 
-def read_owned_ss(owned_files, dropitems, svm):
+def read_owned_ss(owned_files, dropitems, svm, miss_item):
     TRAINING_IMG_WIDTH = 1152
 
     ownitems = []
+    remain_items = [item["id"] for item in miss_item]
     for file in owned_files:
+        if len(remain_items) == 0:
+            break
         img_rgb = img2str.imread(file)
 
         item_pts = calc_pts(img_rgb)
@@ -375,16 +378,23 @@ def read_owned_ss(owned_files, dropitems, svm):
                ]
 
         item_ids = []
-        for pt in pts:
+        # miss_item が全て見つかったらループを抜ける
+        for i, pt in enumerate(pts):
             item = OwnedItem(game_screen[pt[1]: pt[3], pt[0]: pt[2]], dropitems)
             item_ids.append(item.id)
+            if item.id in remain_items:
+                remain_items.remove(item.id)
+            if len(remain_items) == 0:
+                break
         logger.debug("item_ids: %s", item_ids)
 
         item_nums = []
         img_gray = cv2.cvtColor(game_screen, cv2.COLOR_BGR2GRAY)
-        for pt in item_pts:
+        for j, pt in enumerate(item_pts):
             numitem = OwnedNumber(img_gray[pt[1]: pt[3], pt[0]: pt[2]], svm)
             item_nums.append(numitem.num)
+            if i == j:
+                break
         logger.debug("item_num: %s", item_nums)
 
         for id, num in zip(item_ids, item_nums):
@@ -464,3 +474,13 @@ def merge_sc(sc_list):
             logger.debug('use sc_list[1] → sc_list[0] on item %s', i)
             sc_list[1].itemlist = merge_list(sc_list[1], sc_list[0])
             return sc_list[1]
+
+
+def detect_missing_item(sc_after, sc_before):
+    miss_item = []
+    for after, before in zip(sc_after.itemlist, sc_before.itemlist):
+        if after["id"] == before["id"]:
+            continue
+        elif after["id"] != ID_UNDROPPED and after["id"] != ID_NO_POSESSION:
+            miss_item.append(after)
+    return miss_item
