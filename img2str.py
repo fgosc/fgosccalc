@@ -794,12 +794,12 @@ class Item:
         if len(line_lower_white) == 7 and line_lower_white.isdecimal():
             return int(line_lower_white)
         # 6桁
-        pts6 = [[124, 292, 152, 335],
-                [151, 292, 182, 335],
-                [177, 292, 208, 335],
-                [216, 292, 248, 335],
-                [244, 292, 272, 335],
-                [270, 292, 300, 335]]
+        pts6 = [[127, 292, 156, 335],
+                [153, 292, 182, 335],
+                [181, 292, 210, 335],
+                [218, 292, 247, 335],
+                [244, 292, 273, 335],
+                [271, 292, 300, 335]]
 
         pts = []
         for pt in pts6:
@@ -1023,9 +1023,9 @@ class Item:
         for pt in reversed(pts):
             char = []
             tmpimg = img_gray[pt[1]:pt[3], pt[0] - offset_x:pt[2] - offset_x]
-#            cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4., fy=4.))
-#            cv2.waitKey(0)
-#            cv2.destroyAllWindows()
+            # cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4., fy=4.))
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(
                                     win_size,
