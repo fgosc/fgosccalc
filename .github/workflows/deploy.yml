@@ -3,8 +3,8 @@ name: deploy
 on:
   workflow_dispatch:
     inputs:
-      deployType:
-        description: "Deploy type [stg/prod]"
+      deploy_mode:
+        description: "Deploy mode [stg/prod]"
         required: true
         default: 'stg'
  
@@ -36,7 +36,7 @@ jobs:
       run: make pre-deploy
 
     - name: "deploy to staging environment"
-      if: ${{ github.events.inputs.deployType == 'stg' }}
+      if: ${{ github.event.inputs.deploy_mode == 'stg' }}
       uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
       with:
         credentials: ${{ secrets.GCLOUD_AUTH }}
@@ -44,7 +44,7 @@ jobs:
         promote: false
 
     - name: "deploy to production environment"
-      if: ${{ github.events.inputs.deployType == 'prod' }}
+      if: ${{ github.event.inputs.deploy_mode == 'prod' }}
       uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
       with:
         credentials: ${{ secrets.GCLOUD_AUTH }}
