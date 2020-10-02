@@ -18,6 +18,9 @@ jobs:
       with:
         submodules: true
 
+    - name: "setup npm"
+      run: npm install
+
     - name: "prepare before deploy"
       run: make pre-deploy
 
