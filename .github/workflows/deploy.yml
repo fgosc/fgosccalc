@@ -33,7 +33,9 @@ jobs:
       run: pip install -r requirements-gcloud.txt
 
     - name: "make item directory in advance to avoid OSError when fgosccalc makes it"
-      run: mkdir item
+      run: |
+        mkdir item
+        touch item/.keepdir
 
     - name: "run pre-deploy process"
       run: make pre-deploy
