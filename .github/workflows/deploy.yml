@@ -18,6 +18,14 @@ jobs:
       with:
         submodules: true
 
+    - name: "setup python"
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: "update pip to the latest"
+      run: pip install --upgrade pip
+
     - name: "setup npm libraries"
       run: npm install
 
@@ -32,7 +40,7 @@ jobs:
       uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
       with:
         credentials: ${{ secrets.GCLOUD_AUTH }}
-        version: stg
+        version: 'stg'
         promote: false
 
     - name: "deploy to production environment"
