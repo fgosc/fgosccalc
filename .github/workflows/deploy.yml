@@ -30,7 +30,7 @@ jobs:
       if: ${{ github.events.inputs.deployType == 'stg' }}
       uses: actions/gcloud/cli@master
       with:
-      args: "app deploy --quiet --project=fgosccalc --no-promote -v stg"
+        args: "app deploy --quiet --project=fgosccalc --no-promote -v stg"
 
     - name: "deploy to production environment"
       if: ${{ github.events.inputs.deployType == 'prod' }}
