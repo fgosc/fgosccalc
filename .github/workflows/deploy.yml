@@ -32,6 +32,9 @@ jobs:
     - name: "setup python libraries"
       run: pip install -r requirements-gcloud.txt
 
+    - name: "make item directory in advance to avoid OSError when fgosccalc makes it"
+      run: mkdir item
+
     - name: "run pre-deploy process"
       run: make pre-deploy
 
