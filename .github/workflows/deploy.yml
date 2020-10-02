@@ -1,0 +1,39 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployType:
+        description: "Deploy type [stg/prod]"
+        required: true
+        default: 'stg'
+ 
+jobs:
+  build: 
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: "checkout"
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: "set auth envs"
+      uses: actions/gcloud/auth@master
+      env:
+        GCLOUD_AUTH: ${{ secrets.GCLOUD_AUTH }}
+
+    - name: "prepare before deploy"
+      run: make pre-deploy
+
+    - name: "deploy to staging environment"
+      if: ${{ github.events.inputs.deployType == 'stg' }}
+      uses: actions/gcloud/cli@master
+      with:
+      args: "app deploy --quiet --project=fgosccalc --no-promote -v stg"
+
+    - name: "deploy to production environment"
+      if: ${{ github.events.inputs.deployType == 'prod' }}
+      uses: actions/gcloud/cli@master
+      with:
+        args: "app deploy --quiet --project=fgosccalc"
