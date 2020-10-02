@@ -18,7 +18,13 @@ jobs:
       with:
         submodules: true
 
-    - name: "prepare before deploy"
+    - name: "setup npm libraries"
+      run: npm install
+
+    - name: "setup python libraries"
+      run: pip install -r requirements-gloud.txt
+
+    - name: "run pre-deploy process"
       run: make pre-deploy
 
     - name: "deploy to staging environment"
