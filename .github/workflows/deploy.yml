@@ -1,0 +1,55 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_mode:
+        description: "Deploy mode [stg/prod]"
+        required: true
+        default: 'stg'
+ 
+jobs:
+  build: 
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: "checkout"
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: "setup python"
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: "update pip to the latest"
+      run: pip install --upgrade pip
+
+    - name: "setup npm libraries"
+      run: npm install
+
+    - name: "setup python libraries"
+      run: pip install -r requirements-gcloud.txt
+
+    - name: "make item directory in advance to avoid OSError when fgosccalc makes it"
+      run: |
+        mkdir item
+        touch item/.keepdir
+
+    - name: "run pre-deploy process"
+      run: make pre-deploy
+
+    - name: "deploy to staging environment"
+      if: ${{ github.event.inputs.deploy_mode == 'stg' }}
+      uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
+      with:
+        credentials: ${{ secrets.GCLOUD_AUTH }}
+        version: 'stg'
+        promote: false
+
+    - name: "deploy to production environment"
+      if: ${{ github.event.inputs.deploy_mode == 'prod' }}
+      uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
+      with:
+        credentials: ${{ secrets.GCLOUD_AUTH }}
