@@ -43,7 +43,7 @@ def makeup(result_list):
 
 def is_valid_file(obj):
     if obj is None:
-        logger.warning('file1 is None')
+        logger.warning('file is None')
         return False
     if obj.file is None:
         logger.warning('file is not specified')
@@ -78,12 +78,19 @@ def upload_post():
         redirect('/')
 
     owned_files = []
+    logger.info('test extra1')
     if is_valid_file(extra1):
         logger.info('extra file1 found')
         owned_files.append(extra1.file)
+    else:
+        logger.info('extra1 not found')
+
+    logger.info('test extra2')
     if is_valid_file(extra2):
         logger.info('extra file2 found')
         owned_files.append(extra2.file)
+    else:
+        logger.info('extra2 not found')
 
     dropitems = img2str.DropItems(storage=storage)
 
@@ -91,10 +98,29 @@ def upload_post():
 
     im2 = cv2.imdecode(get_np_array(file2.file), 1)
     sc2 = img2str.ScreenShot(im2, svm, dropitems)
+    if len(sc2.itemlist) == 0:
+        logger.warning('cannot recognize sc2 image')
+        if sc2.error:
+            logger.warning('error: %s', sc2.error)
+        return template('error',
+            message=(
+                '周回後画像が認識できません。'
+                f'アップロードしたファイル {file2.filename} に間違いがないか確認してください。'
+            )
+        )
 
     im1 = cv2.imdecode(get_np_array(file1.file), 1)
     sc1 = img2str.ScreenShotBefore(im1, svm, dropitems, sc2.itemlist)
-
+    if len(sc1.itemlist) == 0:
+        logger.warning('cannot recognize sc1 image')
+        if sc1.error:
+            logger.warning('error: %s', sc1.error)
+        return template('error',
+            message=(
+                '周回前画像が認識できません。'
+                f'アップロードしたファイル {file1.filename} に間違いがないか確認してください。'
+            )
+        )
 
     logger.info('sc1: %s', sc1.itemlist)
     logger.info('sc2: %s', sc2.itemlist)
