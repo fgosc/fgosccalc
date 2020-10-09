@@ -77,7 +77,11 @@ def main(args):
     for f in args.after:
         file = Path(f)
         img_rgb = img2str.imread(str(file))
-        sc_after.append(img2str.ScreenShot(img_rgb, svm, dropitems))
+        sc = img2str.ScreenShot(img_rgb, svm, dropitems)
+        if len(sc.itemlist) == 0:
+            logger.error("After File: %s", sc.error)
+            exit()
+        sc_after.append(sc)
     sc2 = merge_sc(sc_after)
     logger.debug('sc_after0: %s', sc_after[0].itemlist)
     if len(sc_after) == 2:
@@ -88,7 +92,11 @@ def main(args):
     for i, f in enumerate(args.before):
         file = Path(f)
         img_rgb = img2str.imread(str(file))
-        sc_before.append(img2str.ScreenShotBefore(img_rgb, svm, dropitems, sc_after[i].itemlist))
+        sc = img2str.ScreenShotBefore(img_rgb, svm, dropitems, sc_after[i].itemlist)
+        if len(sc.itemlist) == 0:
+            logger.error("Before File: %s", sc.error)
+            exit()
+        sc_before.append(sc)
     sc1 = merge_sc(sc_before)
 
     logger.debug('sc_before0: %s', sc_before[0].itemlist)
