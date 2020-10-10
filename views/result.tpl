@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css">
   <link rel="stylesheet" href="static/style.css">
   <link rel="canonical" href="/">
   <title>fgosccalc</title>
@@ -15,6 +16,7 @@
   <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
   <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js"></script>
 </head>
 <body>
   <section class="hero is-success">
@@ -152,6 +154,64 @@
     var questname = '{{ questname }}';
     var runcount = '000';
     var data = JSON.parse('{{! dropdata }}');
+
+    function openModal(event) {
+      const modal = new tingle.modal({
+        cssClass: ['image-modal'],
+        closeMethods: ['overlay', 'button', 'escape'],
+        closeLabel: "Close",
+      });
+      const root = document.createElement('div');
+      root.appendChild(event.target.cloneNode(false))
+      modal.setContent(root.innerHTML);
+      modal.open();
+    }
+
+    class ModalEventsControl {
+      constructor() {
+        this.openModalEventEnabled = false;
+        this.nodes = document.querySelectorAll('.image');
+        this.setOpenModalEvents = this.setOpenModalEvents.bind(this);
+        this.removeOpenModalEvents = this.removeOpenModalEvents.bind(this);
+        this.calcImgWindowRatio = this.calcImgWindowRatio.bind(this);
+        this.toggleOpenModalEvents = this.toggleOpenModalEvents.bind(this);
+      }
+
+      setOpenModalEvents() {
+        for (let node of this.nodes) {
+          node.addEventListener('click', openModal, false);
+        }
+      }
+
+      removeOpenModalEvents() {
+        for (let node of this.nodes) {
+          node.removeEventListener('click', openModal, false);
+        }
+      }
+
+      calcImgWindowRatio() {
+        if (this.nodes.length === 0) {
+          return 1;
+        }
+        return this.nodes[0].width / document.body.clientWidth;
+      }
+
+      toggleOpenModalEvents() {
+        const ratio = this.calcImgWindowRatio();
+        if (this.openModalEventEnabled === false && ratio < 0.5) {
+          this.setOpenModalEvents();
+          this.openModalEventEnabled = true;
+        }
+        if (this.openModalEventEnabled === true && ratio > 0.5) {
+          this.removeOpenModalEvents();
+          this.openModalEventEnabled = false;
+        }
+      }
+    }
+    const control = new ModalEventsControl();
+    window.addEventListener('resize', control.toggleOpenModalEvents, false);
+    // 初回のみ明示的に実行
+    control.toggleOpenModalEvents();
   </script>
   <script src="/static/js/dist/report.js"></script>
 % end
