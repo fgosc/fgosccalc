@@ -91,7 +91,8 @@ class ScreenShotBundle:
         logger.info('sc before: %s', self.before_sc.itemlist)
         logger.info('sc after: %s', self.after_sc.itemlist)
 
-        missing_items = dropitemseditor.detect_missing_item(self.before_sc, self.after_sc)
+        missing_items = dropitemseditor.detect_missing_item(self.after_sc, self.before_sc)
+        logger.info('missing items: %s', missing_items)
 
         if self.owned_files:
             _, owned_list = dropitemseditor.read_owned_ss(self.owned_files, self.dropitems, self.svm, missing_items)
