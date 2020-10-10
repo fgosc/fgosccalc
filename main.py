@@ -172,12 +172,18 @@ def upload_post():
     extra_files = request.files.getall('extra')
 
     logger.info('test before_files')
+    if len(before_files) == 0:
+        logger.warning('before_files is blank')
+        redirect('/')
     for i, f in enumerate(before_files):
         logger.info('test before_file %s', i)
         if not is_valid_file(f):
             redirect('/')
 
     logger.info('test after_files')
+    if len(after_files) == 0:
+        logger.warning('after_files is blank')
+        redirect('/')
     for i, f in enumerate(after_files):
         logger.info('test after_file %s', i)
         if not is_valid_file(f):
