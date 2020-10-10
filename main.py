@@ -62,6 +62,10 @@ def upload_get():
     redirect('/')
 
 
+class CannotAnalyzeError(Exception):
+    pass
+
+
 class ScreenShotBundle:
     def __init__(self, before_files, after_files, owned_files):
         if len(before_files) != len(after_files):
@@ -126,12 +130,11 @@ class ScreenShotBundle:
                 logger.warning('cannot recognize image')
                 if sc.error:
                     logger.warning('error: %s', sc.error)
-                return template('error',
-                    message=(
-                        '周回後画像が認識できません。'
-                        f'アップロードしたファイル {f.filename} に間違いがないか確認してください。'
-                    )
+                message=(
+                    '周回後画像が認識できません。'
+                    f'アップロードしたファイル {f.filename} に間違いがないか確認してください。'
                 )
+                raise CannotAnalyzeError(message)
             self.before_sc_objects.append(sc)
         return dropitemseditor.merge_sc(self.before_sc_objects)
 
@@ -144,12 +147,11 @@ class ScreenShotBundle:
                 logger.warning('cannot recognize image')
                 if sc.error:
                     logger.warning('error: %s', sc.error)
-                return template('error',
-                    message=(
-                        '周回後画像が認識できません。'
-                        f'アップロードしたファイル {f.filename} に間違いがないか確認してください。'
-                    )
+                message=(
+                    '周回後画像が認識できません。'
+                    f'アップロードしたファイル {f.filename} に間違いがないか確認してください。'
                 )
+                raise CannotAnalyzeError(message)
             self.after_sc_objects.append(sc)
         return dropitemseditor.merge_sc(self.after_sc_objects)
 
@@ -192,7 +194,11 @@ def upload_post():
             logger.info('extra_file %s not found')
 
     bundle = ScreenShotBundle(before_files, after_files, owned_files)
-    bundle.analyze()
+    try:
+        bundle.analyze()
+    except CannotAnalyzeError as e:
+        logger.error(e)
+        return template('error', message=str(e))
 
     questname, questdrop = dropitemseditor.get_questinfo(bundle.before_sc, bundle.after_sc)
     logger.info('quest: %s', questname)
