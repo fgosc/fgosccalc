@@ -106,6 +106,10 @@
             </article>
           </div>
           % end
+          % if len(extra_images) == 1:
+          <!-- extra が 1 枚だけのときに表示画像の大きさがアンバランスになるのを回避する -->
+          <div class="tile is-parent"></div>
+          % end
         </div>
       % end
 

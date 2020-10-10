@@ -22,7 +22,7 @@
   <section class="section">
     <div class="container">
       <div class="content">
-        <p>クエスト情報の戦利品のスクリーンショット2枚（周回前後）を投稿すると、アイテム獲得数を計算します。</p>
+        <p>クエスト情報の戦利品のスクリーンショットを投稿すると、アイテム獲得数を計算します。</p>
 
         <form method="post" action="/upload" enctype="multipart/form-data">
           <div class="field">
@@ -34,7 +34,7 @@
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    周回前
+                    周回前（2枚まで）
                   </span>
                 </span>
                 <span id="before-filename" class="file-name">
@@ -52,7 +52,7 @@
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    周回後
+                    周回後（2枚まで）
                   </span>
                 </span>
                 <span id="after-filename" class="file-name">
@@ -71,7 +71,7 @@
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    （オプション）所持品画像
+                    所持品画像（オプション、2枚まで）
                   </span>
                 </span>
                 <span id="extra-filename" class="file-name">
@@ -92,6 +92,7 @@
         <ul>
           <li>たまにエラーが発生します（仕様）。ブラウザバックで戻ってもう一回同じ操作をしてください。3-4 回繰り返しても同じエラーが起きる場合はご連絡ください。</li>
           <li>画像認識の精度は 100% ではありません。過信しないようご注意を。バグ報告は歓迎します。</li>
+          <li>画像のトリミングをすると認識に失敗する可能性が上がります。画像は<b><u>トリミングしていないものを使うことを推奨</u></b>します。</li>
         </ul>
 
         <h3>オプション画像について</h3>
