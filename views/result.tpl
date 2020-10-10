@@ -35,22 +35,24 @@
       % if not sc2_available:
         <p>画像2を正常に解析できませんでした。アップロードしたファイルが正しいか確認してください。</p>
       % end
+      % for before_im, after_im in image_pairs:
         <div class="tile is-ancestor">
           <div class="tile is-parent">
             <article class="tile is-child box">
-            % if before_im:
+            % if before_im is not None:
               <img class="image" src="data:image/png;base64,{{ before_im }}">
             % end
             </article>
           </div>
           <div class="tile is-parent">
             <article class="tile is-child box">
-            % if after_im:
+            % if after_im is not None:
               <img class="image" src="data:image/png;base64,{{ after_im }}">
             % end
             </article>
           </div>
         </div>
+      % end
 % else:
         <h3>解析結果</h3>
         <p>{{ result }}</p>
@@ -74,39 +76,40 @@
           % end
         </table>
 
+      % for before_im, after_im in image_pairs:
         <div class="tile is-ancestor">
           <div class="tile is-parent">
             <article class="tile is-child box">
-            % if before_im:
+            % if before_im is not None:
               <img class="image" src="data:image/jpeg;base64,{{ before_im }}">
             % end
             </article>
           </div>
           <div class="tile is-parent">
             <article class="tile is-child box">
-            % if after_im:
+            % if after_im is not None:
               <img class="image" src="data:image/jpeg;base64,{{ after_im }}">
             % end
             </article>
           </div>
         </div>
+      % end
 
-      % if has_extra_im:
+      % if extra_images:
         <div class="tile is-ancestor">
+          % for im in extra_images:
           <div class="tile is-parent">
             <article class="tile is-child box">
-            % if extra1_im:
-              <img class="image" src="data:image/jpeg;base64,{{ extra1_im }}">
+            % if im:
+              <img class="image" src="data:image/jpeg;base64,{{ im }}">
             % end
             </article>
           </div>
-          <div class="tile is-parent">
-            <article class="tile is-child box">
-            % if extra2_im:
-              <img class="image" src="data:image/jpeg;base64,{{ extra2_im }}">
-            % end
-            </article>
-          </div>
+          % end
+          % if len(extra_images) == 1:
+          <!-- extra が 1 枚だけのときに表示画像の大きさがアンバランスになるのを回避する -->
+          <div class="tile is-parent"></div>
+          % end
         </div>
       % end
 
