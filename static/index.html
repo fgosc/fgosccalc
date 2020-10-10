@@ -28,7 +28,7 @@
           <div class="field">
             <div class="file has-name">
               <label class="file-label">
-                <input class="file-input" id="before" type="file" name="file1" accept=".png,.jpg,.jpeg">
+                <input class="file-input" id="before" type="file" name="before" multiple accept=".png,.jpg,.jpeg">
                 <span class="file-cta">
                   <span class="file-icon">
                     <i class="fas fa-upload"></i>
@@ -46,7 +46,7 @@
           <div class="field">
             <div class="file has-name">
               <label class="file-label">
-                <input class="file-input" id="after" type="file" name="file2" accept=".png,.jpg,.jpeg">
+                <input class="file-input" id="after" type="file" name="after" multiple accept=".png,.jpg,.jpeg">
                 <span class="file-cta">
                   <span class="file-icon">
                     <i class="fas fa-upload"></i>
@@ -65,34 +65,16 @@
           <div class="field">
             <div class="file has-name">
               <label class="file-label">
-                <input class="file-input" id="extra1" type="file" name="extra1" accept=".png,.jpg,.jpeg">
+                <input class="file-input" id="extra" type="file" name="extra" multpile accept=".png,.jpg,.jpeg">
                 <span class="file-cta">
                   <span class="file-icon">
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    （オプション）所持品画像1
+                    （オプション）所持品画像
                   </span>
                 </span>
-                <span id="extra1-filename" class="file-name">
-                  ファイルが選択されていません。
-                </span>
-              </label>
-            </div>
-          </div>
-          <div class="field">
-            <div class="file has-name">
-              <label class="file-label">
-                <input class="file-input" id="extra2" type="file" name="extra2" accept=".png,.jpg,.jpeg">
-                <span class="file-cta">
-                  <span class="file-icon">
-                    <i class="fas fa-upload"></i>
-                  </span>
-                  <span class="file-label">
-                    （オプション）所持品画像2
-                  </span>
-                </span>
-                <span id="extra2-filename" class="file-name">
+                <span id="extra-filename" class="file-name">
                   ファイルが選択されていません。
                 </span>
               </label>
@@ -134,10 +116,28 @@
   </section>
   <script>
     function validate() {
-      const file1 = document.getElementById("before");
-      const file2 = document.getElementById("after");
-      if (file1.value === "" || file2.value === "") {
+      const before = document.getElementById("before");
+      const after = document.getElementById("after");
+      const extra = document.getElementById("extra");
+
+      if (before.value === "" || after.value === "") {
         alert("周回前後のスクリーンショットを指定してください。");
+        return false;
+      }
+      if (before.files.length != after.files.length) {
+        alert("周回前後のスクリーンショット枚数は同じにしてください。");
+        return false;
+      }
+      if (before.files.length > 2) {
+        alert("周回前スクリーンショットは2枚まで指定できます。");
+        return false;
+      }
+      if (after.files.length > 2) {
+        alert("周回後スクリーンショットは2枚まで指定できます。");
+        return false;
+      }
+      if (extra.files.length > 2) {
+        alert("所持品スクリーンショットは2枚まで指定できます。");
         return false;
       }
       return true;
@@ -148,12 +148,16 @@
       input.onchange = () => {
         if (input.files.length > 0) {
           const fileName = document.getElementById(key + '-filename');
-          fileName.textContent = input.files[0].name;
+          const names = [];
+          for (file of input.files) {
+            names.push(file.name);
+          }
+          fileName.textContent = names.join(', ');
         }
       }
     }
 
-    const keys = ['before', 'after', 'extra1', 'extra2'];
+    const keys = ['before', 'after', 'extra'];
     for (key of keys) {
       setOnChangeEvent(key);
     }

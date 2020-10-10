@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import argparse
+import base64
 import copy
 import io
-import base64
+import itertools
 import json
 import logging
 from pathlib import Path
-from urllib.parse import quote_plus
 
 import cv2
 import numpy as np
@@ -62,92 +62,143 @@ def upload_get():
     redirect('/')
 
 
+class ScreenShotBundle:
+    def __init__(self, before_files, after_files, owned_files):
+        if len(before_files) != len(after_files):
+            msg = 'the number of before_files ({}) must be equal to the number of after_files ({})'
+            raise ValueError(msg.format(len(before_files), len(after_files)))
+
+        self.svm = cv2.ml.SVM_load(str(img2str.training))
+        self.dropitems = img2str.DropItems(storage=storage)
+        self.before_files = before_files
+        self.after_files = after_files
+        self.owned_files = owned_files
+        # これらは analyze() の後に値が設定される
+        self.before_images = []
+        self.after_images = []
+        self.owned_images = []
+        self.before_sc_objects = []
+        self.after_sc_objects = []
+        self.owned_diff = []
+        self.before_sc = None
+        self.after_sc = None
+        self.parse_result = None
+
+    def analyze(self):
+        self.after_sc = self._analyze_after_files()
+        self.before_sc = self._analyze_before_files()
+
+        logger.info('sc before: %s', self.before_sc.itemlist)
+        logger.info('sc after: %s', self.after_sc.itemlist)
+
+        missing_items = dropitemseditor.detect_missing_item(self.before_sc, self.after_sc)
+
+        if self.owned_files:
+            _, owned_list = dropitemseditor.read_owned_ss(self.owned_files, self.dropitems, self.svm, missing_items)
+            logger.info('owned list: %s', owned_list)
+            self.owned_diff = dropitemseditor.make_owned_diff(self.before_sc.itemlist, self.after_sc.itemlist, owned_list)
+            logger.info('owned diff: %s', self.owned_diff)
+
+        for of in self.owned_files:
+            # dropitemseditor.read_owned_ss() で終端まで読み取り済みなので
+            # seek 位置を先頭に戻してやらないと imdecode できない。
+            of.seek(0)
+            na = cv2.imdecode(get_np_array(of), 1)
+            im = nparray_to_imagebytes(na)
+            self.owned_images.append(im)
+
+        self.parse_result = dropitemseditor.make_diff(
+            copy.deepcopy(self.before_sc.itemlist),
+            copy.deepcopy(self.after_sc.itemlist),
+            owned=self.owned_diff,
+        )
+        logger.info('parse_result: %s', self.parse_result)
+
+    def _analyze_before_files(self):
+        """ 先に _analyze_after_files() を呼び出しておくこと
+        """
+        for i, f in enumerate(self.before_files):
+            im = cv2.imdecode(get_np_array(f.file), 1)
+            self.before_images.append(im)
+            sc = img2str.ScreenShotBefore(im, self.svm, self.dropitems, self.after_sc_objects[i].itemlist)
+            if len(sc.itemlist) == 0:
+                logger.warning('cannot recognize image')
+                if sc.error:
+                    logger.warning('error: %s', sc.error)
+                return template('error',
+                    message=(
+                        '周回後画像が認識できません。'
+                        f'アップロードしたファイル {f.filename} に間違いがないか確認してください。'
+                    )
+                )
+            self.before_sc_objects.append(sc)
+        return dropitemseditor.merge_sc(self.before_sc_objects)
+
+    def _analyze_after_files(self):
+        for f in self.after_files:
+            im = cv2.imdecode(get_np_array(f.file), 1)
+            self.after_images.append(im)
+            sc = img2str.ScreenShot(im, self.svm, self.dropitems)
+            if len(sc.itemlist) == 0:
+                logger.warning('cannot recognize image')
+                if sc.error:
+                    logger.warning('error: %s', sc.error)
+                return template('error',
+                    message=(
+                        '周回後画像が認識できません。'
+                        f'アップロードしたファイル {f.filename} に間違いがないか確認してください。'
+                    )
+                )
+            self.after_sc_objects.append(sc)
+        return dropitemseditor.merge_sc(self.after_sc_objects)
+
+    def image_pairs(self):
+        return itertools.zip_longest(self.before_images, self.after_images)
+
+    def encoded_image_pairs(self):
+        return [
+            (nparray_to_imagebytes(before), nparray_to_imagebytes(after))
+            for before, after in itertools.zip_longest(self.before_images, self.after_images)
+        ]
+
+
 @app.post('/upload')
 def upload_post():
-    file1 = request.files.get('file1')
-    file2 = request.files.get('file2')
-    extra1 = request.files.get('extra1')
-    extra2 = request.files.get('extra2')
+    before_files = request.files.getall('before')
+    after_files = request.files.getall('after')
+    extra_files = request.files.getall('extra')
 
-    logger.info('test file1')
-    if not is_valid_file(file1):
-        redirect('/')
+    logger.info('test before_files')
+    for i, f in enumerate(before_files):
+        logger.info('test before_file %s', i)
+        if not is_valid_file(f):
+            redirect('/')
 
-    logger.info('test file2')
-    if not is_valid_file(file2):
-        redirect('/')
+    logger.info('test after_files')
+    for i, f in enumerate(after_files):
+        logger.info('test after_file %s', i)
+        if not is_valid_file(f):
+            redirect('/')
 
     owned_files = []
-    logger.info('test extra1')
-    if is_valid_file(extra1):
-        logger.info('extra file1 found')
-        owned_files.append(extra1.file)
-    else:
-        logger.info('extra1 not found')
+    logger.info('test extra_files')
+    for i, f in enumerate(extra_files):
+        logger.info('test extra_file %s', i)
+        if is_valid_file(f):
+            logger.info('extra_file %s found', i)
+            owned_files.append(f.file)
+        else:
+            logger.info('extra_file %s not found')
 
-    logger.info('test extra2')
-    if is_valid_file(extra2):
-        logger.info('extra file2 found')
-        owned_files.append(extra2.file)
-    else:
-        logger.info('extra2 not found')
+    bundle = ScreenShotBundle(before_files, after_files, owned_files)
+    bundle.analyze()
 
-    dropitems = img2str.DropItems(storage=storage)
-
-    svm = cv2.ml.SVM_load(str(img2str.training))
-
-    im2 = cv2.imdecode(get_np_array(file2.file), 1)
-    sc2 = img2str.ScreenShot(im2, svm, dropitems)
-    if len(sc2.itemlist) == 0:
-        logger.warning('cannot recognize sc2 image')
-        if sc2.error:
-            logger.warning('error: %s', sc2.error)
-        return template('error',
-            message=(
-                '周回後画像が認識できません。'
-                f'アップロードしたファイル {file2.filename} に間違いがないか確認してください。'
-            )
-        )
-
-    im1 = cv2.imdecode(get_np_array(file1.file), 1)
-    sc1 = img2str.ScreenShotBefore(im1, svm, dropitems, sc2.itemlist)
-    if len(sc1.itemlist) == 0:
-        logger.warning('cannot recognize sc1 image')
-        if sc1.error:
-            logger.warning('error: %s', sc1.error)
-        return template('error',
-            message=(
-                '周回前画像が認識できません。'
-                f'アップロードしたファイル {file1.filename} に間違いがないか確認してください。'
-            )
-        )
-
-    logger.info('sc1: %s', sc1.itemlist)
-    logger.info('sc2: %s', sc2.itemlist)
-
-    miss_items = dropitemseditor.detect_missing_item(sc2, sc1)
-
-    if owned_files:
-        _, owned_list = dropitemseditor.read_owned_ss(owned_files, dropitems, svm, miss_items)
-        logger.info('owned list: %s', owned_list)
-        owned_diff = dropitemseditor.make_owned_diff(sc1.itemlist, sc2.itemlist, owned_list)
-        logger.info('owned diff: %s', owned_diff)
-    else:
-        owned_diff = []
-
-    result_list = dropitemseditor.make_diff(
-        copy.deepcopy(sc1.itemlist),
-        copy.deepcopy(sc2.itemlist),
-        owned=owned_diff,
-    )
-    logger.info('result_list: %s', result_list)
-
-    questname, questdrop = dropitemseditor.get_questinfo(sc1, sc2)
+    questname, questdrop = dropitemseditor.get_questinfo(bundle.before_sc, bundle.after_sc)
     logger.info('quest: %s', questname)
     logger.info('questdrop: %s', questdrop)
 
-    drops_diff = dropitemseditor.DropsDiff(result_list, questname, questdrop)
-    parsed_obj = drops_diff.parse(dropitems)
+    drops_diff = dropitemseditor.DropsDiff(bundle.parse_result, questname, questdrop)
+    parsed_obj = drops_diff.parse(bundle.dropitems)
 
     dropdata = parsed_obj.as_json_data()
     logger.info('dropdata json: %s', dropdata)
@@ -159,58 +210,37 @@ def upload_post():
         d['add'] = 0
         d['reduce'] = 0
 
-    before_after_pairs = make_before_after_pairs(sc1.itemlist, sc2.itemlist, owned_diff)
+    before_after_pairs = make_before_after_pairs(bundle.before_sc.itemlist, bundle.after_sc.itemlist, bundle.owned_diff)
     logger.info('pairs: %s', before_after_pairs)
     contains_unknown_items = any([pair[0].startswith('item0') for pair in before_after_pairs])
 
-    before_im = nparray_to_imagebytes(im1)
-    after_im = nparray_to_imagebytes(im2)
-    has_extra_im = False
-    extra1_im = None
-    extra2_im = None
-    if len(owned_files) > 0:
-        has_extra_im = True
-        f = owned_files[0]
-        # dropitemseditor.read_owned_ss() で終端まで読み取り済みなので
-        # seek 位置を先頭に戻してやらないと imdecode できない。
-        f.seek(0)
-        extra1_nparray = cv2.imdecode(get_np_array(f), 1)
-        extra1_im = nparray_to_imagebytes(extra1_nparray)
-    if len(owned_files) > 1:
-        f = owned_files[1]
-        # 上記と同じ理由で seek(0) が必要。
-        f.seek(0)
-        extra2_nparray = cv2.imdecode(get_np_array(f), 1)
-        extra2_im = nparray_to_imagebytes(extra2_nparray)
-
     return template('result',
-        result=makeup(result_list),
-        sc1_available=(len(sc1.itemlist) > 0),
-        sc2_available=(len(sc2.itemlist) > 0),
+        result=makeup(bundle.parse_result),
+        sc1_available=(len(bundle.before_sc.itemlist) > 0),
+        sc2_available=(len(bundle.after_sc.itemlist) > 0),
         before_after_pairs=before_after_pairs,
-        before_im=before_im,
-        after_im=after_im,
-        has_extra_im=has_extra_im,
-        extra1_im=extra1_im,
-        extra2_im=extra2_im,
+        image_pairs=bundle.encoded_image_pairs(),
+        extra_images=bundle.owned_images,
         questname=questname,
         dropdata=json.dumps(dropdata),
         contains_unknown_items=contains_unknown_items,
     )
 
 
-def nparray_to_imagebytes(im):
-    h, _ = im.shape[:2]
-    # 解像度の高いものは半分にリサイズ
-    if h >= 1000:
-        resized_im = cv2.resize(im, dsize=None, fx=0.5, fy=0.5)
-    else:
-        resized_im = im
-    ok, encoded_im = cv2.imencode('.jpg', resized_im)
+def nparray_to_jpeg(im):
+    ok, encoded = cv2.imencode('.jpg', im)
     if ok:
-        return base64.b64encode(encoded_im.tobytes())
-    else:
-        return None
+        return encoded
+
+
+def jpeg_to_imagebytes(encoded_im):
+    return base64.b64encode(encoded_im.tobytes())
+
+
+def nparray_to_imagebytes(im):
+    jpg = nparray_to_jpeg(im)
+    if jpg is not None:
+        return jpeg_to_imagebytes(jpg)
 
 
 def make_before_after_pairs(before_list, after_list, owned_diff):
