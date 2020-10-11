@@ -460,7 +460,7 @@ def merge_sc(sc_list):
     list内のスクロール上下を決め、内容をマージする
     """
     if len(sc_list) == 1:
-        return sc_list[0]
+        return sc_list[0].itemlist
 
     for i in range(len(sc_list[0].itemlist)):
         if sc_list[0].itemlist[i]["id"] <= 0 or sc_list[1].itemlist[i]["id"] <= 0:
