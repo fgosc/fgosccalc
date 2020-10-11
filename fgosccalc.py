@@ -21,6 +21,7 @@ from dropitemseditor import (
     get_questinfo,
     make_diff,
     make_owned_diff,
+    detect_upper,
     merge_sc,
     read_owned_ss,
     detect_missing_item
@@ -82,22 +83,28 @@ def main(args):
             logger.error("After File: %s", sc.error)
             exit()
         sc_after.append(sc)
-    sc2 = merge_sc(sc_after)
+    # スクロール上下を決める
+    sc2 = detect_upper(sc_after)
+    # マージしたリストを作る
+    sc2_itemlist = merge_sc(sc_after)
     logger.debug('sc_after0: %s', sc_after[0].itemlist)
     if len(sc_after) == 2:
         logger.debug('sc_after1: %s', sc_after[1].itemlist)
-    logger.debug('sc2: %s', sc2.itemlist)
+    logger.debug('sc2: %s', sc2_itemlist)
 
     sc_before = []
-    for i, f in enumerate(args.before):
+    for f in args.before:
         file = Path(f)
         img_rgb = img2str.imread(str(file))
-        sc = img2str.ScreenShotBefore(img_rgb, svm, dropitems, sc_after[i].itemlist)
+        sc = img2str.ScreenShot(img_rgb, svm, dropitems)
         if len(sc.itemlist) == 0:
             logger.error("Before File: %s", sc.error)
             exit()
         sc_before.append(sc)
-    sc1 = merge_sc(sc_before)
+    # スクロール上下を決める
+    sc1 = detect_upper(sc_before)
+    # マージしたリストを作る
+    sc1_itemlist = merge_sc(sc_before)
 
     logger.debug('sc_before0: %s', sc_before[0].itemlist)
     if len(sc_before) == 2:
@@ -105,7 +112,7 @@ def main(args):
     logger.debug('sc1: %s', sc1.itemlist)
 
     # 足りないアイテムを求める
-    miss_items = detect_missing_item(sc2, sc1)
+    miss_items = detect_missing_item(sc2_itemlist, sc1_itemlist)
  
     if args.owned:
         code, owned_list = read_owned_ss(args.owned, dropitems, svm, miss_items)
@@ -117,9 +124,9 @@ def main(args):
 
     owned_diff = []
     if code == 0:
-        owned_diff = make_owned_diff(sc1.itemlist, sc2.itemlist, owned_list)
+        owned_diff = make_owned_diff(sc1_itemlist, sc2_itemlist, owned_list)
 
-    newdic = make_diff(sc1.itemlist, sc2.itemlist, owned=owned_diff)
+    newdic = make_diff(sc1_itemlist, sc2_itemlist, owned=owned_diff)
 
     questname, droplist = get_questinfo(sc1, sc2)
 

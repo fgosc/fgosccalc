@@ -452,7 +452,6 @@ def merge_list(upper, bottom):
         lower_start = 0
     else:
         lower_start = 12 - (j - b_candidate)
-
     return upper.itemlist + bottom.itemlist[lower_start:]
 
 
@@ -468,17 +467,30 @@ def merge_sc(sc_list):
             continue
         if sc_list[0].itemlist[i]["dropPriority"] > sc_list[1].itemlist[i]["dropPriority"]:
             logger.debug('use sc_list[0] → sc_list[1] on item %s', i)
-            sc_list[0].itemist = merge_list(sc_list[0], sc_list[1])
+            return merge_list(sc_list[0], sc_list[1])
+        else:
+            return merge_list(sc_list[1], sc_list[0])
+
+
+def detect_upper(sc_list):
+    """
+    list内のスクロール上下を決め上のオブジェクトを返す
+    """
+    if len(sc_list) == 1:
+        return sc_list[0]
+
+    for i in range(len(sc_list[0].itemlist)):
+        if sc_list[0].itemlist[i]["id"] <= 0 or sc_list[1].itemlist[i]["id"] <= 0:
+            continue
+        if sc_list[0].itemlist[i]["dropPriority"] > sc_list[1].itemlist[i]["dropPriority"]:
             return sc_list[0]
         else:
-            logger.debug('use sc_list[1] → sc_list[0] on item %s', i)
-            sc_list[1].itemlist = merge_list(sc_list[1], sc_list[0])
             return sc_list[1]
 
 
 def detect_missing_item(sc_after, sc_before):
     miss_item = []
-    for after, before in zip(sc_after.itemlist, sc_before.itemlist):
+    for after, before in zip(sc_after, sc_before):
         if after["id"] == before["id"]:
             continue
         elif after["id"] != ID_UNDROPPED and after["id"] != ID_NO_POSESSION:
