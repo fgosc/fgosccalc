@@ -83,14 +83,21 @@ class ScreenShotBundle:
         self.owned_images = []
         self.before_sc_objects = []
         self.after_sc_objects = []
+        self.before_sc_itemlist = []
+        self.after_sc_itemlist = []
         self.owned_diff = []
-        self.before_sc = None
-        self.after_sc = None
+        self.before_sc_upper = None
+        self.after_sc_upper = None
         self.parse_result = None
 
     def analyze(self):
-        self.after_sc, self.after_sc_itemlist = self._analyze_after_files()
-        self.before_sc, self.before_sc_itemlist = self._analyze_before_files()
+        self._analyze_before_files()
+        self.before_sc_upper = dropitemseditor.detect_upper(self.before_sc_objects)
+        self.before_sc_itemlist = dropitemseditor.merge_sc(self.before_sc_objects)
+
+        self._analyze_after_files()
+        self.after_sc_upper = dropitemseditor.detect_upper(self.after_sc_objects)
+        self.after_sc_itemlist = dropitemseditor.merge_sc(self.after_sc_objects)
 
         logger.info('sc before: %s', self.before_sc_itemlist)
         logger.info('sc after: %s', self.after_sc_itemlist)
@@ -120,7 +127,10 @@ class ScreenShotBundle:
         logger.info('parse_result: %s', self.parse_result)
 
     def _analyze_before_files(self):
-        """ 先に _analyze_after_files() を呼び出しておくこと
+        """ これを実行すると
+            - self.before_images
+            - self.before_sc_objects
+            が設定される。
         """
         for f in self.before_files:
             im = cv2.imdecode(get_np_array(f.file), 1)
@@ -136,9 +146,13 @@ class ScreenShotBundle:
                 )
                 raise CannotAnalyzeError(message)
             self.before_sc_objects.append(sc)
-        return dropitemseditor.detect_upper(self.before_sc_objects), dropitemseditor.merge_sc(self.before_sc_objects)
 
     def _analyze_after_files(self):
+        """ これを実行すると
+            - self.after_images
+            - self.after_sc_objects
+            が設定される。
+        """
         for f in self.after_files:
             im = cv2.imdecode(get_np_array(f.file), 1)
             self.after_images.append(im)
@@ -153,7 +167,6 @@ class ScreenShotBundle:
                 )
                 raise CannotAnalyzeError(message)
             self.after_sc_objects.append(sc)
-        return dropitemseditor.detect_upper(self.after_sc_objects), dropitemseditor.merge_sc(self.after_sc_objects)
 
     def image_pairs(self):
         return itertools.zip_longest(self.before_images, self.after_images)
@@ -206,7 +219,7 @@ def upload_post():
         logger.error(e)
         return template('error', message=str(e))
 
-    questname, questdrop = dropitemseditor.get_questinfo(bundle.before_sc, bundle.after_sc)
+    questname, questdrop = dropitemseditor.get_questinfo(bundle.before_sc_upper, bundle.after_sc_upper)
     logger.info('quest: %s', questname)
     logger.info('questdrop: %s', questdrop)
 
@@ -223,14 +236,14 @@ def upload_post():
         d['add'] = 0
         d['reduce'] = 0
 
-    before_after_pairs = make_before_after_pairs(bundle.before_sc.itemlist, bundle.after_sc.itemlist, bundle.owned_diff)
+    before_after_pairs = make_before_after_pairs(bundle.before_sc_itemlist, bundle.after_sc_itemlist, bundle.owned_diff)
     logger.info('pairs: %s', before_after_pairs)
     contains_unknown_items = any([pair[0].startswith('item0') for pair in before_after_pairs])
 
     return template('result',
         result=makeup(bundle.parse_result),
-        sc1_available=(len(bundle.before_sc.itemlist) > 0),
-        sc2_available=(len(bundle.after_sc.itemlist) > 0),
+        sc1_available=(len(bundle.before_sc_itemlist) > 0),
+        sc2_available=(len(bundle.after_sc_itemlist) > 0),
         before_after_pairs=before_after_pairs,
         image_pairs=bundle.encoded_image_pairs(),
         extra_images=bundle.owned_images,
