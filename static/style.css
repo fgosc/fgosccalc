@@ -13,3 +13,11 @@ ul.note li {
 .title:not(.is-spaced)+.subtitle {
     margin-top: -1.25rem;
 }
+
+.image-modal .tingle-modal-box {
+    width: 80%;
+}
+
+.image-modal .tingle-modal-box__content {
+    padding: 0.8rem;
+}
