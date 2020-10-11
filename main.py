@@ -122,10 +122,10 @@ class ScreenShotBundle:
     def _analyze_before_files(self):
         """ 先に _analyze_after_files() を呼び出しておくこと
         """
-        for i, f in enumerate(self.before_files):
+        for f in self.before_files:
             im = cv2.imdecode(get_np_array(f.file), 1)
             self.before_images.append(im)
-            sc = img2str.ScreenShotBefore(im, self.svm, self.dropitems, self.after_sc_objects[i].itemlist)
+            sc = img2str.ScreenShot(im, self.svm, self.dropitems)
             if len(sc.itemlist) == 0:
                 logger.warning('cannot recognize image')
                 if sc.error:

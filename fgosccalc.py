@@ -93,10 +93,10 @@ def main(args):
     logger.debug('sc2: %s', sc2_itemlist)
 
     sc_before = []
-    for i, f in enumerate(args.before):
+    for f in args.before:
         file = Path(f)
         img_rgb = img2str.imread(str(file))
-        sc = img2str.ScreenShotBefore(img_rgb, svm, dropitems, sc_after[i].itemlist)
+        sc = img2str.ScreenShot(img_rgb, svm, dropitems)
         if len(sc.itemlist) == 0:
             logger.error("Before File: %s", sc.error)
             exit()
