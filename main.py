@@ -89,19 +89,19 @@ class ScreenShotBundle:
         self.parse_result = None
 
     def analyze(self):
-        self.after_sc = self._analyze_after_files()
-        self.before_sc = self._analyze_before_files()
+        self.after_sc, self.after_sc_itemlist = self._analyze_after_files()
+        self.before_sc, self.before_sc_itemlist = self._analyze_before_files()
 
-        logger.info('sc before: %s', self.before_sc.itemlist)
-        logger.info('sc after: %s', self.after_sc.itemlist)
+        logger.info('sc before: %s', self.before_sc_itemlist)
+        logger.info('sc after: %s', self.after_sc_itemlist)
 
-        missing_items = dropitemseditor.detect_missing_item(self.after_sc, self.before_sc)
+        missing_items = dropitemseditor.detect_missing_item(self.after_sc_itemlist, self.before_sc_itemlist)
         logger.info('missing items: %s', missing_items)
 
         if self.owned_files:
             _, owned_list = dropitemseditor.read_owned_ss(self.owned_files, self.dropitems, self.svm, missing_items)
             logger.info('owned list: %s', owned_list)
-            self.owned_diff = dropitemseditor.make_owned_diff(self.before_sc.itemlist, self.after_sc.itemlist, owned_list)
+            self.owned_diff = dropitemseditor.make_owned_diff(self.before_sc_itemlist, self.after_sc_itemlist, owned_list)
             logger.info('owned diff: %s', self.owned_diff)
 
         for of in self.owned_files:
@@ -113,8 +113,8 @@ class ScreenShotBundle:
             self.owned_images.append(im)
 
         self.parse_result = dropitemseditor.make_diff(
-            copy.deepcopy(self.before_sc.itemlist),
-            copy.deepcopy(self.after_sc.itemlist),
+            copy.deepcopy(self.before_sc_itemlist),
+            copy.deepcopy(self.after_sc_itemlist),
             owned=self.owned_diff,
         )
         logger.info('parse_result: %s', self.parse_result)
@@ -136,7 +136,7 @@ class ScreenShotBundle:
                 )
                 raise CannotAnalyzeError(message)
             self.before_sc_objects.append(sc)
-        return dropitemseditor.merge_sc(self.before_sc_objects)
+        return dropitemseditor.detect_upper(self.before_sc_objects), dropitemseditor.merge_sc(self.before_sc_objects)
 
     def _analyze_after_files(self):
         for f in self.after_files:
@@ -153,7 +153,7 @@ class ScreenShotBundle:
                 )
                 raise CannotAnalyzeError(message)
             self.after_sc_objects.append(sc)
-        return dropitemseditor.merge_sc(self.after_sc_objects)
+        return dropitemseditor.detect_upper(self.after_sc_objects), dropitemseditor.merge_sc(self.after_sc_objects)
 
     def image_pairs(self):
         return itertools.zip_longest(self.before_images, self.after_images)
