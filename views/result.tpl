@@ -154,6 +154,7 @@
     var questname = '{{ questname }}';
     var runcount = '000';
     var data = JSON.parse('{{! dropdata }}');
+    var image_url = '{{ image_url }}';
 
     function openModal(event) {
       const modal = new tingle.modal({
