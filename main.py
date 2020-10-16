@@ -215,7 +215,7 @@ def upload_post():
     bundle = ScreenShotBundle(before_files, after_files, owned_files)
     try:
         bundle.analyze()
-    except CannotAnalyzeError as e:
+    except (CannotAnalyzeError, dropitemseditor.ScrollPositionError) as e:
         logger.error(e)
         return template('error', message=str(e))
 
