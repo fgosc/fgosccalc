@@ -218,7 +218,9 @@ def upload_post():
     except CannotAnalyzeError as e:
         logger.error(e)
         return template('error', message=str(e))
-
+    except dropitemseditor.ScrollPositionError as e:
+        logger.error(e)
+        return template('error', message='スクロール上下ファイル入力欄に同じスクロール位置のファイルが入力されました')
     questname, questdrop = dropitemseditor.get_questinfo(bundle.before_sc_upper, bundle.after_sc_upper)
     logger.info('quest: %s', questname)
     logger.info('questdrop: %s', questdrop)

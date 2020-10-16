@@ -29,6 +29,14 @@ from img2str import (
 logger = getLogger(__name__)
 
 
+class DropItemsEditorError(Exception):
+    pass
+
+
+class ScrollPositionError(DropItemsEditorError):
+    pass
+
+
 def make_diff(itemlist1, itemlist2, owned=None):
     tmplist = []
     for before, after in zip(itemlist1, itemlist2):
@@ -482,7 +490,10 @@ def detect_upper(sc_list):
     for i in range(len(sc_list[0].itemlist)):
         if sc_list[0].itemlist[i]["id"] <= 0 or sc_list[1].itemlist[i]["id"] <= 0:
             continue
-        if sc_list[0].itemlist[i]["dropPriority"] > sc_list[1].itemlist[i]["dropPriority"]:
+        if sc_list[0].itemlist[i]["dropPriority"] == sc_list[1].itemlist[i]["dropPriority"]:
+            logger.critical("Same Scroll Position Image Detected")
+            raise ScrollPositionError("Same Scroll Position Image Detected")
+        elif sc_list[0].itemlist[i]["dropPriority"] > sc_list[1].itemlist[i]["dropPriority"]:
             return sc_list[0]
         else:
             return sc_list[1]

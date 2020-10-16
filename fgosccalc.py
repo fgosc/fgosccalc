@@ -24,7 +24,8 @@ from dropitemseditor import (
     detect_upper,
     merge_sc,
     read_owned_ss,
-    detect_missing_item
+    detect_missing_item,
+    ScrollPositionError
 )
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -84,7 +85,11 @@ def main(args):
             exit()
         sc_after.append(sc)
     # スクロール上下を決める
-    sc2 = detect_upper(sc_after)
+    try:
+        sc2 = detect_upper(sc_after)
+    except ScrollPositionError:
+        logger.critical("スクロール位置が同じファイルを認識しています")
+        exit()
     # マージしたリストを作る
     sc2_itemlist = merge_sc(sc_after)
     logger.debug('sc_after0: %s', sc_after[0].itemlist)
@@ -102,7 +107,11 @@ def main(args):
             exit()
         sc_before.append(sc)
     # スクロール上下を決める
-    sc1 = detect_upper(sc_before)
+    try:
+        sc1 = detect_upper(sc_before)
+    except ScrollPositionError:
+        logger.critical("スクロール位置が同じファイルを認識しています")
+        exit()
     # マージしたリストを作る
     sc1_itemlist = merge_sc(sc_before)
 
