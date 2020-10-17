@@ -156,12 +156,10 @@
         return false;
       }
 
-      // input file は post されないよう初期状態に戻す
+      // input file は post されないよう disable にする
       const fileInputNodes = document.querySelectorAll("input[type=file]");
       for (let node of fileInputNodes) {
-        node.value = "";
-        const fileName = document.getElementById(node.id + '-filename');
-        fileName.textContent = "ファイルが選択されていません。";
+        node.disable = true
       }
       return true;
     }
