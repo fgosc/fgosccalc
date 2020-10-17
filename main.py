@@ -105,7 +105,7 @@ class ScreenShotBundle:
         logger.info('missing items: %s', missing_items)
 
         if self.owned_imagebytes:
-            owned_nparrays = [get_np_array(imbytes) for imbytes in self.owned_imagebytes]
+            owned_nparrays = [cv2.imdecode(get_np_array(imbytes), 1) for imbytes in self.owned_imagebytes]
             _, owned_list = dropitemseditor.read_owned_objects(owned_nparrays, self.dropitems, self.svm, missing_items)
             logger.info('owned list: %s', owned_list)
             self.owned_diff = dropitemseditor.make_owned_diff(self.before_sc_itemlist, self.after_sc_itemlist, owned_list)
@@ -159,6 +159,9 @@ class ScreenShotBundle:
             (base64.b64encode(before), base64.b64encode(after))
             for before, after in itertools.zip_longest(self.before_imagebytes, self.after_imagebytes)
         ]
+
+    def b64encoded_owned_images(self):
+        return[base64.b64encode(im) for im in self.owned_imagebytes]
 
 
 def retrieve_data(name):
@@ -231,7 +234,7 @@ def upload_post():
         sc2_available=(len(bundle.after_sc_itemlist) > 0),
         before_after_pairs=before_after_pairs,
         image_pairs=bundle.b64encoded_image_pairs(),
-        extra_images=owned_images,
+        extra_images=bundle.b64encoded_owned_images(),
         questname=questname,
         dropdata=json.dumps(dropdata),
         contains_unknown_items=contains_unknown_items,
