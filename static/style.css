@@ -21,3 +21,7 @@ ul.note li {
 .image-modal .tingle-modal-box__content {
     padding: 0.8rem;
 }
+
+.invisible {
+    display: none;
+}

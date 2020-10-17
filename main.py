@@ -8,6 +8,7 @@ import json
 import logging
 from pathlib import Path
 
+import bottle
 import cv2
 import numpy as np
 from bottle import Bottle, redirect, request, template
@@ -19,6 +20,7 @@ from storage.datastore import GoogleDatastoreStorage
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
+bottle.BaseRequest.MEMFILE_MAX = 20 * 1024 * 1024
 app = Bottle()
 
 
@@ -33,8 +35,8 @@ else:
     storage = GoogleDatastoreStorage('Item')
 
 
-def get_np_array(stream):
-    return np.asarray(bytearray(stream.read()), dtype=np.uint8)
+def get_np_array(data):
+    return np.asarray(bytearray(data), dtype=np.uint8)
 
 
 def makeup(result_list):
@@ -74,13 +76,10 @@ class ScreenShotBundle:
 
         self.svm = cv2.ml.SVM_load(str(img2str.training))
         self.dropitems = img2str.DropItems(storage=storage)
-        self.before_files = before_files
-        self.after_files = after_files
-        self.owned_files = owned_files
+        self.before_imagebytes = before_files
+        self.after_imagebytes = after_files
+        self.owned_imagebytes = owned_files
         # これらは analyze() の後に値が設定される
-        self.before_images = []
-        self.after_images = []
-        self.owned_images = []
         self.before_sc_objects = []
         self.after_sc_objects = []
         self.before_sc_itemlist = []
@@ -105,19 +104,12 @@ class ScreenShotBundle:
         missing_items = dropitemseditor.detect_missing_item(self.after_sc_itemlist, self.before_sc_itemlist)
         logger.info('missing items: %s', missing_items)
 
-        if self.owned_files:
-            _, owned_list = dropitemseditor.read_owned_ss(self.owned_files, self.dropitems, self.svm, missing_items)
+        if self.owned_imagebytes:
+            owned_nparrays = [get_np_array(imbytes) for imbytes in self.owned_imagebytes]
+            _, owned_list = dropitemseditor.read_owned_objects(owned_nparrays, self.dropitems, self.svm, missing_items)
             logger.info('owned list: %s', owned_list)
             self.owned_diff = dropitemseditor.make_owned_diff(self.before_sc_itemlist, self.after_sc_itemlist, owned_list)
             logger.info('owned diff: %s', self.owned_diff)
-
-        for of in self.owned_files:
-            # dropitemseditor.read_owned_ss() で終端まで読み取り済みなので
-            # seek 位置を先頭に戻してやらないと imdecode できない。
-            of.seek(0)
-            na = cv2.imdecode(get_np_array(of), 1)
-            im = nparray_to_imagebytes(na)
-            self.owned_images.append(im)
 
         self.parse_result = dropitemseditor.make_diff(
             copy.deepcopy(self.before_sc_itemlist),
@@ -128,91 +120,82 @@ class ScreenShotBundle:
 
     def _analyze_before_files(self):
         """ これを実行すると
-            - self.before_images
             - self.before_sc_objects
             が設定される。
         """
-        for f in self.before_files:
-            im = cv2.imdecode(get_np_array(f.file), 1)
-            self.before_images.append(im)
-            sc = img2str.ScreenShot(im, self.svm, self.dropitems)
-            if len(sc.itemlist) == 0:
-                logger.warning('cannot recognize image')
-                if sc.error:
-                    logger.warning('error: %s', sc.error)
-                message=(
-                    '周回後画像が認識できません。'
-                    f'アップロードしたファイル {f.filename} に間違いがないか確認してください。'
-                )
-                raise CannotAnalyzeError(message)
-            self.before_sc_objects.append(sc)
+        self._analyze_files_internal(
+            self.before_imagebytes,
+            self.before_sc_objects,
+            '周回前画像が認識できません。アップロードしたファイルに間違いがないか確認してください。',
+        )
 
     def _analyze_after_files(self):
         """ これを実行すると
-            - self.after_images
             - self.after_sc_objects
             が設定される。
         """
-        for f in self.after_files:
-            im = cv2.imdecode(get_np_array(f.file), 1)
-            self.after_images.append(im)
+        self._analyze_files_internal(
+            self.after_imagebytes,
+            self.after_sc_objects,
+            '周回後画像が認識できません。アップロードしたファイルに間違いがないか確認してください。',
+        )
+
+    def _analyze_files_internal(self, imagebytes_container, objects_container, error_message):
+        for imbytes in imagebytes_container:
+            im = cv2.imdecode(get_np_array(imbytes), 1)
             sc = img2str.ScreenShot(im, self.svm, self.dropitems)
             if len(sc.itemlist) == 0:
                 logger.warning('cannot recognize image')
                 if sc.error:
                     logger.warning('error: %s', sc.error)
-                message=(
-                    '周回後画像が認識できません。'
-                    f'アップロードしたファイル {f.filename} に間違いがないか確認してください。'
-                )
-                raise CannotAnalyzeError(message)
-            self.after_sc_objects.append(sc)
+                raise CannotAnalyzeError(error_message)
+            objects_container.append(sc)
 
     def image_pairs(self):
-        return itertools.zip_longest(self.before_images, self.after_images)
+        return itertools.zip_longest(self.before_imagebytes, self.after_imagebytes)
 
-    def encoded_image_pairs(self):
+    def b64encoded_image_pairs(self):
         return [
-            (nparray_to_imagebytes(before), nparray_to_imagebytes(after))
-            for before, after in itertools.zip_longest(self.before_images, self.after_images)
+            (base64.b64encode(before), base64.b64encode(after))
+            for before, after in itertools.zip_longest(self.before_imagebytes, self.after_imagebytes)
         ]
+
+
+def retrieve_data(name):
+    raw = request.forms.get(name)
+    if not raw:
+        logger.info('%s is blank', name)
+        return
+    if not raw.startswith('data:image/jpeg;base64,'):
+        logger.info('%s is not a JPEG')
+        return
+    logger.info('%s length: %s', name, len(raw))
+    return base64.b64decode(raw[len('data:image/jpeg;base64,'):])
+
+
+def retrieve_image_files(names):
+    files = []
+    for name in names:
+        im = retrieve_data(name)
+        if im:
+            files.append(im)
+    return files
 
 
 @app.post('/upload')
 def upload_post():
-    before_files = request.files.getall('before')
-    after_files = request.files.getall('after')
-    extra_files = request.files.getall('extra')
-
-    logger.info('test before_files')
-    if len(before_files) == 0:
-        logger.warning('before_files is blank')
+    before_images = retrieve_image_files(['before-image0', 'before-image1'])
+    if not before_images:
         redirect('/')
-    for i, f in enumerate(before_files):
-        logger.info('test before_file %s', i)
-        if not is_valid_file(f):
-            redirect('/')
 
-    logger.info('test after_files')
-    if len(after_files) == 0:
-        logger.warning('after_files is blank')
+    after_images = retrieve_image_files(['after-image0', 'after-image1'])
+    if not after_images:
         redirect('/')
-    for i, f in enumerate(after_files):
-        logger.info('test after_file %s', i)
-        if not is_valid_file(f):
-            redirect('/')
 
-    owned_files = []
-    logger.info('test extra_files')
-    for i, f in enumerate(extra_files):
-        logger.info('test extra_file %s', i)
-        if is_valid_file(f):
-            logger.info('extra_file %s found', i)
-            owned_files.append(f.file)
-        else:
-            logger.info('extra_file %s not found')
+    owned_images = retrieve_image_files(['extra-image0', 'extra-image1'])
 
-    bundle = ScreenShotBundle(before_files, after_files, owned_files)
+    bundle = ScreenShotBundle(before_images, after_images, owned_images)
+
     try:
         bundle.analyze()
     except CannotAnalyzeError as e:
@@ -247,8 +230,8 @@ def upload_post():
         sc1_available=(len(bundle.before_sc_itemlist) > 0),
         sc2_available=(len(bundle.after_sc_itemlist) > 0),
         before_after_pairs=before_after_pairs,
-        image_pairs=bundle.encoded_image_pairs(),
-        extra_images=bundle.owned_images,
+        image_pairs=bundle.b64encoded_image_pairs(),
+        extra_images=owned_images,
         questname=questname,
         dropdata=json.dumps(dropdata),
         contains_unknown_items=contains_unknown_items,

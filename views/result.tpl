@@ -42,14 +42,14 @@
           <div class="tile is-parent">
             <article class="tile is-child box">
             % if before_im is not None:
-              <img class="image" src="data:image/png;base64,{{ before_im }}">
+              <img class="image" src="data:image/jpeg;base64,{{ before_im }}">
             % end
             </article>
           </div>
           <div class="tile is-parent">
             <article class="tile is-child box">
             % if after_im is not None:
-              <img class="image" src="data:image/png;base64,{{ after_im }}">
+              <img class="image" src="data:image/jpeg;base64,{{ after_im }}">
             % end
             </article>
           </div>
