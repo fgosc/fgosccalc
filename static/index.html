@@ -159,26 +159,26 @@
         return false;
       }
 
-      // input file は post されないよう disable にする
       acquireLock();
+      // input file は post されないよう disable にする
       const fileInputNodes = document.querySelectorAll("input[type=file]");
       for (let node of fileInputNodes) {
-        node.disable = true
+        node.disabled = true
       }
 
       setTimeout(() => {
         for (let node of fileInputNodes) {
-          node.disable = false
+          node.disabled = false
         }
         releaseLock();
-      }, 5000);
+      }, 15000);
       return true;
     }
 
     function acquireLock() {
       console.log('acquire lock')
       const submit = document.getElementById('submit')
-      submit.disable = true
+      submit.disabled = true
       const node = document.getElementById('loading')
       node.setAttribute('class', 'loader')
     }
@@ -187,7 +187,7 @@
       const node = document.getElementById('loading')
       node.setAttribute('class', '')
       const submit = document.getElementById('submit')
-      submit.disable = false
+      submit.disabled = false
       console.log('release lock')
     }
 
