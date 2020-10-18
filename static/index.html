@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.css">
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/loading.css">
   <link rel="canonical" href="/">
   <title>fgosccalc</title>
 </head>
@@ -23,6 +24,8 @@
     <div class="container">
       <div class="content">
         <p>クエスト情報の戦利品のスクリーンショットを投稿すると、アイテム獲得数を計算します。</p>
+
+        <div id="loading"></div>
 
         <form method="post" action="/upload">
           <div class="field">
@@ -97,7 +100,7 @@
 
           <div class="field">
             <div class="control">
-              <input type="submit" class="button is-link" value="送信" onclick="return validateAndPreHook();">
+              <input type="submit" class="button is-link" value="送信" id="submit" onclick="return validateAndPreHook();">
             </div>
           </div>
         </form>
@@ -157,17 +160,50 @@
       }
 
       // input file は post されないよう disable にする
+      acquireLock();
       const fileInputNodes = document.querySelectorAll("input[type=file]");
       for (let node of fileInputNodes) {
         node.disable = true
       }
+
+      setTimeout(() => {
+        for (let node of fileInputNodes) {
+          node.disable = false
+        }
+        releaseLock();
+      }, 5000);
       return true;
+    }
+
+    function acquireLock() {
+      console.log('acquire lock')
+      const submit = document.getElementById('submit')
+      submit.disable = true
+      const node = document.getElementById('loading')
+      node.setAttribute('class', 'loader')
+    }
+
+    function releaseLock() {
+      const node = document.getElementById('loading')
+      node.setAttribute('class', '')
+      const submit = document.getElementById('submit')
+      submit.disable = false
+      console.log('release lock')
     }
 
     function setOnChangeEvent(key) {
       const input = document.getElementById(key);
       input.onchange = () => {
         if (input.files.length > 0) {
+          let callbackCalledCount = 0;
+          const dataTransformedCallback = function() {
+            callbackCalledCount++;
+            if (callbackCalledCount === input.files.length) {
+              releaseLock();
+            }
+          }
+          acquireLock();
+
           const fileName = document.getElementById(key + '-filename');
           const names = [];
           for (file of input.files) {
@@ -189,6 +225,7 @@
               image.onload = () => {
                 canvas.width = image.width;
                 canvas.height = image.height;
+                console.log('file:', input.files[i].name)
                 console.log('image width:', image.width)
                 console.log('image height:', image.height)
                 context.drawImage(image, 0, 0);
@@ -196,6 +233,7 @@
                 console.log('dataurl length:', dataurl.length)
                 const hiddenInput = document.getElementById(key + '-image' + i)
                 hiddenInput.value = dataurl
+                dataTransformedCallback();
               }
             }
             fileReader.readAsDataURL(input.files[i])
@@ -208,6 +246,9 @@
     for (key of keys) {
       setOnChangeEvent(key);
     }
+
+    // 戻るボタンで戻ってきたときに loading 状態を強制解除する
+    window.addEventListener('pageshow', (ev) => releaseLock());
   </script>
 </body>
 </html>

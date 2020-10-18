@@ -195,6 +195,9 @@ def upload_post():
     if not after_images:
         redirect('/')
 
+    if len(before_images) != len(after_images):
+        redirect('/')
+
     owned_images = retrieve_image_files(['extra-image0', 'extra-image1'])
 
     bundle = ScreenShotBundle(before_images, after_images, owned_images)
@@ -206,7 +209,9 @@ def upload_post():
         return template('error', message=str(e))
     except dropitemseditor.ScrollPositionError as e:
         logger.error(e)
-        return template('error', message='スクロール上下ファイル入力欄に同じスクロール位置のファイルが入力されました')
+        message = 'スクロール上下ファイル入力欄に同じスクロール位置のファイルが入力されました。'
+        return template('error', message=message)
+
     questname, questdrop = dropitemseditor.get_questinfo(bundle.before_sc_upper, bundle.after_sc_upper)
     logger.info('quest: %s', questname)
     logger.info('questdrop: %s', questdrop)
