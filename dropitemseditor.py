@@ -348,14 +348,26 @@ def calc_pts(img_rgb):
 
 
 def read_owned_ss(owned_files, dropitems, svm, miss_item):
+    """
+        owned_files の要素は file object であること。
+        file-like object だと imread() に失敗するので注意。
+    """
+    owned_images = [img2str.imread(f) for f in owned_files]
+    return read_owned_objects(owned_images, dropitems, svm, miss_item)
+
+
+def read_owned_objects(owned_images, dropitems, svm, miss_item):
+    """
+        owned_images の要素は np.array であること。
+        file であれば先に imread() して np.array 形式にしておく。
+    """
     TRAINING_IMG_WIDTH = 1152
 
     ownitems = []
     remain_items = [item["id"] for item in miss_item]
-    for file in owned_files:
+    for img_rgb in owned_images:
         if len(remain_items) == 0:
             break
-        img_rgb = img2str.imread(file)
 
         item_pts = calc_pts(img_rgb)
         logger.debug("item_pts: %s", item_pts)

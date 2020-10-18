@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.css">
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/loading.css">
   <link rel="canonical" href="/">
   <title>fgosccalc</title>
 </head>
@@ -24,7 +25,9 @@
       <div class="content">
         <p>クエスト情報の戦利品のスクリーンショットを投稿すると、アイテム獲得数を計算します。</p>
 
-        <form method="post" action="/upload" enctype="multipart/form-data">
+        <div id="loading"></div>
+
+        <form method="post" action="/upload">
           <div class="field">
             <div class="file has-name">
               <label class="file-label">
@@ -43,6 +46,11 @@
               </label>
             </div>
           </div>
+          <canvas id="before-canvas0" class="invisible"></canvas>
+          <input name="before-image0" id="before-image0" type="hidden">
+          <canvas id="before-canvas1" class="invisible"></canvas>
+          <input name="before-image1" id="before-image1" type="hidden">
+
           <div class="field">
             <div class="file has-name">
               <label class="file-label">
@@ -61,7 +69,12 @@
               </label>
             </div>
           </div>
+          <canvas id="after-canvas0" class="invisible"></canvas>
+          <input name="after-image0" id="after-image0" type="hidden">
+          <canvas id="after-canvas1" class="invisible"></canvas>
+          <input name="after-image1" id="after-image1" type="hidden">
 
+          <p>オプション</p>
           <div class="field">
             <div class="file has-name">
               <label class="file-label">
@@ -71,7 +84,7 @@
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    所持品画像（オプション、2枚まで）
+                    所持品画像（2枚まで）
                   </span>
                 </span>
                 <span id="extra-filename" class="file-name">
@@ -80,10 +93,14 @@
               </label>
             </div>
           </div>
+          <canvas id="extra-canvas0" class="invisible"></canvas>
+          <input name="extra-image0" id="extra-image0" type="hidden">
+          <canvas id="extra-canvas1" class="invisible"></canvas>
+          <input name="extra-image1" id="extra-image1" type="hidden">
 
           <div class="field">
             <div class="control">
-              <input type="submit" class="button is-link" value="送信" onclick="return validate();">
+              <input type="button" class="button is-link" value="送信" id="send" onclick="return validateAndPost();">
             </div>
           </div>
         </form>
@@ -116,7 +133,7 @@
     </div><!-- container -->
   </section>
   <script>
-    function validate() {
+    function validateAndPost() {
       const before = document.getElementById("before");
       const after = document.getElementById("after");
       const extra = document.getElementById("extra");
@@ -141,19 +158,89 @@
         alert("所持品スクリーンショットは2枚まで指定できます。");
         return false;
       }
+
+      // input file は post されないよう disable にして一定時間後に解除する
+      const fileInputNodes = document.querySelectorAll("input[type=file]");
+
+      acquireLock();
+      for (let node of fileInputNodes) {
+        node.disabled = true
+      }
+
+      setTimeout(() => {
+        for (let node of fileInputNodes) {
+          node.disabled = false
+        }
+        releaseLock();
+      }, 15000);
+
+      document.forms[0].submit();
       return true;
+    }
+
+    function acquireLock() {
+      console.log('acquire lock')
+      const sendButton = document.getElementById('send')
+      sendButton.disabled = true
+      const node = document.getElementById('loading')
+      node.setAttribute('class', 'loader')
+    }
+
+    function releaseLock() {
+      const node = document.getElementById('loading')
+      node.setAttribute('class', '')
+      const sendButton = document.getElementById('send')
+      sendButton.disabled = false
+      console.log('release lock')
     }
 
     function setOnChangeEvent(key) {
       const input = document.getElementById(key);
       input.onchange = () => {
         if (input.files.length > 0) {
+          let callbackCalledCount = 0;
+          const dataTransformedCallback = function() {
+            callbackCalledCount++;
+            if (callbackCalledCount === input.files.length) {
+              releaseLock();
+            }
+          }
+          acquireLock();
+
           const fileName = document.getElementById(key + '-filename');
           const names = [];
           for (file of input.files) {
             names.push(file.name);
           }
           fileName.textContent = names.join(', ');
+
+          // 事前に jpeg 形式に変換する。
+          // 変換した画像は dataurl 形式で hidden に設定する。
+          // base64 なのでデータサイズが 1.33 倍になるが jpeg に変換した時点で
+          // 十分小さくなっているので問題ない。
+          for (let i = 0; i < input.files.length; i++) {
+            let fileReader = new FileReader();
+            let canvas = document.getElementById(key + '-canvas' + i);
+            fileReader.onload = () => {
+              const context = canvas.getContext('2d');
+              const image = new Image();
+              image.src = fileReader.result;
+              image.onload = () => {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                console.log('file:', input.files[i].name)
+                console.log('image width:', image.width)
+                console.log('image height:', image.height)
+                context.drawImage(image, 0, 0);
+                const dataurl = canvas.toDataURL('image/jpeg', 0.9)
+                console.log('dataurl length:', dataurl.length)
+                const hiddenInput = document.getElementById(key + '-image' + i)
+                hiddenInput.value = dataurl
+                dataTransformedCallback();
+              }
+            }
+            fileReader.readAsDataURL(input.files[i])
+          }
         }
       }
     }
@@ -162,6 +249,9 @@
     for (key of keys) {
       setOnChangeEvent(key);
     }
+
+    // 戻るボタンで戻ってきたときに loading 状態を強制解除する
+    window.addEventListener('pageshow', (ev) => releaseLock());
   </script>
 </body>
 </html>
