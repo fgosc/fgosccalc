@@ -100,7 +100,7 @@
 
           <div class="field">
             <div class="control">
-              <input type="submit" class="button is-link" value="送信" id="submit" onclick="return validateAndPreHook();">
+              <input type="button" class="button is-link" value="送信" id="send" onclick="return validateAndPost();">
             </div>
           </div>
         </form>
@@ -133,7 +133,7 @@
     </div><!-- container -->
   </section>
   <script>
-    function validateAndPreHook() {
+    function validateAndPost() {
       const before = document.getElementById("before");
       const after = document.getElementById("after");
       const extra = document.getElementById("extra");
@@ -159,9 +159,10 @@
         return false;
       }
 
-      acquireLock();
-      // input file は post されないよう disable にする
+      // input file は post されないよう disable にして一定時間後に解除する
       const fileInputNodes = document.querySelectorAll("input[type=file]");
+
+      acquireLock();
       for (let node of fileInputNodes) {
         node.disabled = true
       }
@@ -172,13 +173,15 @@
         }
         releaseLock();
       }, 15000);
+
+      document.forms[0].submit();
       return true;
     }
 
     function acquireLock() {
       console.log('acquire lock')
-      const submit = document.getElementById('submit')
-      submit.disabled = true
+      const sendButton = document.getElementById('send')
+      sendButton.disabled = true
       const node = document.getElementById('loading')
       node.setAttribute('class', 'loader')
     }
@@ -186,8 +189,8 @@
     function releaseLock() {
       const node = document.getElementById('loading')
       node.setAttribute('class', '')
-      const submit = document.getElementById('submit')
-      submit.disabled = false
+      const sendButton = document.getElementById('send')
+      sendButton.disabled = false
       console.log('release lock')
     }
 
