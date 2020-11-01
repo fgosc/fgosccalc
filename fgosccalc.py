@@ -142,7 +142,10 @@ def main(args):
     questnames = get_questnames(sc1, sc2)
     if len(questnames) > 1:
         logger.warning("クエスト名候補が複数あります: %s", questnames)
-    questname = questnames[0]
+    if len(questnames) > 0:
+        questname = questnames[0]
+    else:
+        questname = None
 
     logger.debug('questname: %s', questname)
     logger.debug('questdrop: %s', droplist)
