@@ -277,7 +277,7 @@ def get_questnames(sc1, sc2):
     logger.debug('sc1 quests: %s', sc1qnames)
     logger.debug('sc2 quests: %s', sc2qnames)
     if (len(sc1qnames) > 0 and len(sc2qnames) > 0) and sc1qnames != sc2qnames:
-        return ''
+        return [None]
     if len(sc2qnames) > 0:
         return sc2qnames
     else:
