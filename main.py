@@ -213,7 +213,9 @@ def upload_post():
         return template('error', message=message)
 
     questname, questdrop = dropitemseditor.get_questinfo(bundle.before_sc_upper, bundle.after_sc_upper)
+    questnames = {"questnames": dropitemseditor.get_questnames(bundle.before_sc_upper, bundle.after_sc_upper)}
     logger.info('quest: %s', questname)
+    logger.info('questnames: %s', questnames)
     logger.info('questdrop: %s', questdrop)
 
     drops_diff = dropitemseditor.DropsDiff(bundle.parse_result, questname, questdrop)
@@ -241,6 +243,7 @@ def upload_post():
         image_pairs=bundle.b64encoded_image_pairs(),
         extra_images=bundle.b64encoded_owned_images(),
         questname=questname,
+        questnames=json.dumps(questnames),
         dropdata=json.dumps(dropdata),
         contains_unknown_items=contains_unknown_items,
     )

@@ -19,6 +19,7 @@ from lib.twitter import upload_file
 from dropitemseditor import (
     DropsDiff,
     get_questinfo,
+    get_questnames,
     make_diff,
     make_owned_diff,
     detect_upper,
@@ -137,7 +138,11 @@ def main(args):
 
     newdic = make_diff(sc1_itemlist, sc2_itemlist, owned=owned_diff)
 
-    questname, droplist = get_questinfo(sc1, sc2)
+    _, droplist = get_questinfo(sc1, sc2)
+    questnames = get_questnames(sc1, sc2)
+    if len(questnames) > 1:
+        logger.warning("クエスト名候補が複数あります: %s", questnames)
+    questname = questnames[0]
 
     logger.debug('questname: %s', questname)
     logger.debug('questdrop: %s', droplist)

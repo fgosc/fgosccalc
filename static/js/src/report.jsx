@@ -295,6 +295,50 @@ class QuestNameEditor extends React.Component {
   }
 }
 
+class QuestNameSelector extends React.Component {
+  constructor(props) {
+    super(props)
+    this.handleChange = this.handleChange.bind(this)
+  }
+
+  handleChange(event) {
+    this.props.onQuestNameChange(event.target.value)
+  }
+
+  buildInputNode(questnames) {
+    var options = [];
+  
+    for(var i in questnames["questnames"]){
+      options.push(<option value={questnames["questnames"][i]}>{questnames["questnames"][i]}</option>);
+    }
+
+    return (
+      <select onChange={this.handleChange}>
+        {options}
+      </select>
+    )
+  }
+
+  render() {
+    const questnames = this.props.questnames
+    const node = this.buildInputNode(questnames)
+    if (questname.length < 2) {
+      return (
+        <div className="field is-hidden">
+          <label className="label">周回場所候補</label>
+          {node}
+        </div>
+      )  
+    }
+    return (
+      <div className="field">
+        <label className="label">周回場所候補</label>
+        {node}
+      </div>
+    )
+  }
+}
+
 class RunCountEditor extends React.Component {
   constructor(props) {
     super(props)
@@ -508,6 +552,7 @@ class EditBox extends React.Component {
     this.handleShowTweetButton = this.handleShowTweetButton.bind(this)
 
     const questname = props.questname
+    const questnames = props.questnames
     const runcount = parseInt(props.runcount)
     const lines = props.lines
 
@@ -520,6 +565,7 @@ class EditBox extends React.Component {
     this.state = {
       editMode: false,
       questname: questname,
+      questnames: questnames,
       runcount: runcount,
       lines: lines,
       reportText: this.buildReportText(questname, runcount, lines),
@@ -836,6 +882,8 @@ ${reportText}
         <ReportViewer {...this.state} />
         <QuestNameEditor questname={this.state.questname}
           onQuestNameChange={this.handleQuestNameChange} />
+        <QuestNameSelector questnames={this.state.questnames}
+          onQuestNameChange={this.handleQuestNameChange} />
         <RunCountEditor runcount={this.state.runcount}
           onRunCountChange={this.handleRunCountChange} />
         <div style={{marginTop: 1 + 'rem'}}>
@@ -848,7 +896,7 @@ ${reportText}
   }
 }
 
-// 初期値の questname, runcount, data は html 側で定義されている前提
-const root = <EditBox questname={questname} runcount={runcount} lines={data} />
+// 初期値の questname, questnames, runcount, data は html 側で定義されている前提
+const root = <EditBox questname={questname} questnames={questnames} runcount={runcount} lines={data} />
 
 ReactDOM.render(root, document.getElementById('app0'))

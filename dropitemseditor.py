@@ -271,6 +271,19 @@ def get_questinfo(sc1, sc2):
         return sc1qname, getattr(sc1, 'droplist', [])
 
 
+def get_questnames(sc1, sc2):
+    sc1qnames = sc1.quest_list
+    sc2qnames = sc2.quest_list
+    logger.debug('sc1 quests: %s', sc1qnames)
+    logger.debug('sc2 quests: %s', sc2qnames)
+    if (len(sc1qnames) > 0 and len(sc2qnames) > 0) and sc1qnames != sc2qnames:
+        return ''
+    if len(sc2qnames) > 0:
+        return sc2qnames
+    else:
+        return sc1qnames
+
+
 class OwnedItem(img2str.Item):
     def __init__(self, img_rgb, dropitems, debug=False):
 
