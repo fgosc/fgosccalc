@@ -145,7 +145,7 @@ def main(args):
     if len(questnames) > 0:
         questname = questnames[0]
     else:
-        questname = None
+        questname = ""
 
     logger.debug('questname: %s', questname)
     logger.debug('questdrop: %s', droplist)

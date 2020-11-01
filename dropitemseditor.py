@@ -176,7 +176,7 @@ class ParsedDropsDiff:
         add_line(self.non_standards, lines)
 
         questname = self.questname
-        if not questname:
+        if questname == "":
             questname = '(クエスト名)'
         body = '\n'.join(lines)
         if url != "":
@@ -277,11 +277,13 @@ def get_questnames(sc1, sc2):
     logger.debug('sc1 quests: %s', sc1qnames)
     logger.debug('sc2 quests: %s', sc2qnames)
     if (len(sc1qnames) > 0 and len(sc2qnames) > 0) and sc1qnames != sc2qnames:
-        return [None]
+        return [""]
     if len(sc2qnames) > 0:
         return sc2qnames
-    else:
+    elif len(sc1qnames) > 0:
         return sc1qnames
+    else:
+        return [""]
 
 
 class OwnedItem(img2str.Item):
