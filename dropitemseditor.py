@@ -176,7 +176,7 @@ class ParsedDropsDiff:
         add_line(self.non_standards, lines)
 
         questname = self.questname
-        if questname == "":
+        if not questname:
             questname = '(クエスト名)'
         body = '\n'.join(lines)
         if url != "":
