@@ -152,6 +152,7 @@
   </section>
   <script>
     var questname = '{{ questname }}';
+    var questnames = JSON.parse('{{! questnames }}');
     var runcount = '000';
     var data = JSON.parse('{{! dropdata }}');
 
