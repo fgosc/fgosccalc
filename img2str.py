@@ -372,6 +372,7 @@ class ScreenShot:
                    ]
         self.quest = ""   # 周回カウンタに合わせたクエスト名
         self.quests = []  # 周回カウンタに合わせたクエスト名(複数対応)
+        self.droplist = []
         # reversed するのは 未確認座標X-Cを未確認座標X-Bより先に認識させるため
         for quest in reversed(self.dropitems.freequest):
             droplist = [
@@ -381,7 +382,9 @@ class ScreenShot:
                         or i["name"] == "QP"
                        ]
             if self.compare_drop(itemlist, droplist):
-                self.droplist = [i["name"] for i in quest["drop"]]
+                if self.droplist == []:
+                    # 最初に見つかったdroplistを使用
+                    self.droplist = [i["name"] for i in quest["drop"]]
                 if self.quest == "":
                     self.quest = quest
                 self.quests.append(quest)
