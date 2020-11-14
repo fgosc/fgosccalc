@@ -333,8 +333,7 @@ class QuestNameSelector extends React.Component {
   }
 
   render() {
-    const node = this.buildNode(this.props.questnames)
-    return <React.Fragment>{node}</React.Fragment>
+    return this.buildNode(this.props.questnames)
   }
 }
 
