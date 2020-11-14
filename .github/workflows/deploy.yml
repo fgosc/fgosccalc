@@ -37,6 +37,20 @@ jobs:
         mkdir item
         touch item/.keepdir
 
+    - name: "setup gcloud"
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        credentials: ${{ secrets.GCLOUD_AUTH }}
+
+    - name: "put an empty file in order to avoid CommandException when 'gsutil rm' runs on an empty directory"
+      run: |-
+        touch __emptyfile
+        gsutil cp __emptyfile__ gs://asia.artifacts.fgosccalc.appspot.com/containers/images/
+
+    - name: "clean cache data"
+      run: |-
+        gsutil -m rm -r gs://asia.artifacts.fgosccalc.appspot.com/containers/images/
+
     - name: "run pre-deploy process"
       run: make pre-deploy
 
