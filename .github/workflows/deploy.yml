@@ -44,7 +44,7 @@ jobs:
 
     - name: "put an empty file in order to avoid CommandException when 'gsutil rm' runs on an empty directory"
       run: |-
-        touch __emptyfile
+        touch __emptyfile__
         gsutil cp __emptyfile__ gs://asia.artifacts.fgosccalc.appspot.com/containers/images/
 
     - name: "clean cache data"
