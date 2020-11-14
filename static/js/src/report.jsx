@@ -323,7 +323,7 @@ class QuestNameSelector extends React.Component {
     return (
       <div className="field">
         <label className="label">周回場所候補</label>
-        <div className="control">
+        <div className="select is-small">
           <select onChange={this.handleChange}>
             {options}
           </select>
