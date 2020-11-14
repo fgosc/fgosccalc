@@ -40,7 +40,9 @@ jobs:
     - name: "setup gcloud"
       uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
       with:
-        credentials: ${{ secrets.GCLOUD_AUTH }}
+        project_id: fgosccalc
+        service_account_key: ${{ secrets.GCLOUD_AUTH }}
+        export_default_credentials: true
 
     - name: "put an empty file in order to avoid CommandException when 'gsutil rm' runs on an empty directory"
       run: |-
