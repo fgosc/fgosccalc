@@ -235,7 +235,7 @@ class Table extends React.Component {
         <div>
           <button className="button is-small" onClick={this.props.onAddRowButtonClick}><i className="fas fa-plus"></i></button>
         </div>
-        <ul class="note">
+        <ul className="note">
           <li><b>消費</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</li>
           <li><b>追加獲得</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</li>
           <li><b>直接入力</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</li>
@@ -276,8 +276,8 @@ class QuestNameEditor extends React.Component {
     return (
       <div className="control has-icons-right">
         <input type="text" className="input is-small is-success" value={questname} onChange={this.handleChange} />
-        <span class="icon is-small is-right">
-          <i class="fas fa-check"></i>
+        <span className="icon is-small is-right">
+          <i className="fas fa-check"></i>
         </span>
       </div>
     )
@@ -378,8 +378,8 @@ class RunCountEditor extends React.Component {
     return (
       <div className="control has-icons-right">
         <input type="number" className="input is-small is-success" min="0" value={this.props.runcount} onChange={this.handleChange} />
-        <span class="icon is-small is-right">
-          <i class="fas fa-check"></i>
+        <span className="icon is-small is-right">
+          <i className="fas fa-check"></i>
         </span>
       </div>
     )
