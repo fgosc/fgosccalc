@@ -312,10 +312,10 @@ class QuestNameSelector extends React.Component {
       return <React.Fragment />
     }
 
-    for (let i of questnames['questnames']) {
+    for (let qname of questnames['questnames']) {
       options.push(
-        <option value={questnames['questnames'][i]}>
-          {questnames['questnames'][i]}
+        <option value={qname}>
+          {qname}
         </option>
       )
     }
