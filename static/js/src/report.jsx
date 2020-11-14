@@ -305,37 +305,36 @@ class QuestNameSelector extends React.Component {
     this.props.onQuestNameChange(event.target.value)
   }
 
-  buildInputNode(questnames) {
-    var options = [];
-  
-    for(var i in questnames["questnames"]){
-      options.push(<option value={questnames["questnames"][i]}>{questnames["questnames"][i]}</option>);
+  buildNode(questnames) {
+    const options = [];
+
+    if (questnames['questnames'].length <= 1) {
+      return <React.Fragment />
+    }
+
+    for (let i of questnames['questnames']) {
+      options.push(
+        <option value={questnames['questnames'][i]}>
+          {questnames['questnames'][i]}
+        </option>
+      )
     }
 
     return (
-      <select onChange={this.handleChange}>
-        {options}
-      </select>
+      <div className="field">
+        <label className="label">周回場所候補</label>
+        <div className="control">
+          <select onChange={this.handleChange}>
+            {options}
+          </select>
+        </div>
+      </div>
     )
   }
 
   render() {
-    const questnames = this.props.questnames
-    const node = this.buildInputNode(questnames)
-    if (questname.length < 2) {
-      return (
-        <div className="field is-hidden">
-          <label className="label">周回場所候補</label>
-          {node}
-        </div>
-      )  
-    }
-    return (
-      <div className="field">
-        <label className="label">周回場所候補</label>
-        {node}
-      </div>
-    )
+    const node = this.buildNode(this.props.questnames)
+    return <React.Fragment>{node}</React.Fragment>
   }
 }
 
