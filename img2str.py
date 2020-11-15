@@ -236,7 +236,7 @@ class ScreenShot:
             self.error = str(e)
 
         self.items = []
-        syojifile = Path(__file__).resolve().parent / 'syoji_silber.png'
+        syojifile = Path(__file__).resolve().parent / 'data/misc/syoji_silber.png'
         template = imread(syojifile, 0)  # Item内でも使用
         self.template = template
 
@@ -663,7 +663,7 @@ class ScreenShotBefore(ScreenShot):
             self.error = str(e)
 
         self.items = []
-        syojifile = Path(__file__).resolve().parent / 'syoji_silber.png'
+        syojifile = Path(__file__).resolve().parent / 'data/misc/syoji_silber.png'
         template = imread(syojifile, 0)  # Item内でも使用
         self.template = template
 
@@ -713,7 +713,7 @@ class Item:
     def __init__(self, img_rgb, img_hsv, img_gray,
                  svm, dropitems, through_item,
                  template, debug=False):
-        if self.is_undropped_box(img_hsv):
+        if self.is_undropped_box(img_gray):
             self.id = ID_UNDROPPED
             self.name = "未ドロップ"
             self.dropnum = 0
@@ -742,16 +742,23 @@ class Item:
         logger.info("ドロップ数: %s", self.dropnum)
         self.dropPriority = dropitems.item_dropPriority[self.id]
 
-    def is_undropped_box(self, img_hsv):
+    def is_undropped_box(self, img_gray):
         """
         アイテムボックスが「?」すなわち未ドロップであることを判別する
         """
-        lower = np.array([0, 0, 50])
-        upper = np.array([225, 50, 150])
-
-        img_mask = cv2.inRange(img_hsv, lower, upper)
-        if ScreenShot.calc_black_whiteArea(img_mask) > 90:
+        undropfile = Path(__file__).resolve().parent / 'data/misc/undrop.png'
+        template = imread(undropfile, 0)  # Item内でも使用
+        res = cv2.matchTemplate(
+                                img_gray,
+                                template,
+                                cv2.TM_CCOEFF_NORMED
+                                )
+        threshold = 0.9
+        loc = np.where(res >= threshold)
+        syoji_pt = []
+        for pt in zip(*loc[::-1]):
             return True
+            break
         return False
 
     def ocr_digit(self, debug=False):
