@@ -235,7 +235,7 @@ class Table extends React.Component {
         <div>
           <button className="button is-small" onClick={this.props.onAddRowButtonClick}><i className="fas fa-plus"></i></button>
         </div>
-        <ul class="note">
+        <ul className="note">
           <li><b>消費</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</li>
           <li><b>追加獲得</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</li>
           <li><b>直接入力</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</li>
@@ -276,8 +276,8 @@ class QuestNameEditor extends React.Component {
     return (
       <div className="control has-icons-right">
         <input type="text" className="input is-small is-success" value={questname} onChange={this.handleChange} />
-        <span class="icon is-small is-right">
-          <i class="fas fa-check"></i>
+        <span className="icon is-small is-right">
+          <i className="fas fa-check"></i>
         </span>
       </div>
     )
@@ -305,37 +305,35 @@ class QuestNameSelector extends React.Component {
     this.props.onQuestNameChange(event.target.value)
   }
 
-  buildInputNode(questnames) {
-    var options = [];
-  
-    for(var i in questnames["questnames"]){
-      options.push(<option value={questnames["questnames"][i]}>{questnames["questnames"][i]}</option>);
+  buildNode(questnames) {
+    const options = [];
+
+    if (questnames['questnames'].length <= 1) {
+      return <React.Fragment />
+    }
+
+    for (let qname of questnames['questnames']) {
+      options.push(
+        <option value={qname}>
+          {qname}
+        </option>
+      )
     }
 
     return (
-      <select onChange={this.handleChange}>
-        {options}
-      </select>
+      <div className="field">
+        <label className="label">周回場所候補</label>
+        <div className="select is-small">
+          <select onChange={this.handleChange}>
+            {options}
+          </select>
+        </div>
+      </div>
     )
   }
 
   render() {
-    const questnames = this.props.questnames
-    const node = this.buildInputNode(questnames)
-    if (questname.length < 2) {
-      return (
-        <div className="field is-hidden">
-          <label className="label">周回場所候補</label>
-          {node}
-        </div>
-      )  
-    }
-    return (
-      <div className="field">
-        <label className="label">周回場所候補</label>
-        {node}
-      </div>
-    )
+    return this.buildNode(this.props.questnames)
   }
 }
 
@@ -378,8 +376,8 @@ class RunCountEditor extends React.Component {
     return (
       <div className="control has-icons-right">
         <input type="number" className="input is-small is-success" min="0" value={this.props.runcount} onChange={this.handleChange} />
-        <span class="icon is-small is-right">
-          <i class="fas fa-check"></i>
+        <span className="icon is-small is-right">
+          <i className="fas fa-check"></i>
         </span>
       </div>
     )
