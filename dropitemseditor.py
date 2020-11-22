@@ -401,6 +401,7 @@ def read_owned_objects(owned_images, dropitems, svm, miss_item):
         item_pts = calc_pts(game_screen)
         offset_x = 506 - item_pts[0][0]
         offset_y = 451 - item_pts[0][1]
+        g_height, g_width = game_screen.shape[:2]
 
         pts = [[294 - offset_x, 369 - offset_y, 481 - offset_x, 572 - offset_y],
                [1004 - offset_x, 369 - offset_y, 1191 - offset_x, 572 - offset_y],
@@ -415,6 +416,8 @@ def read_owned_objects(owned_images, dropitems, svm, miss_item):
         item_ids = []
         # miss_item が全て見つかったらループを抜ける
         for i, pt in enumerate(pts):
+            if pt[2] > g_width or pt[3] > g_height:
+                break
             item = OwnedItem(game_screen[pt[1]: pt[3], pt[0]: pt[2]], dropitems)
             item_ids.append(item.id)
             if item.id in remain_items:
