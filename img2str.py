@@ -914,7 +914,7 @@ class Item:
                          sorted(
                                 ids.items(),
                                 key=lambda x: x[0],
-                                reverse=True
+                                reverse=False
                                 ),
                          key=lambda x: x[1]
                          )
