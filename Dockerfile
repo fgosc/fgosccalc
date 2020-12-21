@@ -13,7 +13,6 @@ COPY requirements-docker.txt ./
 RUN pip install -r requirements-docker.txt
 
 COPY . ./
-RUN apt-get install -y 
-# libgl1-mesa-dev
 RUN python3 makeprop.py
+
 CMD ["python", "main.py", "--host", "0.0.0.0"]
