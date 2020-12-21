@@ -26,7 +26,7 @@ window.twttr = (function(d, s, id) {
 }(document, "script", "twitter-wjs"));
 
 const defaultQuestName = '(クエスト名)'
-const tweetURL = 'https://fgosccalc.appspot.com'
+const tweetURL = ''
 
 class TableLine extends React.Component {
   constructor(props) {
