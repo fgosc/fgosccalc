@@ -1,4 +1,4 @@
-bottle==0.12.18
-requests==2.24.0
-numpy==1.19.2
-opencv-contrib-python==4.4.0.44
+bottle==0.12.19
+requests==2.25.1
+numpy==1.19.4
+opencv-contrib-python==4.4.0.46
