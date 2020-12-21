@@ -15,16 +15,14 @@
 # Original
 # https://github.com/google-github-actions/setup-gcloud/blob/95e2d15420adee2aa7d97b08aff5d50feacb17b0/example-workflows/cloud-run/.github/workflows/cloud-run.yml
 
-name: Build and Deploy to Cloud Run
+name: Deploy to Cloud Run (prod)
 
-on:
-  push:
-    branches:
-    - master
+on: workflow_dispatch
 
 env:
   PROJECT_ID: fgosccalc
   RUN_REGION: asia-northeast1
+  # prod
   SERVICE_NAME: fgosccalc
 
 jobs:
