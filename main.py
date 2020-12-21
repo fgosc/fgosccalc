@@ -16,7 +16,10 @@ from bottle import Bottle, redirect, request, template
 import dropitemseditor
 import img2str
 from storage.filesystem import FileSystemStorage
-from storage.datastore import GoogleDatastoreStorage
+try:
+    from storage.datastore import GoogleDatastoreStorage
+except ModuleNotFoundError:
+    pass
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')

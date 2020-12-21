@@ -28,4 +28,4 @@ venv/
 .mypy_cache/
 image/
 Pipfile
-data/property/
+#data/property/
