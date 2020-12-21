@@ -1,4 +1,4 @@
-FROM python:3.8.6-slim-buster
+FROM nikolaik/python-nodejs:python3.8-nodejs14-slim
 
 WORKDIR /app
 
@@ -14,5 +14,6 @@ RUN pip install -r requirements-docker.txt
 
 COPY . ./
 RUN python3 makeprop.py
+RUN npm install && npm run build
 
 CMD ["python", "main.py", "--host", "0.0.0.0"]

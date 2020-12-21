@@ -9,7 +9,8 @@ on:
         default: 'stg'
  
 jobs:
-  build: 
+  build:
+    name: Deploy To App Engine
     runs-on: ubuntu-latest
 
     steps:
