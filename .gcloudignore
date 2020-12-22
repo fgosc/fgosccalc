@@ -18,11 +18,7 @@ __pycache__/
 /setup.cfg
 
 # js
-.babelrc
 node_modules/
-package.json
-package-lock.json
-*.jsx
 
 venv/
 .mypy_cache/

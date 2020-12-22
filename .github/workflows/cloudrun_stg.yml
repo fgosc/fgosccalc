@@ -27,7 +27,7 @@ env:
 
 jobs:
   setup-build-deploy:
-    name: Setup, Build, and Deploy
+    name: Deploy to Cloud Run (stg)
     runs-on: ubuntu-latest
 
     steps:
