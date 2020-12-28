@@ -241,7 +241,7 @@ class ScreenShot:
         self.template = template
 
         ce_zone = True
-        for i, pt in enumerate(item_pts[8:9]):
+        for i, pt in enumerate(item_pts):
             tmp_img_gray = self.img_gray[pt[1]: pt[3], pt[0]: pt[2]]
             numbered, offset_x, offset_y = self.calc_offset(tmp_img_gray)
             if numbered:
@@ -1033,10 +1033,6 @@ class Item:
         for pt in reversed(pts):
             char = []
             tmpimg = img_gray[pt[1]:pt[3], pt[0] - offset_x:pt[2] - offset_x]
-            cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4., fy=4.))
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            cv2.imwrite("tmp.png", tmpimg)
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(
                                     win_size,
