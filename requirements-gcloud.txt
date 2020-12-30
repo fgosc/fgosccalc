@@ -1,4 +1,1 @@
 bottle==0.12.18
-google-cloud-datastore==1.12.0
-numpy==1.18.2
-opencv-contrib-python==4.2.0.34
