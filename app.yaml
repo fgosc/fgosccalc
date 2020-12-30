@@ -1,13 +1,16 @@
 runtime: python38
 instance_class: F1
 
-# ドキュメントルートアクセス時の spin up を回避するため
-# あえて static html を返す
+# GAE 版は廃止するが、旧環境へのリクエストはしばらくはなくならない。
+# よって、旧環境にアクセスした場合は新環境に誘導するページを表示する。
+
+# spin up を回避するため static html を返す。
 handlers:
-- url: /
-  static_files: static/gae_index.html
-  upload: static/gae_index.html
- 
 - url: /favicon.ico
   static_files: static/favicon.ico
   upload: static/favicon.ico
+
+# favicon 以外のリクエストに対しては誘導用のページを返す
+- url: /.*
+  static_files: static/gae_index.html
+  upload: static/gae_index.html
