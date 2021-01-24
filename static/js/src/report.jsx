@@ -811,9 +811,15 @@ class EditBox extends React.Component {
         .join("-")
         .replace(/-\!/g, '\n')
 
+    let rate_increase;
+    if (questname.includes('序') || questname.includes('破') || questname.includes('急')) {
+      rate_increase = "\n\n追加出現率 %"
+    } else {
+      rate_increase = ""
+    }
     let value = `【${questname}】${runcount}周
 ${reportText}
-#FGO周回カウンタ https://aoshirobo.net/fatego/rc/`
+#FGO周回カウンタ https://aoshirobo.net/fatego/rc/${rate_increase}`
 
     const cutIfStartsWith = (expr, key) => {
       if (expr.startsWith(key)) {
