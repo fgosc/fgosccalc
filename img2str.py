@@ -735,11 +735,11 @@ class Item:
         self.template = template
         self.dropnum = self.ocr_digit(debug)
         self.background = classify_background(img_rgb, self.dropitems)
-        logger.info("background: %s", self.background)
+        logger.debug("background: %s", self.background)
         self.id = self.classify_item(img_rgb, debug)
         self.name = dropitems.item_name[self.id]
-        logger.info("アイテム名: %s", self.name)
-        logger.info("ドロップ数: %s", self.dropnum)
+        logger.debug("アイテム名: %s", self.name)
+        logger.debug("ドロップ数: %s", self.dropnum)
         self.dropPriority = dropitems.item_dropPriority[self.id]
 
     def is_undropped_box(self, img_gray):
@@ -1199,7 +1199,6 @@ def parse_args():
                         help='fgoscdata用csv形式で出力',
                         action='store_true'
                         )
-    parser.add_argument('-q', '--questid', type=int)
     parser.add_argument(
                         '--loglevel',
                         choices=('warning', 'debug', 'info'),
@@ -1213,18 +1212,16 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
-    args = parse_args()
-    logger.setLevel(args.loglevel.upper())
-    logger.info('loglevel: %s', args.loglevel)
-
-    if args.questid:
-        if not (93000001 < args.questid < 94999999):
-            logger.critical('無効な questid です: %d', args.questid)
+def main(file, csv_output, debug=False):
+    questid = None
+    if file.stem.isdecimal():
+        questid = int(file.stem)
+        if not (93000001 < questid < 94999999):
+            logger.critical('無効な questid です: %d', questid)
             exit(1)
-        r_get = requests.get(url_quest + str(args.questid) + "/1")
+        r_get = requests.get(url_quest + str(questid) + "/1")
         if r_get.status_code == 404:
-            logger.critical('無効な questid です: %d', args.questid)
+            logger.critical('無効な questid です: %d', questid)
             exit(1)
         quest = r_get.json()
         logger.debug("quest: %s", quest)
@@ -1235,18 +1232,17 @@ if __name__ == '__main__':
         logger.crytical("python makeprop.py を実行してください")
         exit(1)
     svm = cv2.ml.SVM_load(str(training))
-    file = Path(args.file)
     img_rgb = imread(str(file))
-    sc = ScreenShot(img_rgb, svm, dropitems, args.debug)
+    sc = ScreenShot(img_rgb, svm, dropitems, debug)
     if len(sc.quest_list) >= 2:
         logger.warning("周回場所の候補が複数あります")
         logger.warning("sc.quest_list: %s", sc.quest_list)
     logger.debug("sc.itemlist: %s", sc.itemlist)
-    if args.csv:
-        csv_data = [""]
+    if csv_output:
+        csv_data = [questid if questid else ""]
         if len(sc.quest_list) == 1:
             # short name 用に2回加える
-            if args.questid:
+            if questid:
                 csv_data.append(quest["name"])
                 csv_data.append(quest["name"])
             else:
@@ -1255,24 +1251,28 @@ if __name__ == '__main__':
         else:
             csv_data.append("")
             csv_data.append("")
-        for item in sc.itemlist:
-            try:
-                name = dropitems.item_shortname[item["id"]]
-                if name.endswith("礼装"):
+        itemlist = sc.itemlist.copy()
+        if len(sc.itemlist) < 16:
+            for i in range(16- len(sc.itemlist)):
+                itemlist.append("")
+        for item in itemlist:
+            if item == "":
+                csv_data.append("")
+            else:
+                try:
+                    name = dropitems.item_shortname[item["id"]]
+                    if name.endswith("礼装"):
+                        name = item["name"]
+                except KeyError:
                     name = item["name"]
-            except KeyError:
-                name = item["name"]
-            csv_data.append(name)
+                csv_data.append(name)
         writer = csv.writer(sys.stdout)
         writer.writerow(csv_data)
     else:
-        if args.questid:
-            result = "【" + quest["name"] + "】"
+        if len(sc.quest_list) == 1:
+            result = "【" + sc.quest_output + "】"
         else:
-            if len(sc.quest_list) == 1:
-                result = "【" + sc.quest_output + "】"
-            else:
-                result = ""
+            result = ""
         for item in sc.itemlist:
             result = result \
                      + item["name"] \
@@ -1284,3 +1284,11 @@ if __name__ == '__main__':
         print(result)
     if sc.error != "":
         logger.error(sc.error)
+
+if __name__ == '__main__':
+    args = parse_args()
+    logger.setLevel(args.loglevel.upper())
+    logger.info('loglevel: %s', args.loglevel)
+    file = Path(args.file)
+
+    main(file, args.csv, args.debug)
