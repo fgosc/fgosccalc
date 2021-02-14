@@ -15,7 +15,8 @@ from storage.filesystem import FileSystemStorage
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
-url_quest = "https://api.atlasacademy.io/nice/JP/quest/"
+# url_quest = "https://api.atlasacademy.io/nice/JP/quest/"
+url_quest = "https://raw.githubusercontent.com/FZFalzar/FGOData/master/JP_tables/quest/mstQuest.json"
 
 progname = "img2str"
 version = "0.2.0"
@@ -1219,12 +1220,15 @@ def main(file, csv_output, debug=False):
         if not (93000001 < questid < 94999999):
             logger.critical('無効な questid です: %d', questid)
             exit(1)
-        r_get = requests.get(url_quest + str(questid) + "/1")
+        # r_get = requests.get(url_quest + str(questid) + "/1")
+        r_get = requests.get(url_quest)
         if r_get.status_code == 404:
             logger.critical('無効な questid です: %d', questid)
             exit(1)
         quest = r_get.json()
-        logger.debug("quest: %s", quest)
+        questName = [q["name"] for q in quest if q["id"] == questid][0]
+        # logger.debug("quest: %s", quest)
+        logger.info("questName: %s", questName)
 
     dropitems = DropItems()
     if training.exists() is False:
@@ -1243,11 +1247,14 @@ def main(file, csv_output, debug=False):
         if len(sc.quest_list) == 1:
             # short name 用に2回加える
             if questid:
-                csv_data.append(quest["name"])
-                if quest["name"][-2:] not in ['初級', '中級', '上級', '超級']:
-                    csv_data.append(quest["name"].split(" ")[1])
+                csv_data.append(questName)
+                if questName.endswith('初級') \
+                   or questName.endswith('中級') \
+                   or questName.endswith('上級') \
+                   or questName.endswith('超級'):
+                    csv_data.append(questName)
                 else:
-                    csv_data.append(quest["name"])
+                    csv_data.append(questName.split(" ")[1])
             else:
                 csv_data.append(sc.quest_output)
                 csv_data.append(sc.quest_output)
