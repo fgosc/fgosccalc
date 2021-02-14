@@ -1244,7 +1244,10 @@ def main(file, csv_output, debug=False):
             # short name 用に2回加える
             if questid:
                 csv_data.append(quest["name"])
-                csv_data.append(quest["name"])
+                if quest["name"][-2:] not in ['初級', '中級', '上級', '超級']:
+                    csv_data.append(quest["name"].split(" ")[1])
+                else:
+                    csv_data.append(quest["name"])
             else:
                 csv_data.append(sc.quest_output)
                 csv_data.append(sc.quest_output)
