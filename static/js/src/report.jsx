@@ -255,12 +255,20 @@ class QuestNameEditor extends React.Component {
     this.props.onQuestNameChange(event.target.value)
   }
 
-  buildInputNode(questname) {
+  buildQuestnameHelpMessage(hasQuestnameChoice) {
+    if (hasQuestnameChoice) {
+      return "周回場所を候補リストから選択するか、直接入力してください。"
+    } else {
+      return "周回場所を入力してください。"
+    }
+  }
+
+  buildInputNode(questname, questnameHelpMessage) {
     if (questname === defaultQuestName || questname.trim().length === 0) {
       return (
         <div className="control">
           <input type="text" className="input is-small is-danger" value={questname} onChange={this.handleChange} />
-          <p className="help is-danger">周回場所を入力してください。</p>
+          <p className="help is-danger">{questnameHelpMessage}</p>
         </div>
       )
     }
@@ -285,7 +293,9 @@ class QuestNameEditor extends React.Component {
 
   render() {
     const questname = this.props.questname
-    const node = this.buildInputNode(questname)
+    const hasQuestnameChoice = this.props.hasQuestnameChoice
+    const questnameHelpMessage = this.buildQuestnameHelpMessage(hasQuestnameChoice)
+    const node = this.buildInputNode(questname, questnameHelpMessage)
     return (
       <div className="field">
         <label className="label">周回場所</label>
@@ -306,13 +316,16 @@ class QuestNameSelector extends React.Component {
   }
 
   buildNode(questnames) {
-    const options = [];
-
-    if (questnames['questnames'].length <= 1) {
+    if (questnames.length <= 1) {
       return <React.Fragment />
     }
 
-    for (let qname of questnames['questnames']) {
+    const options = [];
+    options.push(
+      <option value="">選択してください</option>
+    )
+
+    for (let qname of questnames) {
       options.push(
         <option value={qname}>
           {qname}
@@ -549,8 +562,20 @@ class EditBox extends React.Component {
     this.buildReportText = this.buildReportText.bind(this)
     this.handleShowTweetButton = this.handleShowTweetButton.bind(this)
 
-    const questname = props.questname
-    const questnames = props.questnames
+    console.log("EditBox props:", props)
+
+    // 元が let questnames = { questnames: ["foo", "bar", ...] } の形式で定義されているため、
+    // このように questnames.questnames で Array を得ることができる。
+    // この要素が存在することは保証されている。
+    const questnames = props.questnames.questnames
+    const hasQuestnameChoice = questnames.length > 1
+    let questname
+    if (hasQuestnameChoice) {
+      // 選択肢が複数ある場合はクエスト名をプリセットしない。クエストを確実に選択させるため。
+      questname = ""
+    } else {
+      questname = props.questname
+    }
     const runcount = parseInt(props.runcount)
     const lines = props.lines
 
@@ -559,11 +584,11 @@ class EditBox extends React.Component {
       // data から与えられた report 値はここで上書きしてしまってよい。
       line.report = this.computeReportValue(line)
     })
-
     this.state = {
       editMode: false,
       questname: questname,
       questnames: questnames,
+      hasQuestnameChoice: hasQuestnameChoice,
       runcount: runcount,
       lines: lines,
       reportText: this.buildReportText(questname, runcount, lines),
@@ -884,7 +909,7 @@ ${reportText}
     return (
       <div>
         <ReportViewer {...this.state} />
-        <QuestNameEditor questname={this.state.questname}
+        <QuestNameEditor questname={this.state.questname} hasQuestnameChoice={this.state.hasQuestnameChoice}
           onQuestNameChange={this.handleQuestNameChange} />
         <QuestNameSelector questnames={this.state.questnames}
           onQuestNameChange={this.handleQuestNameChange} />
