@@ -1254,7 +1254,10 @@ def main(file, csv_output, debug=False):
                    or questName.endswith('超級'):
                     csv_data.append(questName)
                 else:
-                    csv_data.append(questName.split(" ")[1])
+                    if " " in questName:
+                        csv_data.append(questName.split(" ")[1])
+                    else:
+                        csv_data.append(questName)
             else:
                 csv_data.append(sc.quest_output)
                 csv_data.append(sc.quest_output)
