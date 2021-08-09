@@ -2,7 +2,7 @@ from logging import getLogger
 from unittest import TestCase
 
 from . import questdb
-from .consts import ID_UNDROPPED
+from .consts import ID_UNDROPPED, ID_NO_POSESSION
 
 logger = getLogger(__name__)
 
@@ -79,17 +79,56 @@ class QuestTest(TestCase):
         self.assertEqual(c2["place"], "翼竜の島")
         self.assertEqual(c2["name"], "竜たちの楽園")
 
-    def test_guess_quests__has_undropped(self):
-        # 種火のドロップがないケース
+    def test_guess_quests__has_undropped_01(self):
+        # 種火のドロップが欠けているケース 01
         items = [
             {"id": 6526}, # 追憶の貝殻
             {"id": 6534}, # 励振火薬
             {"id": 6001}, # 剣の輝石
             {"id": 6007}, # 狂の輝石
-            {"id": ID_UNDROPPED},
+            {"id": ID_NO_POSESSION}, # 種火1
+            {"id": ID_UNDROPPED},    # 種火2 未ドロップ
+            {"id": ID_NO_POSESSION}, # 種火3
         ]
         candidates = self.fqDataset.guess_quests(items)
 
-        # TODO このケースでも推測できるようにしたい
-        # アナスタシア 焼き払われた村
-        self.assertEqual(len(candidates), 0)
+        self.assertEqual(len(candidates), 1)
+
+        c0: questdb.QuestDict = candidates[0]
+        self.assertEqual(c0["chapter"], "アナスタシア")
+        self.assertEqual(c0["place"], "焼き払われた村")
+        self.assertEqual(c0["name"], "雪に沈む焼け跡")
+
+    def test_guess_quests__has_undropped_02(self):
+        # 種火のドロップが欠けているケース 02
+        items = [
+            {"id": 6516}, # 凶骨
+            {"id": 6001}, # 剣の輝石
+            {"id": ID_UNDROPPED},    # 未ドロップ
+            {"id": ID_UNDROPPED},    # 未ドロップ
+            {"id": ID_UNDROPPED},    # 未ドロップ
+            {"id": ID_NO_POSESSION}, # QP
+        ]
+        candidates = self.fqDataset.guess_quests(items)
+
+        self.assertEqual(len(candidates), 4)
+
+        c0: questdb.QuestDict = candidates[0]
+        self.assertEqual(c0["chapter"], "冬木")
+        self.assertEqual(c0["place"], "未確認座標X-A")
+        self.assertEqual(c0["name"], "屋敷跡")
+
+        c1: questdb.QuestDict = candidates[1]
+        self.assertEqual(c1["chapter"], "冬木")
+        self.assertEqual(c1["place"], "未確認座標X-D")
+        self.assertEqual(c1["name"], "紅く染まった港")
+
+        c2: questdb.QuestDict = candidates[2]
+        self.assertEqual(c2["chapter"], "冬木")
+        self.assertEqual(c2["place"], "未確認座標X-C")
+        self.assertEqual(c2["name"], "大橋")
+
+        c3: questdb.QuestDict = candidates[3]
+        self.assertEqual(c3["chapter"], "冬木")
+        self.assertEqual(c3["place"], "未確認座標X-B")
+        self.assertEqual(c3["name"], "爆心地")
