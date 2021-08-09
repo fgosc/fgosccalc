@@ -20,6 +20,7 @@ def build_questdb() -> List[QuestDict]:
             quests = json.load(f)
             all_quests.extend(quests)
 
+    # 比較用にポイント、種火、QPを除いたドロップリストを用意しておく
     for quest in all_quests:
         quest["dropSelected"] = [
             drop for drop in quest["drop"]
