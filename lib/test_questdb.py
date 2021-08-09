@@ -111,6 +111,7 @@ class QuestTest(TestCase):
         ]
         candidates = self.fqDataset.guess_quests(items)
 
+        # TODO 一致しすぎているので、何らかの手段を加えることで絞り込みを強化したい。
         self.assertEqual(len(candidates), 4)
 
         c0: questdb.QuestDict = candidates[0]
