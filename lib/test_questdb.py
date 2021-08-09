@@ -2,6 +2,7 @@ from logging import getLogger
 from unittest import TestCase
 
 from . import questdb
+from .consts import ID_UNDROPPED
 
 logger = getLogger(__name__)
 

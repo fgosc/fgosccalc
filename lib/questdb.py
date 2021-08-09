@@ -2,12 +2,10 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .consts import ID_UNDROPPED, ID_NO_POSESSION
+
 ItemDict = Dict[str, Any]
 QuestDict = Dict[str, Any]
-
-# TODO consts.py とか作ってそこにまとめる
-ID_UNDROPPED: int = -2
-ID_NO_POSESSION: int = -1
 
 DATADIR_BASE: Path = Path(__file__).resolve().parent.parent
 
