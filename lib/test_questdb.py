@@ -31,7 +31,7 @@ class QuestTest(TestCase):
         self.assertIn("dropPriority", drop0)
         self.assertEqual(len(drop0.keys()), 4)
 
-    def test_compare_drop__single_place(self):
+    def test_guess_quests__single_place(self):
         items = [
             {"id": 6515}, # 八連双晶
             {"id": 6505}, # 虚影の塵
@@ -51,7 +51,7 @@ class QuestTest(TestCase):
         self.assertEqual(c["place"], "連合首都")
         self.assertEqual(c["name"], "ローマの地平")
 
-    def test_compare_drop__multiple_places(self):
+    def test_guess_quests__multiple_places(self):
         items = [
             {"id": 6512}, # 竜の牙
             {"id": 6104}, # 騎の魔石
