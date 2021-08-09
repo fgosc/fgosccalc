@@ -8,6 +8,9 @@ logger = getLogger(__name__)
 
 
 class QuestTest(TestCase):
+    def setUp(self):
+        self.fqDataset = questdb.FreequestDataset()
+
     def test_build_questdb(self):
         quests = questdb.build_questdb()
         self.assertTrue(len(quests) > 0)
@@ -42,8 +45,7 @@ class QuestTest(TestCase):
             {"id": 6007}, # 狂の輝石
             {"id": 7007}, # バーサーカーピース
         ]
-        ds = questdb.FreequestDataset()
-        candidates = ds.guess_quests(items)
+        candidates = self.fqDataset.guess_quests(items)
 
         self.assertEqual(len(candidates), 1)
 
@@ -58,8 +60,7 @@ class QuestTest(TestCase):
             {"id": 6104}, # 騎の魔石
             {"id": 6004}, # 騎の輝石
         ]
-        ds = questdb.FreequestDataset()
-        candidates = ds.guess_quests(items)
+        candidates = self.fqDataset.guess_quests(items)
 
         self.assertEqual(len(candidates), 3)
 
