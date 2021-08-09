@@ -78,3 +78,18 @@ class QuestTest(TestCase):
         self.assertEqual(c2["chapter"], "オケアノス")
         self.assertEqual(c2["place"], "翼竜の島")
         self.assertEqual(c2["name"], "竜たちの楽園")
+
+    def test_guess_quests__has_undropped(self):
+        # 種火のドロップがないケース
+        items = [
+            {"id": 6526}, # 追憶の貝殻
+            {"id": 6534}, # 励振火薬
+            {"id": 6001}, # 剣の輝石
+            {"id": 6007}, # 狂の輝石
+            {"id": ID_UNDROPPED},
+        ]
+        candidates = self.fqDataset.guess_quests(items)
+
+        # TODO このケースでも推測できるようにしたい
+        # アナスタシア 焼き払われた村
+        self.assertEqual(len(candidates), 0)
