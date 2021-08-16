@@ -14,9 +14,7 @@ import requests
 from storage.filesystem import FileSystemStorage
 
 logger = logging.getLogger()
-logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
-# url_quest = "https://api.atlasacademy.io/nice/JP/quest/"
-url_quest = "https://raw.githubusercontent.com/FZFalzar/FGOData/master/JP_tables/quest/mstQuest.json"
+url_quest = "https://api.atlasacademy.io/nice/JP/quest/"
 
 progname = "img2str"
 version = "0.2.0"
@@ -240,7 +238,7 @@ class ScreenShot:
         syojifile = Path(__file__).resolve().parent / 'data/misc/syoji_silber.png'
         template = imread(syojifile, 0)  # Item内でも使用
         self.template = template
-
+        self.dropItemNum = 12
         ce_zone = True
         for i, pt in enumerate(item_pts):
             tmp_img_gray = self.img_gray[pt[1]: pt[3], pt[0]: pt[2]]
@@ -265,6 +263,7 @@ class ScreenShot:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             # アイテム枠のヒストグラム調査
             if self.is_empty_box(item_img_gray):
+                self.dropItemNum = i
                 break
             logger.debug("[Item %d Information]", i)
             item = Item(item_img_rgb, item_img_hsv, item_img_gray, svm,
@@ -376,6 +375,11 @@ class ScreenShot:
         self.droplist = []
         # reversed するのは 未確認座標X-Cを未確認座標X-Bより先に認識させるため
         for quest in reversed(self.dropitems.freequest):
+            dropItemNum = quest["dropItemNum"]
+            if dropItemNum > 12:
+                dropItemNum = 12
+            if self.dropItemNum != dropItemNum:
+                continue
             droplist = [
                         {"id": i["id"], "name": i["name"]}
                         for i in quest["drop"]
@@ -756,10 +760,8 @@ class Item:
                                 )
         threshold = 0.9
         loc = np.where(res >= threshold)
-        syoji_pt = []
         for pt in zip(*loc[::-1]):
             return True
-            break
         return False
 
     def ocr_digit(self, debug=False):
@@ -1203,7 +1205,7 @@ def parse_args():
     parser.add_argument(
                         '--loglevel',
                         choices=('warning', 'debug', 'info'),
-                        default='warning'
+                        default='info'
                         )
     parser.add_argument(
                         '--version',
@@ -1221,12 +1223,14 @@ def main(file, csv_output, debug=False):
             logger.critical('無効な questid です: %d', questid)
             exit(1)
         # r_get = requests.get(url_quest + str(questid) + "/1")
-        r_get = requests.get(url_quest)
+        endpoint = f"{url_quest}{questid}/1"
+        logger.info("calling HTTP API: %s", endpoint)
+        r_get = requests.get(endpoint)
         if r_get.status_code == 404:
             logger.critical('無効な questid です: %d', questid)
             exit(1)
         quest = r_get.json()
-        questName = [q["name"] for q in quest if q["id"] == questid][0]
+        questName = quest["name"]
         # logger.debug("quest: %s", quest)
         logger.info("questName: %s", questName)
 
@@ -1302,6 +1306,13 @@ if __name__ == '__main__':
     args = parse_args()
     logger.setLevel(args.loglevel.upper())
     logger.info('loglevel: %s', args.loglevel)
+    lformat = '%(name)s <%(filename)s-L%(lineno)s> [%(levelname)s] %(message)s'
+    logging.basicConfig(
+        level=logging.INFO,
+        format=lformat,
+    )
+    logger.setLevel(args.loglevel.upper())
+
     file = Path(args.file)
 
     main(file, args.csv, args.debug)
