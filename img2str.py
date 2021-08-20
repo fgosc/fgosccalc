@@ -1248,14 +1248,18 @@ def main(file, csv_output, debug=False):
     logger.debug("sc.itemlist: %s", sc.itemlist)
     if csv_output:
         csv_data = [questid if questid else ""]
-        if len(sc.quest_list) == 1:
+        if len(sc.quest_list) == 1 or questName != "":
             # short name 用に2回加える
             if questid:
                 csv_data.append(questName)
                 if questName.endswith('初級') \
                    or questName.endswith('中級') \
                    or questName.endswith('上級') \
-                   or questName.endswith('超級'):
+                   or questName.endswith('超級') \
+                   or questName.endswith('開位級') \
+                   or questName.endswith('祭位級') \
+                   or questName.endswith('典位級') \
+                   or questName.endswith('典位+級'):
                     csv_data.append(questName)
                 else:
                     if " " in questName:
