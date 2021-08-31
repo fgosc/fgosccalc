@@ -63,3 +63,21 @@ jobs:
           --image "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" \
           --platform "managed" \
           --allow-unauthenticated
+
+    # Delete old revisions and container images in order to reduce the storage usage
+    - name: Delete old revisions
+      run: |-
+        gcloud run revisions list \
+          --service $SERVICE_NAME \
+          --region $RUN_REGION \
+          | tail -n +5 \
+          | awk '{{ print $2 }}' \
+          | xargs -I % gcloud run revisions delete % --region asia-northeast1 --quiet
+
+    - name: Delete old container images
+      run: |-
+        gcloud container images list-tags gcr.io/$PROJECT_ID/$SERVICE_NAME \
+          | tail -n +5 \
+          | awk '{{ print $1 }}' \
+          | xargs -I % gcloud container images delete \
+          gcr.io/$PROJECT_ID/$SERVICE_NAME@sha256:% --quiet --force-delete-tags
