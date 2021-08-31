@@ -1,8 +1,9 @@
 ![fgosccalc1](https://user-images.githubusercontent.com/62515228/78868001-0ca71a80-7a7d-11ea-84b2-087f6b2466fc.png)
+
 # fgosccalc
 FGOのクエスト情報戦利品の周回前後のスクショを読み取り差分を計算
 
-このプログラムをウェブ化したものをまっくすさんが公開しています https://fgosccalc.appspot.com/
+このプログラムをウェブ化したものをまっくすさんが公開しています https://fgosccalc.max747.org/
 
 ## 必要なソフトウェア
 Python 3.7以降
@@ -10,22 +11,22 @@ Python 3.7以降
 ## ファイル
 - img2str.py : コマンドプロンプトでファイルを読み込みアイテムを出力
   - makeprop.py : img2str.py で使用するproperty.xml を作成する
-    - data/* : 文字学習用データ
+    - data/\* : 文字学習用データ
   - freequest.csv : クエスト名自動認識に使用される
   - syurenquest.csv :  クエスト名自動認識に使用される
-  - syoji_silber.png : 「所持」の文字位置を認識するためのファイル
-  - hash_ce.csv : 概念礼装画像認識のためのデータファイル update.py で更新
-  - hash_item.csv : アイテム画像認識のためのデータファイル update.py で更新
+  - syoji\_silber.png : 「所持」の文字位置を認識するためのファイル
+  - hash\_ce.csv : 概念礼装画像認識のためのデータファイル update.py で更新
+  - hash\_item.csv : アイテム画像認識のためのデータファイル update.py で更新
 - fgosccalc.py　: コマンドプロンプトでファイル2つを読み込み差分を出力
-  - item_nickname.csv : アイテムを短縮名に変換するためのデータ
+  - item\_nickname.csv : アイテムを短縮名に変換するためのデータ
 - fgosccalc.cgi : fgosccalc.py の CGI版
 - calctweet.py : 周回報告のTweet URL から周回報告と画像差分をチェックする
   - item.csv : calctweet.py で使用するアイテム標準化ファイル
   - setting-dst.ini  : calctweet.py で使用する setting.ini の元ファイル
 - update.py : アイテムデータのアップデートを行う
-  - std_item_nickname.csv : 恒常アイテムを短縮名に変換するためのデータ
-  - ce_bl.txt : データ取得対象外の非ドロップ概念礼装のブラックリスト
-  - item_bl.txt : データ取得対象外の非ドロップアイテムのブラックリスト
+  - std\_item\_nickname.csv : 恒常アイテムを短縮名に変換するためのデータ
+  - ce\_bl.txt : データ取得対象外の非ドロップ概念礼装のブラックリスト
+  - item\_bl.txt : データ取得対象外の非ドロップアイテムのブラックリスト
 
 以下はmakeprop.py実行時に作成される
 - property.xml : 文字認識のためのトレーニングファイル
@@ -50,10 +51,10 @@ $ python makeprop.py
 
 ### calctweet.py のインストールは以下の手順が必要
 1. setting-dst.ini をコピーして setting.ini を作成
-2. consumer_key　と　consumer_secret を手に入れる  
-基本的に一般配布はしないので、https://developer.twitter.com/ からアプリケーション登録をして手に入れる  
-※ここでaccess_token と access_secret を入手すると4の手順がとばせます
-3. setting.ini に取得したconsumer_key と consumer_secretを入力する  
+2. consumer\_key　と　consumer\_secret を手に入れる  
+基本的に一般配布はしないので、https://developer.twitter.com/ からアプリケーション登録をして手に入れる
+※ここでaccess\_token と access\_secret を入手すると4の手順がとばせます
+3. setting.ini に取得したconsumer\_key と consumer\_secretを入力する
 次のように入力します  
 
 ```
