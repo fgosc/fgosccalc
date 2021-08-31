@@ -71,13 +71,13 @@ jobs:
           --service $SERVICE_NAME \
           --region $RUN_REGION \
           | tail -n +7 \
-          | awk '{ print $2 }' \
-          | xargs -I {} gcloud run revisions delete {} --region asia-northeast1 --quiet
+          | awk '{{ print $2 }}' \
+          | xargs -I % gcloud run revisions delete % --region asia-northeast1 --quiet
 
     - name: Delete old container images
       run: |-
         gcloud container images list-tags gcr.io/$PROJECT_ID/$SERVICE_NAME \
           | tail -n +7 \
-          | awk '{ print $1 }' \
-          | xargs -I {} gcloud container images delete \
-          gcr.io/$PROJECT_ID/$SERVICE_NAME@sha256:{} --quiet --force-delete-tags
+          | awk '{{ print $1 }}' \
+          | xargs -I % gcloud container images delete \
+          gcr.io/$PROJECT_ID/$SERVICE_NAME@sha256:% --quiet --force-delete-tags
