@@ -86,7 +86,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b87278193a0576880d763be7515d57c920d3aed9568515c13e956ef94fe2d8ca"
+content-hash = "09b9b1087597458f8ecd230ae4fd52cbc731983a2b4272ecd22d63336d505f12"
 
 [metadata.files]
 bottle = [
