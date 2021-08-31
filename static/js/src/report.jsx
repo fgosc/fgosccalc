@@ -836,15 +836,9 @@ class EditBox extends React.Component {
         .join("-")
         .replace(/-\!/g, '\n')
 
-    let rate_increase;
-    if (questname.includes('序') || questname.includes('破') || questname.includes('急')) {
-      rate_increase = "\n\n追加出現率 %"
-    } else {
-      rate_increase = ""
-    }
     let value = `【${questname}】${runcount}周
 ${reportText}
-#FGO周回カウンタ https://aoshirobo.net/fatego/rc/${rate_increase}`
+#FGO周回カウンタ https://aoshirobo.net/fatego/rc/`
 
     const cutIfStartsWith = (expr, key) => {
       if (expr.startsWith(key)) {
@@ -863,6 +857,11 @@ ${reportText}
         .join('-')
 
     const additionalLines = []
+
+    const keywords = ['序', '破', '急']
+    if (questname.length > 0 && keywords.includes(questname[questname.length - 1])) {
+      additionalLines.push('追加出現率 %')
+    }
     if (addedMaterials.length > 0) {
       additionalLines.push('周回外消費分の加算: ' + addedMaterials)
     }
