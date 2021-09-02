@@ -56,13 +56,12 @@ jobs:
 
     # Deploy image to Cloud Run
     - name: Deploy
-      run: |-
-        gcloud run deploy "$SERVICE_NAME" \
-          --quiet \
-          --region "$RUN_REGION" \
-          --image "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" \
-          --platform "managed" \
-          --allow-unauthenticated
+      id: deploy
+      uses: google-github-actions/deploy-cloudrun@main
+      with:
+        service: ${{ env.SERVICE_NAME }}
+        image: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        credentials: ${{ secrets.GCLOUD_AUTH }}
 
     # Delete old revisions and container images in order to reduce the storage usage
     - name: Delete old revisions
