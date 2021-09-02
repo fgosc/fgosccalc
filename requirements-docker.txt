@@ -1,4 +1,8 @@
 bottle==0.12.19
-requests==2.25.1
-numpy==1.19.4
-opencv-contrib-python==4.4.0.46
+certifi==2021.5.30; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0"
+charset-normalizer==2.0.4; python_full_version >= "3.6.0" and python_version >= "3"
+idna==3.2; python_version >= "3.5" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version >= "3.5"
+numpy==1.21.1; python_version >= "3.7"
+opencv-contrib-python==4.5.3.56; python_version >= "3.6"
+requests==2.26.0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.6.0")
+urllib3==1.26.6; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version < "4"

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "fgosccalc"
+version = "0.1.0"
+description = ""
+authors = ["fgophi", "max747"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+opencv-contrib-python = "^4.5.3"
+requests = "^2.26.0"
+bottle = "^0.12.19"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
