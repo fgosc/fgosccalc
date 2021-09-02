@@ -13,16 +13,16 @@ Python 3.7以降
   - makeprop.py : img2str.py で使用するproperty.xml を作成する
     - data/* : 文字学習用データ
   - freequest.csv : クエスト名自動認識に使用される
-  - syurenquest.csv :  クエスト名自動認識に使用される
+  - syurenquest.csv : クエスト名自動認識に使用される
   - syoji_silber.png : 「所持」の文字位置を認識するためのファイル
   - hash_ce.csv : 概念礼装画像認識のためのデータファイル update.py で更新
   - hash_item.csv : アイテム画像認識のためのデータファイル update.py で更新
-- fgosccalc.py　: コマンドプロンプトでファイル2つを読み込み差分を出力
+- fgosccalc.py : コマンドプロンプトでファイル2つを読み込み差分を出力
   - item_nickname.csv : アイテムを短縮名に変換するためのデータ
 - fgosccalc.cgi : fgosccalc.py の CGI版
 - calctweet.py : 周回報告のTweet URL から周回報告と画像差分をチェックする
   - item.csv : calctweet.py で使用するアイテム標準化ファイル
-  - setting-dst.ini  : calctweet.py で使用する setting.ini の元ファイル
+  - setting-dst.ini : calctweet.py で使用する setting.ini の元ファイル
 - update.py : アイテムデータのアップデートを行う
   - std_item_nickname.csv : 恒常アイテムを短縮名に変換するためのデータ
   - ce_bl.txt : データ取得対象外の非ドロップ概念礼装のブラックリスト
@@ -51,7 +51,7 @@ $ python makeprop.py
 
 ### calctweet.py のインストールは以下の手順が必要
 1. setting-dst.ini をコピーして setting.ini を作成
-2. consumer_key　と　consumer_secret を手に入れる
+2. consumer_key と consumer_secret を手に入れる
 基本的に一般配布はしないので、https://developer.twitter.com/ からアプリケーション登録をして手に入れる
 ※ここでaccess_token と access_secret を入手すると4の手順がとばせます
 3. setting.ini に取得したconsumer_key と consumer_secretを入力する
