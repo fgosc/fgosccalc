@@ -60,6 +60,7 @@ jobs:
       uses: google-github-actions/deploy-cloudrun@main
       with:
         service: ${{ env.SERVICE_NAME }}
+        region: ${{ env.RUN_REGION }}
         image: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
         credentials: ${{ secrets.GCLOUD_AUTH }}
 
