@@ -1,5 +1,5 @@
 "use strict";
-// ver 20200913-01
+// ver 20210908-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -830,6 +830,16 @@ class EditBox extends React.Component {
     }))
   }
 
+  questHasAdditionalEnemy(questname) {
+    const suffixes = ['序', '破', '急']
+    return questname.length > 0 && suffixes.some((e) => questname.endsWith(e))
+  }
+
+  questHasAdditionalDrop(questname) {
+    const prefixes = ['カルデア探検隊！']
+    return questname.length > 0 && prefixes.some((e) => questname.startsWith(e))
+  }
+
   buildReportText(questname, runcount, lines) {
     const reportText = lines
         .map(line => { return line.material + line.report })
@@ -858,9 +868,13 @@ ${reportText}
 
     const additionalLines = []
 
-    const keywords = ['序', '破', '急']
-    if (questname.length > 0 && keywords.includes(questname[questname.length - 1])) {
+    if (this.questHasAdditionalEnemy(questname)) {
+      console.log("match additonal enemy")
       additionalLines.push('追加出現率 %')
+    }
+    if (this.questHasAdditionalDrop(questname)) {
+      console.log("match additonal drop")
+      additionalLines.push('追加ドロップ率 %')
     }
     if (addedMaterials.length > 0) {
       additionalLines.push('周回外消費分の加算: ' + addedMaterials)
