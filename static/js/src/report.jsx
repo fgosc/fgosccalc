@@ -873,11 +873,9 @@ ${reportText}
     const additionalLines = []
 
     if (this.questHasAdditionalEnemy(questname)) {
-      console.log("match additonal enemy")
       additionalLines.push('追加出現率 %')
     }
     if (this.questHasAdditionalDrop(questname)) {
-      console.log("match additonal drop")
       additionalLines.push('追加ドロップ率 %')
     }
     if (addedMaterials.length > 0) {
