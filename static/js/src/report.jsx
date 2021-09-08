@@ -1,5 +1,5 @@
 "use strict";
-// ver 20200913-01
+// ver 20210908-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -830,6 +830,20 @@ class EditBox extends React.Component {
     }))
   }
 
+  questHasAdditionalEnemy(questname) {
+    const suffixes = ['序', '破', '急']
+    return questname.length > 0 && suffixes.some((e) => questname.endsWith(e))
+  }
+
+  questHasAdditionalDrop(questname) {
+    const targets = [
+      '漂流してきた宝を探せ！',
+      '海賊達と飲みニケーション！',
+      '秘境に隠れし宝を探せ！',
+    ]
+    return questname.length > 0 && targets.includes(questname)
+  }
+
   buildReportText(questname, runcount, lines) {
     const reportText = lines
         .map(line => { return line.material + line.report })
@@ -858,9 +872,11 @@ ${reportText}
 
     const additionalLines = []
 
-    const keywords = ['序', '破', '急']
-    if (questname.length > 0 && keywords.includes(questname[questname.length - 1])) {
+    if (this.questHasAdditionalEnemy(questname)) {
       additionalLines.push('追加出現率 %')
+    }
+    if (this.questHasAdditionalDrop(questname)) {
+      additionalLines.push('追加ドロップ率 %')
     }
     if (addedMaterials.length > 0) {
       additionalLines.push('周回外消費分の加算: ' + addedMaterials)
