@@ -836,8 +836,12 @@ class EditBox extends React.Component {
   }
 
   questHasAdditionalDrop(questname) {
-    const prefixes = ['カルデア探検隊！']
-    return questname.length > 0 && prefixes.some((e) => questname.startsWith(e))
+    const targets = [
+      '漂流してきた宝を探せ！',
+      '海賊達と飲みニケーション！',
+      '秘境に隠れし宝を探せ！',
+    ]
+    return questname.length > 0 && targets.includes(questname)
   }
 
   buildReportText(questname, runcount, lines) {
