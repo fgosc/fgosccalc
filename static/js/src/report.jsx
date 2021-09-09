@@ -1,5 +1,5 @@
 "use strict";
-// ver 20200913-01
+// ver 20210909-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -830,6 +830,22 @@ class EditBox extends React.Component {
     }))
   }
 
+  questHasAdditionalEnemy(questname) {
+    const suffixes = ['序', '破', '急']
+    return questname.length > 0 && suffixes.some((e) => questname.endsWith(e))
+  }
+
+  questHasAdditionalDrop(reportText) {
+    // TODO 本来は報告テキストではなく元データの素材名で完全一致するか見たほうがよいが
+    // 改修範囲が大きくなるので一旦これで妥協
+    const targets = [
+      '宝箱金',
+      '宝箱銀',
+      '宝箱銅',
+    ]
+    return questname.length > 0 && targets.some((e) => reportText.includes(e))
+  }
+
   buildReportText(questname, runcount, lines) {
     const reportText = lines
         .map(line => { return line.material + line.report })
@@ -858,9 +874,11 @@ ${reportText}
 
     const additionalLines = []
 
-    const keywords = ['序', '破', '急']
-    if (questname.length > 0 && keywords.includes(questname[questname.length - 1])) {
+    if (this.questHasAdditionalEnemy(questname)) {
       additionalLines.push('追加出現率 %')
+    }
+    if (this.questHasAdditionalDrop(reportText)) {
+      additionalLines.push('追加ドロップ率 %')
     }
     if (addedMaterials.length > 0) {
       additionalLines.push('周回外消費分の加算: ' + addedMaterials)
