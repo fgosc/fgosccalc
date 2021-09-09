@@ -1,5 +1,5 @@
 "use strict";
-// ver 20210908-1
+// ver 20210909-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -835,13 +835,15 @@ class EditBox extends React.Component {
     return questname.length > 0 && suffixes.some((e) => questname.endsWith(e))
   }
 
-  questHasAdditionalDrop(questname) {
+  questHasAdditionalDrop(reportText) {
+    // TODO 本来は報告テキストではなく元データの素材名で完全一致するか見たほうがよいが
+    // 改修範囲が大きくなるので一旦これで妥協
     const targets = [
-      '漂流してきた宝を探せ！',
-      '海賊達と飲みニケーション！',
-      '秘境に隠れし宝を探せ！',
+      '宝箱金',
+      '宝箱銀',
+      '宝箱銅',
     ]
-    return questname.length > 0 && targets.includes(questname)
+    return questname.length > 0 && targets.some((e) => reportText.includes(e))
   }
 
   buildReportText(questname, runcount, lines) {
@@ -875,7 +877,7 @@ ${reportText}
     if (this.questHasAdditionalEnemy(questname)) {
       additionalLines.push('追加出現率 %')
     }
-    if (this.questHasAdditionalDrop(questname)) {
+    if (this.questHasAdditionalDrop(reportText)) {
       additionalLines.push('追加ドロップ率 %')
     }
     if (addedMaterials.length > 0) {
