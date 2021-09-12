@@ -226,17 +226,17 @@ class TableLine extends React.Component {
 class Table extends React.Component {
   render() {
     return (
-      <div style={{marginBottom: 1.5 + 'rem'}}>
+      <div className="table-container" style={{marginBottom: 1.5 + 'rem'}}>
         <table className="is-narrow">
           <thead>
             <tr>
               <th></th>
-              <th>素材名</th>
-              <th>解析結果</th>
-              <th>消費</th>
-              <th>追加獲得</th>
-              <th>x3変換</th>
-              <th>報告値</th>
+              <th style={{minWidth: 6 + 'rem'}}>素材名</th>
+              <th style={{minWidth: 6 + 'rem'}}>解析結果</th>
+              <th style={{minWidth: 6 + 'rem'}}>消費</th>
+              <th style={{minWidth: 6 + 'rem'}}>追加獲得</th>
+              <th style={{minWidth: 6 + 'rem'}}>x3変換</th>
+              <th style={{minWidth: 6 + 'rem'}}>報告値</th>
               <th></th>
             </tr>
           </thead>
