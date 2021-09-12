@@ -220,6 +220,7 @@ def upload_post():
     logger.info('quest: %s', questname)
     logger.info('questnames: %s', questnames)
     logger.info('questdrop: %s', questdrop)
+    logger.info('parse_result: %s', bundle.parse_result)
 
     drops_diff = dropitemseditor.DropsDiff(bundle.parse_result, questname, questdrop)
     parsed_obj = drops_diff.parse(bundle.dropitems)
@@ -233,6 +234,10 @@ def upload_post():
         d['initial'] = d['report']
         d['add'] = 0
         d['reduce'] = 0
+        if d['item_id'] and d['item_id'] >= img2str.ID_EVNET:
+            d['is_event_item'] = True
+        else:
+            d['is_event_item'] = False
 
     before_after_pairs = make_before_after_pairs(bundle.before_sc_itemlist, bundle.after_sc_itemlist, bundle.owned_diff)
     logger.info('pairs: %s', before_after_pairs)

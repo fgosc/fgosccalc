@@ -109,9 +109,9 @@ class ParsedDropsDiff:
 
             出力例:
             [
-                { "id": 1, "material": "爪", "report": 10 },
-                { "id": 2, "material": "羽根", "report": 25 },
-                { "id": 3, "material": "!弓モニュ", "report": 3 }
+                { "id": 1, "material": "爪", "report": 10, "item_id": ... },
+                { "id": 2, "material": "羽根", "report": 25, "item_id": ... },
+                { "id": 3, "material": "!弓モニュ", "report": 3, "item_id": ... }
             ]
         """
         categories = [
@@ -150,6 +150,7 @@ class ParsedDropsDiff:
                     'id': index,
                     'material': item_name,
                     'report': str(count),
+                    'item_id': item["item_id"],
                 }
                 data.append(d)
                 index += 1
@@ -224,26 +225,26 @@ class DropsDiff:
                 if len(self.questdrops) > 0:
                     item_id = [k for k, v in dropitems.item_name.items() if v == self.questdrops[i]][0]
                     if dropitems.item_type[item_id] == "Craft Essence":
-                        craft_essence.append({"name": out_name(item_id, dropitems), "dropnum": 0})
+                        craft_essence.append({"name": out_name(item_id, dropitems), "dropnum": 0, "item_id": item_id})
             elif dropitems.item_type[item["id"]] == "Craft Essence":
-                craft_essence.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
+                craft_essence.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
             elif ID_STANDARD_ITEM_MIN <= item["id"] <= ID_STANDARD_ITEM_MAX:
-                materials.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
+                materials.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
             elif ID_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX:
-                gems.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
+                gems.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
             elif ID_PIECE_MIN <= item["id"] <= ID_MONUMENT_MAX:
-                pieces.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
+                pieces.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
             elif ID_EXP_MIN <= item["id"] <= ID_EXP_MAX:
                 raise ValueError('item_dict should not have wisdoms')
             else:
-                non_standards.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"]})
+                non_standards.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
 
         if self.is_freequest:
             for questdrop in self.questdrops:
                 if questdrop in dropitems.exp_list:
                     # 種火はスクリーンショットから個数計算できないため常に
                     # NaN (N/A の意味。FGO周回カウンタ互換) を設定する
-                    wisdoms.append({"name": questdrop, "dropnum": 'NaN'})
+                    wisdoms.append({"name": questdrop, "dropnum": 'NaN', "item_id": None})
 
         return ParsedDropsDiff(
             self.questname,
