@@ -1,5 +1,5 @@
 "use strict";
-// ver 20210909-1
+// ver 20210912-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -35,6 +35,7 @@ class TableLine extends React.Component {
     this.handleMaterialChange = this.handleMaterialChange.bind(this)
     this.handleAddChange = this.handleAddChange.bind(this)
     this.handleReduceChange = this.handleReduceChange.bind(this)
+    this.handleChunkStateChange = this.handleChunkStateChange.bind(this)
     this.handleReportChange = this.handleReportChange.bind(this)
     this.handleEditClick = this.handleEditClick.bind(this)
     this.handleDiscardEditClick = this.handleDiscardEditClick.bind(this)
@@ -60,7 +61,11 @@ class TableLine extends React.Component {
   }
 
   handleReportChange(event) {
-    this.props.onMaterialReportCountChange(this.props.id, event.target.value)
+    this.props.onMaterialReportCountChange(this.props.id, event.target.value, false)
+  }
+
+  handleChunkStateChange(event) {
+    this.props.onMaterialChunkStateChange(this.props.id, event.target.checked)
   }
 
   handleEditClick(event) {
@@ -68,12 +73,13 @@ class TableLine extends React.Component {
     // 直接入力開始時は今までの増減操作をなかったことにする
     this.props.onMaterialAddCountChange(this.props.id, 0)
     this.props.onMaterialReduceCountChange(this.props.id, 0)
+    this.props.onMaterialReportCountChange(this.props.id, this.props.initial, true)
   }
 
   handleDiscardEditClick(event) {
     this.setState({ editResult: false })
     // 直接入力終了時は今までの編集操作をなかったことにする
-    this.props.onMaterialReportCountChange(this.props.id, this.props.initial)
+    this.props.onMaterialReportCountChange(this.props.id, this.props.initial, true)
   }
 
   handleDeleteClick(event) {
@@ -118,9 +124,14 @@ class TableLine extends React.Component {
     return true
   }
 
+  canReplaceToChunk(props) {
+    const reportValue = parseInt(props.initial) + parseInt(props.add) - parseInt(props.reduce)
+    return reportValue % 3 === 0
+  }
+
   render() {
     // TODO refactor
-    let materialComponent, addComponent, reduceComponent, reportComponent, editButton
+    let materialComponent, addComponent, reduceComponent, reportComponent, editButton, chunkComponent
     const materialValue = this.props.material
     const reportValue = this.props.report
 
@@ -146,6 +157,7 @@ class TableLine extends React.Component {
     if (this.state.editResult) {
       addComponent = <span>{this.props.add}</span>
       reduceComponent = <span>{this.props.reduce}</span>
+      chunkComponent = <span>{this.props.chunk}</span>
       if (!this.isValidReportValue(reportValue)) {
         reportComponent = (
           <React.Fragment>
@@ -160,6 +172,11 @@ class TableLine extends React.Component {
     } else {
       addComponent = <input type="number" className="input is-small" min="0" value={this.props.add} onChange={this.handleAddChange} />
       reduceComponent = <input type="number" className="input is-small" min="0" value={this.props.reduce} onChange={this.handleReduceChange} />
+      if (this.props.chunk === true || this.canReplaceToChunk(this.props)) {
+        chunkComponent = <input type="checkbox" value={this.props.chunk} onChange={this.handleChunkStateChange} />
+      } else {
+        chunkComponent = <span>{this.props.chunk}</span>
+      }
       reportComponent = <span>{reportValue}</span>
       editButton = <button className="button is-small is-success" onClick={this.handleEditClick}>直接入力</button>
     }
@@ -190,6 +207,9 @@ class TableLine extends React.Component {
           {reduceComponent}
         </td>
         <td className="valign-middle">
+          {chunkComponent}
+        </td>
+        <td className="valign-middle">
           {reportComponent}
         </td>
         <td className="valign-middle">
@@ -212,6 +232,7 @@ class Table extends React.Component {
               <th>解析結果</th>
               <th>消費</th>
               <th>追加獲得</th>
+              <th>x3変換</th>
               <th>報告値</th>
               <th></th>
             </tr>
@@ -224,6 +245,7 @@ class Table extends React.Component {
                 onMaterialChange={this.props.onMaterialChange}
                 onMaterialAddCountChange={this.props.onMaterialAddCountChange}
                 onMaterialReduceCountChange={this.props.onMaterialReduceCountChange}
+                onMaterialChunkStateChange={this.props.onMaterialChunkStateChange}
                 onMaterialReportCountChange={this.props.onMaterialReportCountChange}
                 onLineDeleteButtonClick={this.props.onLineDeleteButtonClick}
                 onLineUpButtonClick={this.props.onLineUpButtonClick}
@@ -238,6 +260,7 @@ class Table extends React.Component {
         <ul className="note">
           <li><b>消費</b> ... 解析結果に指定した数を加えて報告数を増やします。たとえば、周回カウント中に育成等で素材を消費した場合など。</li>
           <li><b>追加獲得</b> ... 解析結果から指定した数を引いて報告数を減らします。たとえば、周回以外で入手した素材を集計から除外したいなど。</li>
+          <li><b>x3変換</b> ... 解析結果を3で割った値を報告数とし、素材名に (x3) を付加します。ドロップ数増加礼装が付いている場合には<u>使えません</u>。</li>
           <li><b>直接入力</b> ... 解析結果を無視して報告数を直接入力します。解析結果が正しくない場合や、解析ではカウント不可能なアイテム（礼装や種火など）の報告に使います。</li>
         </ul>
       </div>
@@ -554,6 +577,7 @@ class EditBox extends React.Component {
     this.handleMaterialChange = this.handleMaterialChange.bind(this)
     this.handleMaterialAddCountChange = this.handleMaterialAddCountChange.bind(this)
     this.handleMaterialReduceCountChange = this.handleMaterialReduceCountChange.bind(this)
+    this.handleMaterialChunkStateChange = this.handleMaterialChunkStateChange.bind(this)
     this.handleMaterialReportCountChange = this.handleMaterialReportCountChange.bind(this)
     this.handleLineDeleteButtonClick = this.handleLineDeleteButtonClick.bind(this)
     this.handleLineUpButtonClick = this.handleLineUpButtonClick.bind(this)
@@ -580,6 +604,8 @@ class EditBox extends React.Component {
     const lines = props.lines
 
     lines.map(line => {
+      // 枠報告 (x3変換) の初期値
+      line.chunk = false
       // report の値を計算しておく。
       // data から与えられた report 値はここで上書きしてしまってよい。
       line.report = this.computeReportValue(line)
@@ -648,6 +674,9 @@ class EditBox extends React.Component {
     if (reportValue < 0 || isNaN(reportValue)) {
       reportValue = "NaN"
     }
+    if (line.chunk) {
+      return reportValue / 3
+    }
     return reportValue
   }
 
@@ -677,12 +706,45 @@ class EditBox extends React.Component {
     }))
   }
 
-  handleMaterialReportCountChange(id, count) {
+  addChunkSuffix(name) {
+    return name + '(x3)'
+  }
+
+  removeChunkSuffix(name) {
+    if (name.endsWith('(x3)')) {
+      return name.slice(0, -4)
+    }
+    return name
+  }
+
+  handleMaterialChunkStateChange(id, checked) {
+    const hook = (line) => {
+      line.chunk = checked
+      if (checked) {
+        line.material = this.addChunkSuffix(line.material)
+        line.report = this.computeReportValue(line)
+      } else {
+        line.material = this.removeChunkSuffix(line.material)
+        line.report = this.computeReportValue(line)
+      }
+    }
+    const newlines = this.rebuildLines(this.state.lines, hook, id)
+    this.setState((state) => ({
+      lines: newlines,
+      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      canTweet: false,
+    }))
+  }
+
+  handleMaterialReportCountChange(id, count, resetName) {
     const hook = (line) => {
       if (count < 0) {
         line.report = "NaN"
       } else {
         line.report = count
+      }
+      if (resetName) {
+        line.material = this.removeChunkSuffix(line.material)
       }
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
@@ -907,6 +969,7 @@ ${reportText}
               onMaterialChange={this.handleMaterialChange}
               onMaterialAddCountChange={this.handleMaterialAddCountChange}
               onMaterialReduceCountChange={this.handleMaterialReduceCountChange}
+              onMaterialChunkStateChange={this.handleMaterialChunkStateChange}
               onMaterialReportCountChange={this.handleMaterialReportCountChange}
               onLineDeleteButtonClick={this.handleLineDeleteButtonClick}
               onLineUpButtonClick={this.handleLineUpButtonClick}
