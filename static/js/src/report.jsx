@@ -125,6 +125,9 @@ class TableLine extends React.Component {
   }
 
   canReplaceToChunk(props) {
+    if (!props.is_event_item) {
+      return false
+    }
     const reportValue = parseInt(props.initial) + parseInt(props.add) - parseInt(props.reduce)
     return reportValue % 3 === 0
   }
