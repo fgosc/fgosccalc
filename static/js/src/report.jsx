@@ -170,8 +170,8 @@ class TableLine extends React.Component {
       }
       editButton = <button className="button is-small is-danger" onClick={this.handleDiscardEditClick}>キャンセル</button>
     } else {
-      addComponent = <input type="number" className="input is-small" min="0" value={this.props.add} onChange={this.handleAddChange} />
-      reduceComponent = <input type="number" className="input is-small" min="0" value={this.props.reduce} onChange={this.handleReduceChange} />
+      addComponent = <input type="number" className="input is-small" min="0" value={this.props.add} onChange={this.handleAddChange} disabled={this.props.chunk} />
+      reduceComponent = <input type="number" className="input is-small" min="0" value={this.props.reduce} onChange={this.handleReduceChange} disabled={this.props.chunk} />
       if (this.props.chunk === true || this.canReplaceToChunk(this.props)) {
         chunkComponent = <input type="checkbox" value={this.props.chunk} onChange={this.handleChunkStateChange} />
       } else {
