@@ -1048,11 +1048,10 @@ ${reportText}
     this.setState({ canTweet: true })
   }
 
-  render() {
-    let tableComponent
+  makeComponent() {
     if (this.state.editMode) {
-      tableComponent = (
-        <React.Fragment>
+      return (
+        <>
           <button className="button is-small is-link" onClick={this.handleCloseClick}>閉じる</button>
           <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
           <Table {...this.state}
@@ -1066,16 +1065,18 @@ ${reportText}
               onLineDownButtonClick={this.handleLineDownButtonClick}
               onAddRowButtonClick={this.handleAddRowButtonClick}
           />
-        </React.Fragment>
-      )
-    } else {
-      tableComponent = (
-        <React.Fragment>
-          <button className="button is-small is-link" onClick={this.handleEditClick}>報告素材を編集</button>
-          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
-        </React.Fragment>
+        </>
       )
     }
+    return (
+      <>
+        <button className="button is-small is-link" onClick={this.handleEditClick}>報告素材を編集</button>
+        <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
+      </>
+    )
+  }
+
+  render() {
     return (
       <div>
         <ReportViewer {...this.state} />
@@ -1086,7 +1087,7 @@ ${reportText}
         <RunCountEditor runcount={this.state.runcount}
           onRunCountChange={this.handleRunCountChange} />
         <div style={{marginTop: 1 + 'rem'}}>
-          {tableComponent}
+          {this.makeComponent()}
         </div>
         <TweetButton {...this.state}
           onShowTweetButton={this.handleShowTweetButton} />
