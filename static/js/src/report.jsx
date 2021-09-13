@@ -141,11 +141,22 @@ class ChunkMaterialCountCell extends React.Component {
   }
 
   canReplaceToChunk(props) {
+    // イベントアイテムであること
     if (!props.is_event_item) {
       return false
     }
     const reportValue = parseInt(props.initial) + parseInt(props.add) - parseInt(props.reduce)
-    return reportValue % 3 === 0
+    // 報告数が 3 の倍数であること
+    if (reportValue % 3 !== 0) {
+      return false
+    }
+    // 周回数の 4 倍以上の報告数であること
+    // (少なくとも 1 周あたり 1.334 枠分はイベントアイテムがドロップするだろうと仮定する)
+    if (reportValue < parseInt(props.runcount) * 4) {
+      return false
+    }
+    // 以上をすべて満たした場合 x3 変換が可能
+    return true
   }
 
   makeComponent() {
@@ -335,6 +346,7 @@ class Table extends React.Component {
             return (
               <TableLine key={e.id}
                 {...e}
+                runcount={this.props.runcount}
                 onMaterialChange={this.props.onMaterialChange}
                 onMaterialAddCountChange={this.props.onMaterialAddCountChange}
                 onMaterialReduceCountChange={this.props.onMaterialReduceCountChange}
