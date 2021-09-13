@@ -221,7 +221,7 @@ class EditButton extends React.Component {
     if (this.props.editResult) {
       return <button className="button is-small is-danger" onClick={this.props.onDiscardEditClick}>キャンセル</button>
     }
-    return <button className="button is-small is-success" onClick={this.props.onEditClick}>直接入力</button>
+    return <button className="button is-small is-link" onClick={this.props.onEditClick}>直接入力</button>
   }
 
   render() {
@@ -321,12 +321,12 @@ class Table extends React.Component {
           <thead>
             <tr>
               <th></th>
-              <th style={{minWidth: 6 + 'rem'}}>素材名</th>
-              <th style={{minWidth: 6 + 'rem'}}>解析結果</th>
-              <th style={{minWidth: 6 + 'rem'}}>消費</th>
-              <th style={{minWidth: 6 + 'rem'}}>追加獲得</th>
-              <th style={{minWidth: 6 + 'rem'}}>x3変換</th>
-              <th style={{minWidth: 6 + 'rem'}}>報告値</th>
+              <th className="standard">素材名</th>
+              <th className="standard">解析結果</th>
+              <th className="standard">消費</th>
+              <th className="standard">追加獲得</th>
+              <th className="standard">x3変換</th>
+              <th className="standard">報告値</th>
               <th></th>
             </tr>
           </thead>
@@ -1053,7 +1053,7 @@ ${reportText}
     if (this.state.editMode) {
       tableComponent = (
         <React.Fragment>
-          <button className="button is-small is-success" onClick={this.handleCloseClick}>閉じる</button>
+          <button className="button is-small is-link" onClick={this.handleCloseClick}>閉じる</button>
           <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
           <Table {...this.state}
               onMaterialChange={this.handleMaterialChange}
@@ -1071,7 +1071,7 @@ ${reportText}
     } else {
       tableComponent = (
         <React.Fragment>
-          <button className="button is-small is-success" onClick={this.handleEditClick}>報告素材を編集</button>
+          <button className="button is-small is-link" onClick={this.handleEditClick}>報告素材を編集</button>
           <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
         </React.Fragment>
       )
