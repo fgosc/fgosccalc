@@ -479,6 +479,10 @@ class RunCountEditor extends React.Component {
   }
 
   addValue(delta) {
+    // 素材編集モード中は変更不可
+    if (this.props.editModeEnabled) {
+      return
+    }
     let runcount = parseInt(this.props.runcount)
     // ブランクなど数値でない場合に NaN になる可能性がある。
     // その場合は強制的に 0 にする。
@@ -492,8 +496,8 @@ class RunCountEditor extends React.Component {
     this.props.onRunCountChange(v)
   }
 
-  buildInputNode(runcount) {
-    const _runcount = parseInt(runcount)
+  buildInputNode() {
+    const _runcount = parseInt(this.props.runcount)
     if (_runcount <= 0 || isNaN(_runcount)) {
       return (
         <div className="control">
@@ -504,7 +508,7 @@ class RunCountEditor extends React.Component {
     }
     return (
       <div className="control has-icons-right">
-        <input type="number" className="input is-small is-success" min="0" value={this.props.runcount} onChange={this.handleChange} />
+        <input type="number" className="input is-small is-success" min="0" value={this.props.runcount} disabled={this.props.editModeEnabled} onChange={this.handleChange} />
         <span className="icon is-small is-right">
           <i className="fas fa-check"></i>
         </span>
@@ -517,8 +521,7 @@ class RunCountEditor extends React.Component {
   }
 
   render() {
-    const runcount = this.props.runcount
-    const inputNode = this.buildInputNode(runcount)
+    const inputNode = this.buildInputNode()
     return (
       <div>
         <div className="field">
@@ -1048,32 +1051,31 @@ ${reportText}
     this.setState({ canTweet: true })
   }
 
-  makeComponent() {
-    if (this.state.editMode) {
-      return (
-        <>
-          <button className="button is-small is-link" onClick={this.handleCloseClick}>閉じる</button>
-          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
-          <Table {...this.state}
-              onMaterialChange={this.handleMaterialChange}
-              onMaterialAddCountChange={this.handleMaterialAddCountChange}
-              onMaterialReduceCountChange={this.handleMaterialReduceCountChange}
-              onMaterialChunkStateChange={this.handleMaterialChunkStateChange}
-              onMaterialReportCountChange={this.handleMaterialReportCountChange}
-              onLineDeleteButtonClick={this.handleLineDeleteButtonClick}
-              onLineUpButtonClick={this.handleLineUpButtonClick}
-              onLineDownButtonClick={this.handleLineDownButtonClick}
-              onAddRowButtonClick={this.handleAddRowButtonClick}
-          />
-        </>
-      )
+  makeToggleButton() {
+    if (this.state.runcount <= 0) {
+      return <button className="button is-small" disabled={true}>報告素材を編集</button>
     }
-    return (
-      <>
-        <button className="button is-small is-link" onClick={this.handleEditClick}>報告素材を編集</button>
-        <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
-      </>
-    )
+    if (this.state.editMode) {
+      return <button className="button is-small is-link" onClick={this.handleCloseClick}>閉じる</button>
+    }
+    return <button className="button is-small is-link" onClick={this.handleEditClick}>報告素材を編集</button>
+  }
+
+  makeTable() {
+    if (!this.state.editMode) {
+      return <></>
+    }
+    return <Table {...this.state}
+        onMaterialChange={this.handleMaterialChange}
+        onMaterialAddCountChange={this.handleMaterialAddCountChange}
+        onMaterialReduceCountChange={this.handleMaterialReduceCountChange}
+        onMaterialChunkStateChange={this.handleMaterialChunkStateChange}
+        onMaterialReportCountChange={this.handleMaterialReportCountChange}
+        onLineDeleteButtonClick={this.handleLineDeleteButtonClick}
+        onLineUpButtonClick={this.handleLineUpButtonClick}
+        onLineDownButtonClick={this.handleLineDownButtonClick}
+        onAddRowButtonClick={this.handleAddRowButtonClick}
+    />
   }
 
   render() {
@@ -1084,10 +1086,12 @@ ${reportText}
           onQuestNameChange={this.handleQuestNameChange} />
         <QuestNameSelector questnames={this.state.questnames}
           onQuestNameChange={this.handleQuestNameChange} />
-        <RunCountEditor runcount={this.state.runcount}
+        <RunCountEditor runcount={this.state.runcount} editModeEnabled={this.state.editMode}
           onRunCountChange={this.handleRunCountChange} />
         <div style={{marginTop: 1 + 'rem'}}>
-          {this.makeComponent()}
+          {this.makeToggleButton()}
+          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
+          {this.makeTable()}
         </div>
         <TweetButton {...this.state}
           onShowTweetButton={this.handleShowTweetButton} />
