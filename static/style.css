@@ -25,3 +25,7 @@ ul.note li {
 .invisible {
     display: none;
 }
+
+th.standard {
+    min-width: 6rem;
+}

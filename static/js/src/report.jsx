@@ -1,5 +1,5 @@
 "use strict";
-// ver 20210912-1
+// ver 20210913-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -28,72 +28,16 @@ window.twttr = (function(d, s, id) {
 const defaultQuestName = '(クエスト名)'
 const tweetURL = ''
 
-class TableLine extends React.Component {
+// "素材" フィールド
+class MaterialNameCell extends React.Component {
   constructor(props) {
     super(props)
 
-    this.handleMaterialChange = this.handleMaterialChange.bind(this)
-    this.handleAddChange = this.handleAddChange.bind(this)
-    this.handleReduceChange = this.handleReduceChange.bind(this)
-    this.handleChunkStateChange = this.handleChunkStateChange.bind(this)
-    this.handleReportChange = this.handleReportChange.bind(this)
-    this.handleEditClick = this.handleEditClick.bind(this)
-    this.handleDiscardEditClick = this.handleDiscardEditClick.bind(this)
-    this.handleDeleteClick = this.handleDeleteClick.bind(this)
-    this.handleUpClick = this.handleUpClick.bind(this)
-    this.handleDownClick = this.handleDownClick.bind(this)
-
-    this.state = {
-      editResult: false,
-    }
+    this.handleValueChange = this.handleValueChange.bind(this)
   }
 
-  handleMaterialChange(event) {
-    this.props.onMaterialChange(this.props.id, event.target.value)
-  }
-
-  handleAddChange(event) {
-    this.props.onMaterialAddCountChange(this.props.id, event.target.value)
-  }
-
-  handleReduceChange(event) {
-    this.props.onMaterialReduceCountChange(this.props.id, event.target.value)
-  }
-
-  handleReportChange(event) {
-    this.props.onMaterialReportCountChange(this.props.id, event.target.value, false)
-  }
-
-  handleChunkStateChange(event) {
-    this.props.onMaterialChunkStateChange(this.props.id, event.target.checked)
-  }
-
-  handleEditClick(event) {
-    this.setState({ editResult: true })
-    // 直接入力開始時は今までの増減操作をなかったことにする
-    this.props.onMaterialAddCountChange(this.props.id, 0)
-    this.props.onMaterialReduceCountChange(this.props.id, 0)
-    this.props.onMaterialReportCountChange(this.props.id, this.props.initial, true)
-  }
-
-  handleDiscardEditClick(event) {
-    this.setState({ editResult: false })
-    // 直接入力終了時は今までの編集操作をなかったことにする
-    this.props.onMaterialReportCountChange(this.props.id, this.props.initial, true)
-  }
-
-  handleDeleteClick(event) {
-    if (confirm("この行を削除しますか？")) {
-      this.props.onLineDeleteButtonClick(this.props.id)
-    }
-  }
-
-  handleUpClick(event) {
-    this.props.onLineUpButtonClick(this.props.id)
-  }
-
-  handleDownClick(event) {
-    this.props.onLineDownButtonClick(this.props.id)
+  handleValueChange(event) {
+    this.props.onValueChange(this.props.id, event.target.value)
   }
 
   isValidMaterialValue(v) {
@@ -107,6 +51,139 @@ class TableLine extends React.Component {
       return 'TAILNUM'
     }
     return 'OK'
+  }
+
+  makeComponent() {
+    const value = this.props.material
+    const validationResult = this.isValidMaterialValue(value.trim())
+
+    if (validationResult === 'BLANK') {
+      return (
+        <>
+          <input type="text" className="input is-small is-danger" value={value} onChange={this.handleValueChange} />
+          <p className="help is-danger">入力必須</p>
+        </>
+      )
+    } else if (validationResult === 'TAILNUM') {
+      return (
+        <>
+          <input type="text" className="input is-small" value={value} onChange={this.handleValueChange} />
+          <p className="help is-danger">末尾は数字以外</p>
+        </>
+      )
+    }
+    return <input type="text" className="input is-small" value={value} onChange={this.handleValueChange} />
+  }
+
+  render() {
+    return this.makeComponent()
+  }
+}
+
+// "消費" フィールド
+class AddMaterialCountCell extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.handleValueChange = this.handleValueChange.bind(this)
+  }
+
+  handleValueChange(event) {
+    this.props.onValueChange(this.props.id, event.target.value)
+  }
+
+  makeComponent() {
+    if (this.props.editResult) {
+      return <span>{this.props.add}</span>
+    }
+    return <input type="number" className="input is-small" min="0" value={this.props.add} onChange={this.handleValueChange} disabled={this.props.chunk} />
+  }
+
+  render() {
+    return this.makeComponent()
+  }
+}
+
+// "追加獲得" フィールド
+class ReduceMaterialCountCell extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.handleValueChange = this.handleValueChange.bind(this)
+  }
+
+  handleValueChange(event) {
+    this.props.onValueChange(this.props.id, event.target.value)
+  }
+
+  makeComponent() {
+    if (this.props.editResult) {
+      return <span>{this.props.reduce}</span>
+    }
+    return <input type="number" className="input is-small" min="0" value={this.props.reduce} onChange={this.handleValueChange} disabled={this.props.chunk} />
+  }
+
+  render() {
+    return this.makeComponent()
+  }
+}
+
+// "x3変換" フィールド
+class ChunkMaterialCountCell extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.handleCheckedChange = this.handleCheckedChange.bind(this)
+  }
+
+  handleCheckedChange(event) {
+    this.props.onValueChange(this.props.id, event.target.checked)
+  }
+
+  canReplaceToChunk(props) {
+    // イベントアイテムであること
+    if (!props.is_event_item) {
+      return false
+    }
+    const reportValue = parseInt(props.initial) + parseInt(props.add) - parseInt(props.reduce)
+    // 報告数が 3 の倍数であること
+    if (reportValue % 3 !== 0) {
+      return false
+    }
+    // 周回数の 4 倍以上の報告数であること
+    // (少なくとも 1 周あたり 1.334 枠分はイベントアイテムがドロップするだろうと仮定する)
+    if (reportValue < parseInt(props.runcount) * 4) {
+      return false
+    }
+    // 以上をすべて満たした場合 x3 変換が可能
+    return true
+  }
+
+  makeComponent() {
+    if (this.props.editResult) {
+      return <></>
+    }
+    if (this.props.chunk === true || this.canReplaceToChunk(this.props)) {
+      return <input type="checkbox" value={this.props.chunk} onChange={this.handleCheckedChange} />
+    }
+    return <></>
+  }
+
+  render() {
+    return this.makeComponent()
+  }
+}
+
+// "報告値" フィールド
+class ReportCountCell extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.handleValueChange = this.handleValueChange.bind(this)
+  }
+
+  handleValueChange(event) {
+    this.props.onValueChange(this.props.id, event.target.value)
   }
 
   isValidReportValue(v) {
@@ -124,66 +201,90 @@ class TableLine extends React.Component {
     return true
   }
 
-  canReplaceToChunk(props) {
-    if (!props.is_event_item) {
-      return false
+  makeComponent() {
+    const reportValue = this.props.report
+    if (!this.props.editResult) {
+      return <span>{reportValue}</span>
     }
-    const reportValue = parseInt(props.initial) + parseInt(props.add) - parseInt(props.reduce)
-    return reportValue % 3 === 0
+    if (this.isValidReportValue(reportValue)) {
+      return <input type="text" className="input is-small" value={reportValue} onChange={this.handleValueChange} />
+    }
+    return (
+      <>
+        <input type="text" className="input is-small is-danger" value={reportValue} onChange={this.handleValueChange} />
+        <p className="help is-danger">整数または NaN</p>
+      </>
+    )
   }
 
   render() {
-    // TODO refactor
-    let materialComponent, addComponent, reduceComponent, reportComponent, editButton, chunkComponent
-    const materialValue = this.props.material
-    const reportValue = this.props.report
+    return this.makeComponent()
+  }
+}
 
-    const materialValidationResult = this.isValidMaterialValue(materialValue.trim())
-    if (materialValidationResult === 'BLANK') {
-      materialComponent = (
-        <React.Fragment>
-          <input type="text" className="input is-small is-danger" value={materialValue} onChange={this.handleMaterialChange} />
-          <p className="help is-danger">入力必須</p>
-        </React.Fragment>
-      )
-    } else if (materialValidationResult === 'TAILNUM') {
-      materialComponent = (
-        <React.Fragment>
-          <input type="text" className="input is-small" value={materialValue} onChange={this.handleMaterialChange} />
-          <p className="help is-danger">末尾は数字以外</p>
-        </React.Fragment>
-      )
-    } else {
-      materialComponent = <input type="text" className="input is-small" value={materialValue} onChange={this.handleMaterialChange} />
+// "直接入力/キャンセル" ボタン
+class EditButton extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+
+  makeComponent() {
+    if (this.props.editResult) {
+      return <button className="button is-small is-danger" onClick={this.props.onDiscardEditClick}>キャンセル</button>
     }
+    return <button className="button is-small is-link" onClick={this.props.onEditClick}>直接入力</button>
+  }
 
-    if (this.state.editResult) {
-      addComponent = <span>{this.props.add}</span>
-      reduceComponent = <span>{this.props.reduce}</span>
-      chunkComponent = <span>{this.props.chunk}</span>
-      if (!this.isValidReportValue(reportValue)) {
-        reportComponent = (
-          <React.Fragment>
-            <input type="text" className="input is-small is-danger" value={reportValue} onChange={this.handleReportChange} />
-            <p className="help is-danger">整数または NaN</p>
-          </React.Fragment>
-        )
-      } else {
-        reportComponent = <input type="text" className="input is-small" value={reportValue} onChange={this.handleReportChange} />
-      }
-      editButton = <button className="button is-small is-danger" onClick={this.handleDiscardEditClick}>キャンセル</button>
-    } else {
-      addComponent = <input type="number" className="input is-small" min="0" value={this.props.add} onChange={this.handleAddChange} disabled={this.props.chunk} />
-      reduceComponent = <input type="number" className="input is-small" min="0" value={this.props.reduce} onChange={this.handleReduceChange} disabled={this.props.chunk} />
-      if (this.props.chunk === true || this.canReplaceToChunk(this.props)) {
-        chunkComponent = <input type="checkbox" value={this.props.chunk} onChange={this.handleChunkStateChange} />
-      } else {
-        chunkComponent = <span>{this.props.chunk}</span>
-      }
-      reportComponent = <span>{reportValue}</span>
-      editButton = <button className="button is-small is-success" onClick={this.handleEditClick}>直接入力</button>
+  render() {
+    return this.makeComponent()
+  }
+}
+
+// テーブル行
+class TableLine extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.handleEditClick = this.handleEditClick.bind(this)
+    this.handleDiscardEditClick = this.handleDiscardEditClick.bind(this)
+    this.handleDeleteClick = this.handleDeleteClick.bind(this)
+    this.handleUpClick = this.handleUpClick.bind(this)
+    this.handleDownClick = this.handleDownClick.bind(this)
+
+    this.state = {
+      editResult: false,
     }
+  }
 
+  handleEditClick(event) {
+    this.setState({ editResult: true })
+    // 直接入力開始時は今までの増減およびx3変換操作をなかったことにする
+    this.props.onMaterialAddCountChange(this.props.id, 0)
+    this.props.onMaterialReduceCountChange(this.props.id, 0)
+    this.props.onMaterialChunkStateChange(this.props.id, false)
+  }
+
+  handleDiscardEditClick(event) {
+    this.setState({ editResult: false })
+    // 直接入力終了時は今までの報告値編集操作をなかったことにする
+    this.props.onMaterialReportCountChange(this.props.id, this.props.initial)
+  }
+
+  handleDeleteClick(event) {
+    if (confirm("この行を削除しますか？")) {
+      this.props.onLineDeleteButtonClick(this.props.id)
+    }
+  }
+
+  handleUpClick(event) {
+    this.props.onLineUpButtonClick(this.props.id)
+  }
+
+  handleDownClick(event) {
+    this.props.onLineDownButtonClick(this.props.id)
+  }
+
+  render() {
     return (
       <tr>
         <td className="valign-middle">
@@ -198,25 +299,25 @@ class TableLine extends React.Component {
           </button>
         </td>
         <td className="valign-middle">
-          {materialComponent}
+          <MaterialNameCell {...this.props} {...this.state} onValueChange={this.props.onMaterialChange} />
         </td>
         <td className="valign-middle">
           {this.props.initial}
         </td>
         <td className="valign-middle">
-          {addComponent}
+          <AddMaterialCountCell {...this.props} {...this.state} onValueChange={this.props.onMaterialAddCountChange} />
         </td>
         <td className="valign-middle">
-          {reduceComponent}
+          <ReduceMaterialCountCell {...this.props} {...this.state} onValueChange={this.props.onMaterialReduceCountChange} />
         </td>
         <td className="valign-middle">
-          {chunkComponent}
+          <ChunkMaterialCountCell {...this.props} {...this.state} onValueChange={this.props.onMaterialChunkStateChange} />
         </td>
         <td className="valign-middle">
-          {reportComponent}
+          <ReportCountCell {...this.props} {...this.state} onValueChange={this.props.onMaterialReportCountChange} />
         </td>
         <td className="valign-middle">
-          {editButton}
+          <EditButton {...this.props} {...this.state} onEditClick={this.handleEditClick} onDiscardEditClick={this.handleDiscardEditClick} />
         </td>
       </tr>
     )
@@ -231,12 +332,12 @@ class Table extends React.Component {
           <thead>
             <tr>
               <th></th>
-              <th style={{minWidth: 6 + 'rem'}}>素材名</th>
-              <th style={{minWidth: 6 + 'rem'}}>解析結果</th>
-              <th style={{minWidth: 6 + 'rem'}}>消費</th>
-              <th style={{minWidth: 6 + 'rem'}}>追加獲得</th>
-              <th style={{minWidth: 6 + 'rem'}}>x3変換</th>
-              <th style={{minWidth: 6 + 'rem'}}>報告値</th>
+              <th className="standard">素材名</th>
+              <th className="standard">解析結果</th>
+              <th className="standard">消費</th>
+              <th className="standard">追加獲得</th>
+              <th className="standard">x3変換</th>
+              <th className="standard">報告値</th>
               <th></th>
             </tr>
           </thead>
@@ -245,6 +346,7 @@ class Table extends React.Component {
             return (
               <TableLine key={e.id}
                 {...e}
+                runcount={this.props.runcount}
                 onMaterialChange={this.props.onMaterialChange}
                 onMaterialAddCountChange={this.props.onMaterialAddCountChange}
                 onMaterialReduceCountChange={this.props.onMaterialReduceCountChange}
@@ -389,6 +491,10 @@ class RunCountEditor extends React.Component {
   }
 
   addValue(delta) {
+    // 素材編集モード中は変更不可
+    if (this.props.editModeEnabled) {
+      return
+    }
     let runcount = parseInt(this.props.runcount)
     // ブランクなど数値でない場合に NaN になる可能性がある。
     // その場合は強制的に 0 にする。
@@ -402,8 +508,8 @@ class RunCountEditor extends React.Component {
     this.props.onRunCountChange(v)
   }
 
-  buildInputNode(runcount) {
-    const _runcount = parseInt(runcount)
+  buildInputNode() {
+    const _runcount = parseInt(this.props.runcount)
     if (_runcount <= 0 || isNaN(_runcount)) {
       return (
         <div className="control">
@@ -414,7 +520,7 @@ class RunCountEditor extends React.Component {
     }
     return (
       <div className="control has-icons-right">
-        <input type="number" className="input is-small is-success" min="0" value={this.props.runcount} onChange={this.handleChange} />
+        <input type="number" className="input is-small is-success" min="0" value={this.props.runcount} disabled={this.props.editModeEnabled} onChange={this.handleChange} />
         <span className="icon is-small is-right">
           <i className="fas fa-check"></i>
         </span>
@@ -427,8 +533,7 @@ class RunCountEditor extends React.Component {
   }
 
   render() {
-    const runcount = this.props.runcount
-    const inputNode = this.buildInputNode(runcount)
+    const inputNode = this.buildInputNode()
     return (
       <div>
         <div className="field">
@@ -739,15 +844,12 @@ class EditBox extends React.Component {
     }))
   }
 
-  handleMaterialReportCountChange(id, count, resetName) {
+  handleMaterialReportCountChange(id, count) {
     const hook = (line) => {
       if (count < 0) {
         line.report = "NaN"
       } else {
         line.report = count
-      }
-      if (resetName) {
-        line.material = this.removeChunkSuffix(line.material)
       }
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
@@ -961,34 +1063,34 @@ ${reportText}
     this.setState({ canTweet: true })
   }
 
-  render() {
-    let tableComponent
-    if (this.state.editMode) {
-      tableComponent = (
-        <React.Fragment>
-          <button className="button is-small is-success" onClick={this.handleCloseClick}>閉じる</button>
-          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
-          <Table {...this.state}
-              onMaterialChange={this.handleMaterialChange}
-              onMaterialAddCountChange={this.handleMaterialAddCountChange}
-              onMaterialReduceCountChange={this.handleMaterialReduceCountChange}
-              onMaterialChunkStateChange={this.handleMaterialChunkStateChange}
-              onMaterialReportCountChange={this.handleMaterialReportCountChange}
-              onLineDeleteButtonClick={this.handleLineDeleteButtonClick}
-              onLineUpButtonClick={this.handleLineUpButtonClick}
-              onLineDownButtonClick={this.handleLineDownButtonClick}
-              onAddRowButtonClick={this.handleAddRowButtonClick}
-          />
-        </React.Fragment>
-      )
-    } else {
-      tableComponent = (
-        <React.Fragment>
-          <button className="button is-small is-success" onClick={this.handleEditClick}>報告素材を編集</button>
-          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
-        </React.Fragment>
-      )
+  makeToggleButton() {
+    if (this.state.runcount <= 0) {
+      return <button className="button is-small" disabled={true}>報告素材を編集</button>
     }
+    if (this.state.editMode) {
+      return <button className="button is-small is-link" onClick={this.handleCloseClick}>閉じる</button>
+    }
+    return <button className="button is-small is-link" onClick={this.handleEditClick}>報告素材を編集</button>
+  }
+
+  makeTable() {
+    if (!this.state.editMode) {
+      return <></>
+    }
+    return <Table {...this.state}
+        onMaterialChange={this.handleMaterialChange}
+        onMaterialAddCountChange={this.handleMaterialAddCountChange}
+        onMaterialReduceCountChange={this.handleMaterialReduceCountChange}
+        onMaterialChunkStateChange={this.handleMaterialChunkStateChange}
+        onMaterialReportCountChange={this.handleMaterialReportCountChange}
+        onLineDeleteButtonClick={this.handleLineDeleteButtonClick}
+        onLineUpButtonClick={this.handleLineUpButtonClick}
+        onLineDownButtonClick={this.handleLineDownButtonClick}
+        onAddRowButtonClick={this.handleAddRowButtonClick}
+    />
+  }
+
+  render() {
     return (
       <div>
         <ReportViewer {...this.state} />
@@ -996,10 +1098,12 @@ ${reportText}
           onQuestNameChange={this.handleQuestNameChange} />
         <QuestNameSelector questnames={this.state.questnames}
           onQuestNameChange={this.handleQuestNameChange} />
-        <RunCountEditor runcount={this.state.runcount}
+        <RunCountEditor runcount={this.state.runcount} editModeEnabled={this.state.editMode}
           onRunCountChange={this.handleRunCountChange} />
         <div style={{marginTop: 1 + 'rem'}}>
-          {tableComponent}
+          {this.makeToggleButton()}
+          <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
+          {this.makeTable()}
         </div>
         <TweetButton {...this.state}
           onShowTweetButton={this.handleShowTweetButton} />
