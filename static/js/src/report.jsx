@@ -827,11 +827,14 @@ class EditBox extends React.Component {
 
   handleMaterialChunkStateChange(id, checked) {
     const hook = (line) => {
+      // 直前のチェック状態
+      const prevChunkChecked = line.chunk
       line.chunk = checked
-      if (checked) {
+      // チェック状態が変化した場合のみ実行
+      if (checked && !prevChunkChecked) {
         line.material = this.addChunkSuffix(line.material)
         line.report = this.computeReportValue(line)
-      } else {
+      } else if (!checked && prevChunkChecked) {
         line.material = this.removeChunkSuffix(line.material)
         line.report = this.computeReportValue(line)
       }
