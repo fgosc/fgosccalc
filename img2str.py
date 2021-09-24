@@ -104,7 +104,7 @@ class DropItems:
                 }
     exp_list = [
                 item["shortname"] for item in drop_item
-                if ID_EXP_MIN <= item["id"] < ID_EXP_MAX
+                if ID_EXP_MIN <= item["id"] <= ID_EXP_MAX
                ]
 
     npz = np.load(Path(__file__).resolve().parent / Path('background.npz'))
