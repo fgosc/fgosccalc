@@ -1221,14 +1221,14 @@ def main(file, csv_output, debug=False):
         questid = int(file.stem)
         if not (93000001 < questid < 94999999):
             logger.critical('無効な questid です: %d', questid)
-            exit(1)
+            sys.exit(1)
         # r_get = requests.get(url_quest + str(questid) + "/1")
         endpoint = f"{url_quest}{questid}/1"
         logger.info("calling HTTP API: %s", endpoint)
         r_get = requests.get(endpoint)
         if r_get.status_code == 404:
             logger.critical('無効な questid です: %d', questid)
-            exit(1)
+            sys.exit(1)
         quest = r_get.json()
         questName = quest["name"]
         # logger.debug("quest: %s", quest)
@@ -1238,7 +1238,7 @@ def main(file, csv_output, debug=False):
     if training.exists() is False:
         logger.crytical("property.xml が存在しません")
         logger.crytical("python makeprop.py を実行してください")
-        exit(1)
+        sys.exit(1)
     svm = cv2.ml.SVM_load(str(training))
     img_rgb = imread(str(file))
     sc = ScreenShot(img_rgb, svm, dropitems, debug)
@@ -1305,6 +1305,7 @@ def main(file, csv_output, debug=False):
         print(result)
     if sc.error != "":
         logger.error(sc.error)
+        sys.exit(1)
 
 if __name__ == '__main__':
     args = parse_args()
