@@ -25,6 +25,14 @@ window.twttr = (function(d, s, id) {
   return t;
 }(document, "script", "twitter-wjs"));
 
+
+const cutIfStartsWith = (expr, key) => {
+  if (expr.startsWith(key)) {
+    return expr.substring(key.length)
+  }
+  return expr
+}
+
 const defaultQuestName = '(クエスト名)'
 const tweetURL = ''
 
@@ -1026,20 +1034,14 @@ class EditBox extends React.Component {
 ${reportText}
 #FGO周回カウンタ https://aoshirobo.net/fatego/rc/`
 
-    const cutIfStartsWith = (expr, key) => {
-      if (expr.startsWith(key)) {
-        return expr.substring(key.length)
-      }
-      return expr
-    }
-
+    const suffixPattern = /\(x[0-9]\)$/
     const addedMaterials = lines
         .filter(line => { return line.add != 0})
-        .map(line => { return cutIfStartsWith(line.material, '!') + line.add })
+        .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '') + line.add })
         .join('-')
     const reducedMaterials = lines
         .filter((line) => { return line.reduce != 0})
-        .map(line => { return cutIfStartsWith(line.material, '!') + line.reduce })
+        .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '') + line.reduce })
         .join('-')
 
     const additionalLines = []
