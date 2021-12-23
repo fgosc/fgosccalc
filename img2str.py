@@ -378,7 +378,7 @@ class ScreenShot:
             dropItemNum = quest["dropItemNum"]
             if dropItemNum > 12:
                 dropItemNum = 12
-            if self.dropItemNum != dropItemNum:
+            if self.dropItemNum != dropItemNum and dropItemNum > 0:
                 continue
             droplist = [
                         {"id": i["id"], "name": i["name"]}
