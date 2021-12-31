@@ -39,6 +39,7 @@ ID_EXP_MAX = 9707500
 PRIORITY_REWARD_QP = 9012
 ID_NORTH_AMERICA = 93000500
 ID_SYURENJYO = 94006800
+ID_SYURENJYO_TMP = 94066100
 ID_EVNET = 94000000
 
 # アイテム下部の文字認証用
@@ -410,6 +411,9 @@ class ScreenShot:
             if math.floor(quest["id"] / 100) * 100 == ID_NORTH_AMERICA:
                 output = quest["place"] + " " + quest["name"]
             elif math.floor(quest["id"] / 100) * 100 == ID_SYURENJYO:
+                output = quest["chapter"] + " " + quest["place"]
+            elif math.floor(quest["id"] / 100) * 100 == ID_SYURENJYO_TMP:
+                # 2022/01/01 修練場極級追加につき平常時のIDが未搭載のため臨時に追加
                 output = quest["chapter"] + " " + quest["place"]
             elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET:
                 output = quest["shortname"]
