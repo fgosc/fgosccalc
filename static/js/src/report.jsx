@@ -1008,9 +1008,17 @@ class EditBox extends React.Component {
     }))
   }
 
-  questHasAdditionalEnemy(questname) {
-    const suffixes = ['序', '破', '急']
-    return questname.length > 0 && suffixes.some((e) => questname.endsWith(e))
+  questHasAdditionalEnemy(questname, reportText) {
+    const suffixes = ['序', '破', '急']  // 鎌倉
+    if (questname.length > 0 && suffixes.some((e) => questname.endsWith(e))) {
+      return true
+    }
+    // TODO 本来は報告テキストではなく元データの素材名で完全一致するか見たほうがよいが
+    // 改修範囲が大きくなるので一旦これで妥協
+    const targets = [
+      'クロック', 'ラビット', 'リーブス',  // 事件簿
+    ]
+    return reportText.length > 0 && targets.some((e) => reportText.includes(e))
   }
 
   questHasAdditionalDrop(reportText) {
@@ -1021,7 +1029,7 @@ class EditBox extends React.Component {
       '宝箱銀',
       '宝箱銅',
     ]
-    return questname.length > 0 && targets.some((e) => reportText.includes(e))
+    return reportText.length > 0 && targets.some((e) => reportText.includes(e))
   }
 
   buildReportText(questname, runcount, lines) {
@@ -1046,7 +1054,7 @@ ${reportText}
 
     const additionalLines = []
 
-    if (this.questHasAdditionalEnemy(questname)) {
+    if (this.questHasAdditionalEnemy(questname, reportText)) {
       additionalLines.push('追加出現率 %')
     }
     if (this.questHasAdditionalDrop(reportText)) {
