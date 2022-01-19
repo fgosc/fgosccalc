@@ -907,7 +907,7 @@ class Item:
                                     )
             if i in self.dropitems.item_background.keys():
                 item_bg = self.dropitems.item_background[i]
-                if d <= 15 and item_bg == self.background:
+                if d <= 20 and item_bg == self.background:
                     #  #21 の修正のため15→14に変更して様子見
                     #  ポイントと種の距離が8という例有り(IMG_0274)→16に
                     #  バーガーと脂の距離が10という例有り(IMG_2354)→14に
