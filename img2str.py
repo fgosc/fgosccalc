@@ -447,7 +447,7 @@ class ScreenShot:
             if area > 5000:
                 ret = cv2.boundingRect(cnt)
                 pts = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
-                if 4.2 < ret[2] / ret[3] < 4.4:
+                if 4.15 < ret[2] / ret[3] < 4.4:
                     item_pts.append(pts)
         logger.debug("エネミータブの位置: %s", item_pts)
         if len(item_pts) == 0:
