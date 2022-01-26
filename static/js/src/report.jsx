@@ -1032,6 +1032,21 @@ class EditBox extends React.Component {
     return reportText.length > 0 && targets.some((e) => reportText.includes(e))
   }
 
+  questHasDropRateUpTargetMaterials(lines, targetMaterial) {
+    return lines.filter(line => {
+      if (line.material === targetMaterial) {
+        return true
+      } else if (line.material === `!${targetMaterial}`) {
+        return true
+      }
+      return false
+    }).length > 0
+  }
+
+  buildDropRateUpLine(targetMaterial) {
+    return `${targetMaterial}泥UP %`
+  }
+
   buildReportText(questname, runcount, lines) {
     const reportText = lines
         .map(line => { return line.material + line.report })
@@ -1053,12 +1068,18 @@ ${reportText}
         .join('-')
 
     const additionalLines = []
+    const dropRateUpTargetMaterials = ["塵"]
 
     if (this.questHasAdditionalEnemy(questname, reportText)) {
       additionalLines.push('追加出現率 %')
     }
     if (this.questHasAdditionalDrop(reportText)) {
       additionalLines.push('追加ドロップ率 %')
+    }
+    for (let targetMaterial of dropRateUpTargetMaterials) {
+      if (this.questHasDropRateUpTargetMaterials(lines, targetMaterial)) {
+        additionalLines.push(this.buildDropRateUpLine(targetMaterial))
+      }
     }
     if (addedMaterials.length > 0) {
       additionalLines.push('周回外消費分の加算: ' + addedMaterials)
