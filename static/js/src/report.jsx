@@ -1044,7 +1044,7 @@ class EditBox extends React.Component {
   }
 
   buildDropRateUpLine(targetMaterial) {
-    return `泥率Up ${targetMaterial} %`
+    return `${targetMaterial}泥UP %`
   }
 
   buildReportText(questname, runcount, lines) {
