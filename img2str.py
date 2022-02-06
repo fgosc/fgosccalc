@@ -119,7 +119,7 @@ class DropItems:
 
     def __init__(self, storage=defaultItemStorage):
         self.storage = storage
-        self.calc_dist_local()
+        # self.calc_dist_local()
 
     def calc_dist_local(self):
         """
