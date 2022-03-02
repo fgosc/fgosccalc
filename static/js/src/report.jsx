@@ -1068,7 +1068,7 @@ ${reportText}
         .join('-')
 
     const additionalLines = []
-    const dropRateUpTargetMaterials = ["塵"]
+    const dropRateUpTargetMaterials = ["塵", "骨"]
 
     if (this.questHasAdditionalEnemy(questname, reportText)) {
       additionalLines.push('追加出現率 %')
