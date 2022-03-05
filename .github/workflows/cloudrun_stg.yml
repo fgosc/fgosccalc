@@ -41,7 +41,7 @@ jobs:
         git log -1 > static/version
 
     # Setup gcloud CLI
-    - uses: google-github-actions/setup-gcloud@master
+    - uses: google-github-actions/setup-gcloud@v0
       with:
         project_id: fgosccalc
         service_account_key: ${{ secrets.GCLOUD_AUTH }}
@@ -57,7 +57,7 @@ jobs:
     # Deploy image to Cloud Run
     - name: Deploy
       id: deploy
-      uses: google-github-actions/deploy-cloudrun@main
+      uses: google-github-actions/deploy-cloudrun@v0
       with:
         service: ${{ env.SERVICE_NAME }}
         region: ${{ env.RUN_REGION }}
