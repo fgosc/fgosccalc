@@ -1,5 +1,5 @@
 "use strict";
-// ver 20210913-1
+// ver 20220519-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -1052,6 +1052,7 @@ class EditBox extends React.Component {
         .map(line => { return line.material + line.report })
         .join("-")
         .replace(/-\!/g, '\n')
+        .replace(/^!/, '') // 先頭行のアイテムが ! で始まるケースを考慮
 
     let value = `【${questname}】${runcount}周
 ${reportText}
