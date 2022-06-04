@@ -1,8 +1,8 @@
-bottle==0.12.19
-certifi==2021.10.8; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0"
-charset-normalizer==2.0.8; python_full_version >= "3.6.0" and python_version >= "3"
+bottle==0.12.21
+certifi==2022.5.18.1; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version >= "3.6"
+charset-normalizer==2.0.12; python_full_version >= "3.6.0" and python_version >= "3"
 idna==3.3; python_version >= "3.5" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version >= "3.5"
-numpy==1.21.1; python_version >= "3.7"
-opencv-contrib-python==4.5.3.56; python_version >= "3.6"
-requests==2.26.0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.6.0")
-urllib3==1.26.7; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version < "4"
+numpy==1.22.4; python_version >= "3.10" and platform_system == "Linux" and platform_machine == "aarch64" or python_version >= "3.10" or python_version >= "3.9" and platform_system == "Darwin" and platform_machine == "arm64"
+opencv-contrib-python==4.5.5.64; python_version >= "3.6"
+requests==2.27.1; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.6.0")
+urllib3==1.26.9; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version < "4"
