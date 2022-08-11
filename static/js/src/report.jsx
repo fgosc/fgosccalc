@@ -1,5 +1,5 @@
 "use strict";
-// ver 20220519-1
+// ver 20220811-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -158,9 +158,9 @@ class ChunkMaterialCountCell extends React.Component {
     if (reportValue % 3 !== 0) {
       return false
     }
-    // 周回数の 4 倍以上の報告数であること
-    // (少なくとも 1 周あたり 1.334 枠分はイベントアイテムがドロップするだろうと仮定する)
-    if (reportValue < parseInt(props.runcount) * 4) {
+    // 周回数の 3 倍以上の報告数であること
+    // (少なくとも 1 周あたり 1 枠分はイベントアイテムがドロップするだろうと仮定する)
+    if (reportValue < parseInt(props.runcount) * 3) {
       return false
     }
     // 以上をすべて満たした場合 x3 変換が可能
