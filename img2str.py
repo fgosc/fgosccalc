@@ -41,6 +41,8 @@ ID_NORTH_AMERICA = 93000500
 ID_SYURENJYO = 94006800
 ID_SYURENJYO_TMP = 94066100
 ID_EVNET = 94000000
+ID_GHOST_LANTERN = 6508
+ID_GHOST_LANTERN_ALT = 95100000
 
 # アイテム下部の文字認証用
 training = Path(__file__).resolve().parent / Path("property.xml")
@@ -88,6 +90,8 @@ class DropItems:
                  item["id"]: item["phash"] for item in drop_item
                  if "phash" in item.keys()
                 }
+    # ゴーストランタンが誤認識しやすいので
+    dist_item[ID_GHOST_LANTERN_ALT] = "6e3a89b3121c6cc5"
     dist_secret_gem = {
                        item["id"]: item["phash_class"] for item in drop_item
                        if ID_SECRET_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX
@@ -937,6 +941,8 @@ class Item:
             elif ID_2ZORO_DICE <= id <= ID_3ZORO_DICE:
                 id = self.zorodice2id(img)
 
+            if id == ID_GHOST_LANTERN_ALT:
+                id = ID_GHOST_LANTERN
             return id
 
         return ""
