@@ -1,5 +1,5 @@
 "use strict";
-// ver 20220811-1
+// ver 20220903-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -1069,7 +1069,7 @@ ${reportText}
         .join('-')
 
     const additionalLines = []
-    const dropRateUpTargetMaterials = ['涙石', '貝殻', '羽根', '頁', '歯車', '八連', '塵', '牙', '髄液', '骨', '証']
+    const dropRateUpTargetMaterials = ['涙石', '貝殻', '羽根', '頁', '歯車', '八連', '塵', '牙', '鉄杭', '髄液', '鎖', '骨', '証']
 
     if (this.questHasAdditionalEnemy(questname, reportText)) {
       additionalLines.push('追加出現率 %')
