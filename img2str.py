@@ -43,6 +43,8 @@ ID_SYURENJYO_TMP = 94066100
 ID_EVNET = 94000000
 ID_GHOST_LANTERN = 6508
 ID_GHOST_LANTERN_ALT = 95100000
+ID_GREEN_TEA = 94074504
+ID_RED_TEA = 94074506
 
 # アイテム下部の文字認証用
 training = Path(__file__).resolve().parent / Path("property.xml")
@@ -940,6 +942,8 @@ class Item:
                 id = self.gem_img2id(img, self.dropitems.dist_gem)
             elif ID_2ZORO_DICE <= id <= ID_3ZORO_DICE:
                 id = self.zorodice2id(img)
+            elif ID_GREEN_TEA <= id <= ID_RED_TEA:
+                logger.info("TEA")
 
             if id == ID_GHOST_LANTERN_ALT:
                 id = ID_GHOST_LANTERN
