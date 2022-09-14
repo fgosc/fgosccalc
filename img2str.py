@@ -920,9 +920,11 @@ class Item:
         yellow_tea_file = Path(__file__).resolve().parent / 'data/misc/yellow_tea.png'
         img1 = imread(yellow_tea_file)
         hist1 = calc_hue_hist(img1)
-        hist2 = calc_hue_hist(img)
+        height, width = img.shape[:2]
+        hist2 = calc_hue_hist(img[125:height-125, 85:width-85])
         score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-        if score < 0.2:
+        logger.info(score)
+        if score < 0.5:
             return ID_GREEN_TEA
         return ID_YELLOW_TEA
 
