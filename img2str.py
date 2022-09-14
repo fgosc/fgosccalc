@@ -44,7 +44,7 @@ ID_EVNET = 94000000
 ID_GHOST_LANTERN = 6508
 ID_GHOST_LANTERN_ALT = 95100000
 ID_GREEN_TEA = 94074504
-ID_RED_TEA = 94074506
+ID_YELLOW_TEA = 94074505
 
 # アイテム下部の文字認証用
 training = Path(__file__).resolve().parent / Path("property.xml")
@@ -895,6 +895,37 @@ class Item:
             return ID_2ZORO_DICE
         return ID_3ZORO_DICE
 
+    def tea2id(self, img):
+        """
+        グリーン茶葉とイエロー茶葉を判別する
+        """
+        def calc_hist(img):
+            # ヒストグラムを計算する。
+            hist = cv2.calcHist([img], channels=[0], mask=None, histSize=[256], ranges=[0, 256])
+            # ヒストグラムを正規化する。
+            hist = cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX)
+            # (n_bins, 1) -> (n_bins,)
+            hist = hist.squeeze(axis=-1)
+
+            return hist
+        def calc_hue_hist(img):
+            # HSV 形式に変換する。
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            # 成分ごとに分離する。
+            h, s, v = cv2.split(hsv)
+            # Hue 成分のヒストグラムを計算する。
+            hist = calc_hist(h)
+
+            return hist
+        yellow_tea_file = Path(__file__).resolve().parent / 'data/misc/yellow_tea.png'
+        img1 = imread(yellow_tea_file)
+        hist1 = calc_hue_hist(img1)
+        hist2 = calc_hue_hist(img)
+        score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+        if score < 0.2:
+            return ID_GREEN_TEA
+        return ID_YELLOW_TEA
+
     def classify_standard_item(self, img, debug=False):
         """
         imgとの距離を比較して近いアイテムを求める
@@ -942,8 +973,8 @@ class Item:
                 id = self.gem_img2id(img, self.dropitems.dist_gem)
             elif ID_2ZORO_DICE <= id <= ID_3ZORO_DICE:
                 id = self.zorodice2id(img)
-            elif ID_GREEN_TEA <= id <= ID_RED_TEA:
-                logger.info("TEA")
+            elif ID_GREEN_TEA <= id <= ID_YELLOW_TEA:
+                id = self.tea2id(img)
 
             if id == ID_GHOST_LANTERN_ALT:
                 id = ID_GHOST_LANTERN
