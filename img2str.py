@@ -923,7 +923,6 @@ class Item:
         height, width = img.shape[:2]
         hist2 = calc_hue_hist(img[125:height-125, 85:width-85])
         score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-        logger.info(score)
         if score < 0.5:
             return ID_GREEN_TEA
         return ID_YELLOW_TEA
