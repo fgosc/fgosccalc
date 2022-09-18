@@ -45,6 +45,7 @@ ID_GHOST_LANTERN = 6508
 ID_GHOST_LANTERN_ALT = 95100000
 ID_GREEN_TEA = 94074504
 ID_YELLOW_TEA = 94074505
+ID_RED_TEA = 94074506
 
 # アイテム下部の文字認証用
 training = Path(__file__).resolve().parent / Path("property.xml")
@@ -917,15 +918,23 @@ class Item:
             hist = calc_hist(h)
 
             return hist
-        yellow_tea_file = Path(__file__).resolve().parent / 'data/misc/yellow_tea.png'
-        img1 = imread(yellow_tea_file)
-        hist1 = calc_hue_hist(img1)
+
         height, width = img.shape[:2]
-        hist2 = calc_hue_hist(img[125:height-125, 85:width-85])
-        score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-        if score < 0.5:
-            return ID_GREEN_TEA
-        return ID_YELLOW_TEA
+        yellow_tea_file = Path(__file__).resolve().parent / 'data/misc/yellow_tea.png'
+        red_tea_file = Path(__file__).resolve().parent / 'data/misc/red_tea.png'
+        hist_target = calc_hue_hist(img[125:height-125, 85:width-85])
+        img_red = imread(red_tea_file)
+        hist_red = calc_hue_hist(img_red[125:height-125, 85:width-85])
+        score_red = cv2.compareHist(hist_red, hist_target, cv2.HISTCMP_CORREL)
+        if score_red > 0.5:
+            return ID_RED_TEA
+
+        img_yellow = imread(yellow_tea_file)
+        hist_yellow = calc_hue_hist(img_yellow[125:height-125, 85:width-85])
+        score_yellow = cv2.compareHist(hist_yellow, hist_target, cv2.HISTCMP_CORREL)
+        if score_yellow > 0.5:
+            return ID_YELLOW_TEA
+        return ID_GREEN_TEA
 
     def classify_standard_item(self, img, debug=False):
         """
@@ -974,7 +983,7 @@ class Item:
                 id = self.gem_img2id(img, self.dropitems.dist_gem)
             elif ID_2ZORO_DICE <= id <= ID_3ZORO_DICE:
                 id = self.zorodice2id(img)
-            elif ID_GREEN_TEA <= id <= ID_YELLOW_TEA:
+            elif ID_GREEN_TEA <= id <= ID_RED_TEA:
                 id = self.tea2id(img)
 
             if id == ID_GHOST_LANTERN_ALT:
