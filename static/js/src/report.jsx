@@ -158,7 +158,9 @@ class ChunkMaterialCountCell extends React.Component {
   canReplaceToChunk(props, ngItemNames) {
     // 名前が NG リストに載っていないこと
     for (let ngItemName of ngItemNames) {
-      if (props.material === ngItemName) {
+      // 先頭の ! がある場合は除去しておく
+      const material = props.material.replace(/^!/, "")
+      if (material === ngItemName) {
         return false
       }
     }
