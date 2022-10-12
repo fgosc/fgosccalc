@@ -1,5 +1,5 @@
 "use strict";
-// ver 20220903-1
+// ver 20220922-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -142,13 +142,28 @@ class ChunkMaterialCountCell extends React.Component {
     super(props)
 
     this.handleCheckedChange = this.handleCheckedChange.bind(this)
+    // NOTE: ドロップ数増加礼装を積むイベントの場合に、対象素材をここに記述すると x3 変換を無効にできる
+    this.ngItemNames = [
+      // ぐだぐだ新邪馬台国
+      "赤茶葉",
+      "黄茶葉",
+      "緑茶葉",
+    ]
   }
 
   handleCheckedChange(event) {
     this.props.onValueChange(this.props.id, event.target.checked)
   }
 
-  canReplaceToChunk(props) {
+  canReplaceToChunk(props, ngItemNames) {
+    // 名前が NG リストに載っていないこと
+    for (let ngItemName of ngItemNames) {
+      // 先頭の ! がある場合は除去しておく
+      const material = props.material.replace(/^!/, "")
+      if (material === ngItemName) {
+        return false
+      }
+    }
     // イベントアイテムであること
     if (!props.is_event_item) {
       return false
@@ -171,7 +186,7 @@ class ChunkMaterialCountCell extends React.Component {
     if (this.props.editResult) {
       return <></>
     }
-    if (this.props.chunk === true || this.canReplaceToChunk(this.props)) {
+    if (this.props.chunk === true || this.canReplaceToChunk(this.props, this.ngItemNames)) {
       return <input type="checkbox" value={this.props.chunk} onChange={this.handleCheckedChange} />
     }
     return <></>
@@ -1069,7 +1084,7 @@ ${reportText}
         .join('-')
 
     const additionalLines = []
-    const dropRateUpTargetMaterials = ['涙石', '貝殻', '羽根', '頁', '歯車', '八連', '塵', '牙', '鉄杭', '髄液', '鎖', '骨', '証']
+    const dropRateUpTargetMaterials = ['涙石', '貝殻', '羽根', '頁', '歯車', '八連', '種', '毒針', '塵', '牙', '鉄杭', '髄液', '鎖', '骨', '証']
 
     if (this.questHasAdditionalEnemy(questname, reportText)) {
       additionalLines.push('追加出現率 %')
