@@ -445,7 +445,7 @@ class ScreenShot:
                                     cv2.CHAIN_APPROX_SIMPLE
                                    )[0]
 
-        if debug:
+        if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite("img_mask.png", img_mask)
 
         item_pts = []
@@ -469,17 +469,20 @@ class ScreenShot:
         lower_w = np.array([100, 100, 100])
         upper_w = np.array([255, 255, 255])
         img_mask_w = cv2.inRange(self.img_rgb_orig, lower_w, upper_w)
+        if logger.isEnabledFor(logging.DEBUG):
+            cv2.imwrite("img_mask_w.png", img_mask_w)
         closebutton_pts = []
         contours = cv2.findContours(
                                     img_mask_w,
-                                    cv2.RETR_EXTERNAL,
+                                    cv2.RETR_LIST,
                                     cv2.CHAIN_APPROX_SIMPLE
                                    )[0]
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > 2:
+            if area > 2000:
                 ret = cv2.boundingRect(cnt)
                 pts = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
+
                 if pts[1] > self.height / 2 \
                    and 4.5 < ret[2] / ret[3] < 4.9 \
                    and enemytab_pts[0] < pts[2] < enemytab_pts[2] \
@@ -489,9 +492,6 @@ class ScreenShot:
         logger.debug("閉じるボタンの位置: %s", closebutton_pts)
         if len(closebutton_pts) == 0:
             raise ValueError("閉じるボタン無し")
-
-        if debug:
-            cv2.imwrite("img_mask_w.png", img_mask_w)
 
         return closebutton_pts[0]
 
