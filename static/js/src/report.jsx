@@ -150,6 +150,9 @@ class ChunkMaterialCountCell extends React.Component {
       "緑茶葉",
       // カルデア妖精騎士杯
       "ゼッケン",
+      "金メダル",
+      "銀メダル",
+      "銅メダル",
     ]
   }
 
