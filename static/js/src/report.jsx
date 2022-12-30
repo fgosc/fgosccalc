@@ -1089,7 +1089,7 @@ ${reportText}
         .join('-')
 
     const additionalLines = []
-    const dropRateUpTargetMaterials = ['逆鱗', '心臓', '涙石', '勲章', '貝殻', '羽根', '蹄鉄', '頁', '歯車', '八連', '種', '毒針', '塵', '牙', '鉄杭', '髄液', '鎖', '骨', '証']
+    const dropRateUpTargetMaterials = ['逆鱗', '心臓', '涙石', '勲章', '貝殻', '蛇玉', '羽根', '蹄鉄', '頁', '歯車', '八連', '種', '毒針', '塵', '牙', '火薬', '鉄杭', '髄液', '鎖', '骨', '証']
 
     if (this.questHasAdditionalEnemy(questname, reportText)) {
       additionalLines.push('追加出現率 %')
