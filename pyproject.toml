@@ -6,9 +6,11 @@ authors = ["fgophi", "max747"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-opencv-contrib-python = "^4.5.3"
-requests = "^2.26.0"
-bottle = "^0.12.19"
+bottle = "^0.12.23"
+requests = "^2.28.0"
+# 検証が終わるまでいったん固定
+numpy = "==1.21.1"
+opencv-contrib-python = "==4.5.3.56"
 
 [tool.poetry.dev-dependencies]
 
