@@ -352,12 +352,12 @@ class ScreenShot:
 
         return lx, rx
 
-    def compare_drop(self, scitem, fqitem):
+    def compare_drop(self, scitem, fqitem, exclude=0):
         """
         フリクエのドロップアイテムと画像のドロップアイテムを比較
         """
-        if len(fqitem) > 12:
-            fqitem = fqitem[:12]
+        if len(fqitem) > 12 - exclude:
+            fqitem = fqitem[:12 - exclude]
         if len(scitem) != len(fqitem):
             return False
         for sc, fq in zip(scitem, fqitem):
@@ -394,7 +394,14 @@ class ScreenShot:
                         if not i["type"] in ["Point", "Exp. UP"]
                         or i["name"] == "QP"
                        ]
-            if self.compare_drop(itemlist, droplist):
+            exclude = len([
+                        {"id": i["id"], "name": i["name"]}
+                        for i in quest["drop"]
+                        if i["type"] in ["Point", "Exp. UP"]
+                        or i["name"] == "QP"
+                       ])
+            # ポイント分数から除外する
+            if self.compare_drop(itemlist, droplist, exclude):
                 if self.droplist == []:
                     # 最初に見つかったdroplistを使用
                     self.droplist = [i["name"] for i in quest["drop"]]
