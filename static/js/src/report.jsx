@@ -14,6 +14,13 @@ const cutIfStartsWith = (expr, key) => {
   return expr
 }
 
+function base64urlencode(text) {
+  return btoa(unescape(encodeURIComponent(text)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+}
+
 const defaultQuestName = '(クエスト名)'
 // TODO 本番サイトの URL が確定したら置き換える
 const reportSiteURL = 'http://localhost:3000'
@@ -620,8 +627,9 @@ function ReportButton(props) {
       }),
       "note": props.additionalLines.join("\n"),
     }
-    console.log(`report: ${JSON.stringify(report)}`)
-    const encoded = window.btoa(unescape(encodeURIComponent(JSON.stringify(report))))
+    const report_json = JSON.stringify(report)
+    console.log(`report: ${report_json}`)
+    const encoded = base64urlencode(report_json)
     const url = reportSiteURL + "?p=" + encoded
     window.open(url, "_blank")
   }
