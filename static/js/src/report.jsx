@@ -22,8 +22,7 @@ function base64urlencode(text) {
 }
 
 const defaultQuestName = '(クエスト名)'
-// TODO 本番サイトの URL が確定したら置き換える
-const reportSiteURL = 'http://localhost:3000'
+const reportSiteURL = 'https://fgodrop.max747.org'
 
 // "素材" フィールド
 class MaterialNameCell extends React.Component {
