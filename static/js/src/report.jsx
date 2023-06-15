@@ -938,7 +938,7 @@ class EditBox extends React.Component {
     this.setState((state) => ({
       lines: linesCopy,
       additionalLines: additionalLines,
-      reportText: this.buildReportText(state.questname, state.runcount, linesCopy),
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy, additionalLines),
       canTweet: false,
     }))
   }
@@ -959,7 +959,7 @@ class EditBox extends React.Component {
     this.setState((state) => ({
       lines: linesCopy,
       additionalLines: additionalLines,
-      reportText: this.buildReportText(state.questname, state.runcount, linesCopy),
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy, additionalLines),
       canTweet: false,
     }))
   }
@@ -980,7 +980,7 @@ class EditBox extends React.Component {
     this.setState((state) => ({
       lines: lines,
       additionalLines: additionalLines,
-      reportText: this.buildReportText(state.questname, state.runcount, lines),
+      reportText: this.buildReportText(state.questname, state.runcount, lines, additionalLines),
     }))
   }
 
