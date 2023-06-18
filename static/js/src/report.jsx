@@ -1,30 +1,11 @@
 "use strict";
-// ver 20220922-1
+// ver 20230422-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
     dsn: "https://c3ee02d195ae440aacd020b5869abfa7@o425638.ingest.sentry.io/5363673",
   });
 }
-
-// https://developer.twitter.com/en/docs/twitter-for-websites/javascript-api/guides/set-up-twitter-for-websites
-window.twttr = (function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0],
-    t = window.twttr || {};
-  if (d.getElementById(id)) return;
-  js = d.createElement(s);
-  js.id = id;
-  js.src = "https://platform.twitter.com/widgets.js";
-  fjs.parentNode.insertBefore(js, fjs);
-
-  t._e = [];
-  t.ready = function(f) {
-    t._e.push(f);
-  };
-
-  return t;
-}(document, "script", "twitter-wjs"));
-
 
 const cutIfStartsWith = (expr, key) => {
   if (expr.startsWith(key)) {
@@ -33,8 +14,15 @@ const cutIfStartsWith = (expr, key) => {
   return expr
 }
 
+function base64urlencode(text) {
+  return btoa(unescape(encodeURIComponent(text)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+}
+
 const defaultQuestName = '(クエスト名)'
-const tweetURL = ''
+const reportSiteURL = 'https://fgodrop.max747.org'
 
 // "素材" フィールド
 class MaterialNameCell extends React.Component {
@@ -617,89 +605,42 @@ class ReportViewer extends React.Component {
   }
 }
 
-class TweetButton extends React.Component {
-  constructor(props) {
-    super(props)
-    this.createTweetButton = this.createTweetButton.bind(this)
-    this.state = { tweetButtonDisplayed: false }
+function ReportButton(props) {
+  function handleClick(event) {
+    // 報告データを base64 encode して URL に埋め込む
+    // report format:
+    // {
+    //   "questname": "questname",
+    //   "runs": 123,
+    //   "lines": [
+    //     {"material": "material", "initial": 0 },
+    //     {"material": "material", "initial": 0 }
+    //   ],
+    //   "note": "note"
+    // }
+    const report = {
+      "questname": props.questname,
+      "runs": props.runcount,
+      "lines": props.lines.map(line => {
+        return { "material": line.material, "initial": line.report }
+      }),
+      "note": props.additionalLines.join("\n"),
+    }
+    const report_json = JSON.stringify(report)
+    console.log(`report: ${report_json}`)
+    const encoded = base64urlencode(report_json)
+    const url = reportSiteURL + "?p=" + encoded
+    window.open(url, "_blank")
   }
+  const disabled = props.questname === "" || props.runcount <= 0 || props.lines.length === 0
 
-  isValidCondition(questname, runcount) {
-    // questname
-    if (questname === defaultQuestName) {
-      return false
-    }
-    if (questname.trim().length === 0) {
-      return false
-    }
-    // runcount
-    if (runcount <= 0) {
-      return false
-    }
-    return true
-  }
-
-  removeTweetButton() {
-    console.log('removeTweetButton event')
-    const el = document.getElementById('tweet-button')
-    if (el === null) {
-      return
-    }
-    for (let node of el.childNodes) {
-      el.removeChild(node)
-    }
-    this.setState({ tweetButtonDisplayed: false })
-  }
-
-  createTweetButton(event) {
-    console.log('createShareButton event')
-    // tweet-button はこのコンテナの外にある
-    const el = document.getElementById('tweet-button')
-    if (el === null) {
-      return
-    }
-
-    console.log('ready')
-    window.twttr.ready(() => {
-      for (let node of el.childNodes) {
-        el.removeChild(node)
-      }
-      console.log('createShareButton run')
-      window.twttr.widgets.createShareButton(
-        tweetURL,
-        el,
-        {
-          text: this.props.reportText,
-          size: 'large',
-        }
-      )
-      console.log('createShareButton ok')
-      this.props.onShowTweetButton()
-      this.setState({ tweetButtonDisplayed: true })
-    })
-  }
-
-  render() {
-    const tweetButtonDisplayed = this.state.tweetButtonDisplayed
-    if (tweetButtonDisplayed && this.props.canTweet != tweetButtonDisplayed) {
-      // 上位コンポーネントがツイートボタン表示不可といっているので、その状態に合わせる。
-      // このような回りくどいことをしているのは DOM 操作が絡むから。
-      this.removeTweetButton()
-    }
-    const invalidCondition = !this.isValidCondition(this.props.questname, this.props.runcount)
-    let className
-    if (invalidCondition) {
-      className = "button is-small"
-    } else {
-      className = "button is-small is-link"
-    }
-    const generateButton = <button className={className} disabled={invalidCondition} onClick={this.createTweetButton}>ツイートボタン生成</button>
-    return (
-      <div style={{ marginTop: 1 + 'rem'}}>
-        {generateButton}
+  return (
+    <div className="field">
+      <div className="control">
+        <button className="button is-small is-link" onClick={handleClick} disabled={disabled}>報告サイトへ</button>
       </div>
-    )
-  }
+    </div>
+  )
 }
 
 class EditBox extends React.Component {
@@ -720,9 +661,6 @@ class EditBox extends React.Component {
     this.handleLineDownButtonClick = this.handleLineDownButtonClick.bind(this)
     this.handleAddRowButtonClick = this.handleAddRowButtonClick.bind(this)
     this.buildReportText = this.buildReportText.bind(this)
-    this.handleShowTweetButton = this.handleShowTweetButton.bind(this)
-
-    console.log("EditBox props:", props)
 
     // 元が let questnames = { questnames: ["foo", "bar", ...] } の形式で定義されているため、
     // このように questnames.questnames で Array を得ることができる。
@@ -746,6 +684,7 @@ class EditBox extends React.Component {
       // data から与えられた report 値はここで上書きしてしまってよい。
       line.report = this.computeReportValue(line)
     })
+    const additionalLines = this.buildAdditionalLines(questname, lines)
     this.state = {
       editMode: false,
       questname: questname,
@@ -753,7 +692,8 @@ class EditBox extends React.Component {
       hasQuestnameChoice: hasQuestnameChoice,
       runcount: runcount,
       lines: lines,
-      reportText: this.buildReportText(questname, runcount, lines),
+      additionalLines: additionalLines,
+      reportText: this.buildReportText(questname, runcount, lines, additionalLines),
       canTweet: false,
     }
   }
@@ -767,9 +707,11 @@ class EditBox extends React.Component {
   }
 
   handleQuestNameChange(questname) {
+    const additionalLines = this.buildAdditionalLines(questname, this.state.lines)
     this.setState((state) => ({
         questname: questname,
-        reportText: this.buildReportText(questname, state.runcount, state.lines),
+        additionalLines: additionalLines,
+        reportText: this.buildReportText(questname, state.runcount, state.lines, additionalLines),
         canTweet: false,
     }))
   }
@@ -777,7 +719,7 @@ class EditBox extends React.Component {
   handleRunCountChange(runcount) {
     this.setState((state) => ({
       runcount: runcount,
-      reportText: this.buildReportText(state.questname, runcount, state.lines),
+      reportText: this.buildReportText(state.questname, runcount, state.lines, state.additionalLines),
       canTweet: false,
     }))
   }
@@ -798,9 +740,11 @@ class EditBox extends React.Component {
       line.material = material
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      additionalLines: additionalLines,
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
       canTweet: false,
     }))
   }
@@ -822,9 +766,11 @@ class EditBox extends React.Component {
       line.report = this.computeReportValue(line)
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      additionalLines: additionalLines,
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
       canTweet: false,
     }))
   }
@@ -835,9 +781,11 @@ class EditBox extends React.Component {
       line.report = this.computeReportValue(line)
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      additionalLines: additionalLines,
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
       canTweet: false,
     }))
   }
@@ -868,9 +816,10 @@ class EditBox extends React.Component {
       }
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
       canTweet: false,
     }))
   }
@@ -884,18 +833,20 @@ class EditBox extends React.Component {
       }
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
       canTweet: false,
     }))
   }
 
   handleLineDeleteButtonClick(id) {
     const newlines = this.state.lines.filter(line => { return line.id !== id })
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
     this.setState((state) => ({
       lines: newlines,
-      reportText: this.buildReportText(state.questname, state.runcount, newlines),
+      reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
       canTweet: false,
     }))
   }
@@ -983,9 +934,11 @@ class EditBox extends React.Component {
     }
 
     this.changeLineOrder(linesCopy, target[0], 'up')
+    const additionalLines = this.buildAdditionalLines(this.state.questname, linesCopy)
     this.setState((state) => ({
       lines: linesCopy,
-      reportText: this.buildReportText(state.questname, state.runcount, linesCopy),
+      additionalLines: additionalLines,
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy, additionalLines),
       canTweet: false,
     }))
   }
@@ -1002,9 +955,11 @@ class EditBox extends React.Component {
     }
 
     this.changeLineOrder(linesCopy, target[0], 'down')
+    const additionalLines = this.buildAdditionalLines(this.state.questname, linesCopy)
     this.setState((state) => ({
       lines: linesCopy,
-      reportText: this.buildReportText(state.questname, state.runcount, linesCopy),
+      additionalLines: additionalLines,
+      reportText: this.buildReportText(state.questname, state.runcount, linesCopy, additionalLines),
       canTweet: false,
     }))
   }
@@ -1021,35 +976,32 @@ class EditBox extends React.Component {
       report: 0,
     }
     lines.push(newline)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, lines)
     this.setState((state) => ({
       lines: lines,
-      reportText: this.buildReportText(state.questname, state.runcount, lines),
-      canTweet: false,
+      additionalLines: additionalLines,
+      reportText: this.buildReportText(state.questname, state.runcount, lines, additionalLines),
     }))
   }
 
-  questHasAdditionalEnemy(questname, reportText) {
+  questHasAdditionalEnemy(questname, materials) {
+    // クエスト名による判定
     const suffixes = ['序', '破', '急']  // 鎌倉
-    if (questname.length > 0 && suffixes.some((e) => questname.endsWith(e))) {
+    if (questname.length > 0 && suffixes.some(e => questname.endsWith(e))) {
       return true
     }
-    // TODO 本来は報告テキストではなく元データの素材名で完全一致するか見たほうがよいが
-    // 改修範囲が大きくなるので一旦これで妥協
+    // 素材名による判定
     const targets = [
       'クロック', 'ラビット', 'リーブス',  // 事件簿
     ]
-    return reportText.length > 0 && targets.some((e) => reportText.includes(e))
+    return targets.some(e => materials.includes(e))
   }
 
-  questHasAdditionalDrop(reportText) {
-    // TODO 本来は報告テキストではなく元データの素材名で完全一致するか見たほうがよいが
-    // 改修範囲が大きくなるので一旦これで妥協
+  questHasAdditionalDrop(materials) {
     const targets = [
-      '宝箱金',
-      '宝箱銀',
-      '宝箱銅',
+      '宝箱金', '宝箱銀', '宝箱銅',  // サマーアドベンチャー
     ]
-    return reportText.length > 0 && targets.some((e) => reportText.includes(e))
+    return targets.some(e => materials.includes(e))
   }
 
   questHasDropRateUpTargetMaterials(lines, targetMaterial) {
@@ -1067,7 +1019,47 @@ class EditBox extends React.Component {
     return `${targetMaterial}泥UP %`
   }
 
-  buildReportText(questname, runcount, lines) {
+  buildAdditionalLines(questname, lines) {
+    const suffixPattern = /\(x[0-9]\)$/
+    const addedMaterialsText = lines
+        .filter(line => { return line.add != 0})
+        .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '') + line.add })
+        .join('-')
+    const reducedMaterialsText = lines
+        .filter((line) => { return line.reduce != 0})
+        .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '') + line.reduce })
+        .join('-')
+    const materials = lines
+        .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '')})
+
+    const additionalLines = []
+    const dropRateUpTargetMaterials = [
+      '逆鱗', '心臓', '涙石',
+      '勲章', '貝殻', '蛇玉', '羽根', '蹄鉄', 'ホムベビ', '頁', '歯車', '八連', 'ランタン', '種', '毒針',
+      '塵', '牙', '火薬', '鉄杭', '髄液', '鎖', '骨', '証',
+    ]
+
+    if (this.questHasAdditionalEnemy(questname, materials)) {
+      additionalLines.push('追加出現率 %')
+    }
+    if (this.questHasAdditionalDrop(materials)) {
+      additionalLines.push('追加ドロップ率 %')
+    }
+    for (let targetMaterial of dropRateUpTargetMaterials) {
+      if (this.questHasDropRateUpTargetMaterials(lines, targetMaterial)) {
+        additionalLines.push(this.buildDropRateUpLine(targetMaterial))
+      }
+    }
+    if (addedMaterialsText.length > 0) {
+      additionalLines.push('周回外消費分の加算: ' + addedMaterialsText)
+    }
+    if (reducedMaterialsText.length > 0) {
+      additionalLines.push('周回外獲得分の減算: ' + reducedMaterialsText)
+    }
+    return additionalLines
+  }
+
+  buildReportText(questname, runcount, lines, additionalLines) {
     const reportText = lines
         .map(line => { return line.material + line.report })
         .join("-")
@@ -1076,46 +1068,12 @@ class EditBox extends React.Component {
 
     let value = `【${questname}】${runcount}周
 ${reportText}
-#FGO周回カウンタ https://aoshirobo.net/fatego/rc/`
+#FGO周回カウンタ ${reportSiteURL}`
 
-    const suffixPattern = /\(x[0-9]\)$/
-    const addedMaterials = lines
-        .filter(line => { return line.add != 0})
-        .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '') + line.add })
-        .join('-')
-    const reducedMaterials = lines
-        .filter((line) => { return line.reduce != 0})
-        .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '') + line.reduce })
-        .join('-')
-
-    const additionalLines = []
-    const dropRateUpTargetMaterials = ['逆鱗', '心臓', '涙石', '勲章', '貝殻', '蛇玉', '羽根', '蹄鉄', 'ホムベビ', '頁', '歯車', '八連', 'ランタン', '種', '毒針', '塵', '牙', '火薬', '鉄杭', '髄液', '鎖', '骨', '証']
-
-    if (this.questHasAdditionalEnemy(questname, reportText)) {
-      additionalLines.push('追加出現率 %')
-    }
-    if (this.questHasAdditionalDrop(reportText)) {
-      additionalLines.push('追加ドロップ率 %')
-    }
-    for (let targetMaterial of dropRateUpTargetMaterials) {
-      if (this.questHasDropRateUpTargetMaterials(lines, targetMaterial)) {
-        additionalLines.push(this.buildDropRateUpLine(targetMaterial))
-      }
-    }
-    if (addedMaterials.length > 0) {
-      additionalLines.push('周回外消費分の加算: ' + addedMaterials)
-    }
-    if (reducedMaterials.length > 0) {
-      additionalLines.push('周回外獲得分の減算: ' + reducedMaterials)
-    }
     if (additionalLines.length > 0) {
       value += '\n\n' + additionalLines.join('\n')
     }
     return value + '\n'
-  }
-
-  handleShowTweetButton(event) {
-    this.setState({ canTweet: true })
   }
 
   makeToggleButton() {
@@ -1148,7 +1106,6 @@ ${reportText}
   render() {
     return (
       <div>
-        <ReportViewer {...this.state} />
         <QuestNameEditor questname={this.state.questname} hasQuestnameChoice={this.state.hasQuestnameChoice}
           onQuestNameChange={this.handleQuestNameChange} />
         <QuestNameSelector questnames={this.state.questnames}
@@ -1160,8 +1117,12 @@ ${reportText}
           <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
           {this.makeTable()}
         </div>
-        <TweetButton {...this.state}
-          onShowTweetButton={this.handleShowTweetButton} />
+        <div style={{marginTop: 1 + 'rem'}}>
+          <ReportViewer {...this.state} />
+        </div>
+        <div style={{marginTop: 1 + 'rem'}}>
+          <ReportButton {...this.state} />
+        </div>
       </div>
     )
   }
