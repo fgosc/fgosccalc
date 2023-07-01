@@ -1034,7 +1034,7 @@ class EditBox extends React.Component {
 
     const additionalLines = []
     const dropRateUpTargetMaterials = [
-      '逆鱗', '心臓', '涙石',
+      '根', '逆鱗', '心臓', '涙石',
       '勲章', '貝殻', '蛇玉', '羽根', '蹄鉄', 'ホムベビ', '頁', '歯車', '八連', 'ランタン', '種', '毒針',
       '塵', '牙', '火薬', '鉄杭', '髄液', '鎖', '骨', '証',
     ]
