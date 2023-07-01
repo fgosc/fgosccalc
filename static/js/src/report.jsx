@@ -1,5 +1,5 @@
 "use strict";
-// ver 20230422-1
+// ver 20230701-1
 
 if (typeof Sentry !== 'undefined') {
   Sentry.init({
@@ -605,6 +605,26 @@ class ReportViewer extends React.Component {
   }
 }
 
+function FGO1HRunSupportCheckbox(props) {
+  function handleClick(event) {
+    props.onSupportFGO1HRunCheckboxChange(event.target.checked)
+  }
+  return (
+    <>
+      <input type="checkbox" id="fgo1hrun" checked={props.supportFGO1HRun} onChange={handleClick} />
+      <label for="fgo1hrun" style={{marginLeft: 0.3 + 'rem'}}>周回マラソン用タグ #FGO_1H_run を挿入</label>（必要な場合のみチェックしてください）
+    </>
+  )
+}
+
+function AdvancedArea(props) {
+  return (
+    <div style={{marginTop: 1 + 'rem', fontSize: 'small'}}>
+      <FGO1HRunSupportCheckbox {...props} />
+    </div>
+  )
+}
+
 function ReportButton(props) {
   function handleClick(event) {
     // 報告データを base64 encode して URL に埋め込む
@@ -660,6 +680,7 @@ class EditBox extends React.Component {
     this.handleLineUpButtonClick = this.handleLineUpButtonClick.bind(this)
     this.handleLineDownButtonClick = this.handleLineDownButtonClick.bind(this)
     this.handleAddRowButtonClick = this.handleAddRowButtonClick.bind(this)
+    this.handleSupportFGO1HRunCheckboxChange = this.handleSupportFGO1HRunCheckboxChange.bind(this)
     this.buildReportText = this.buildReportText.bind(this)
 
     // 元が let questnames = { questnames: ["foo", "bar", ...] } の形式で定義されているため、
@@ -684,7 +705,7 @@ class EditBox extends React.Component {
       // data から与えられた report 値はここで上書きしてしまってよい。
       line.report = this.computeReportValue(line)
     })
-    const additionalLines = this.buildAdditionalLines(questname, lines)
+    const additionalLines = this.buildAdditionalLines(questname, lines, false)
     this.state = {
       editMode: false,
       questname: questname,
@@ -695,6 +716,7 @@ class EditBox extends React.Component {
       additionalLines: additionalLines,
       reportText: this.buildReportText(questname, runcount, lines, additionalLines),
       canTweet: false,
+      supportFGO1HRun: false,
     }
   }
 
@@ -707,7 +729,7 @@ class EditBox extends React.Component {
   }
 
   handleQuestNameChange(questname) {
-    const additionalLines = this.buildAdditionalLines(questname, this.state.lines)
+    const additionalLines = this.buildAdditionalLines(questname, this.state.lines, this.state.supportFGO1HRun)
     this.setState((state) => ({
         questname: questname,
         additionalLines: additionalLines,
@@ -740,7 +762,7 @@ class EditBox extends React.Component {
       line.material = material
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
-    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: newlines,
       additionalLines: additionalLines,
@@ -766,7 +788,7 @@ class EditBox extends React.Component {
       line.report = this.computeReportValue(line)
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
-    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: newlines,
       additionalLines: additionalLines,
@@ -781,7 +803,7 @@ class EditBox extends React.Component {
       line.report = this.computeReportValue(line)
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
-    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: newlines,
       additionalLines: additionalLines,
@@ -816,7 +838,7 @@ class EditBox extends React.Component {
       }
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
-    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: newlines,
       reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
@@ -833,7 +855,7 @@ class EditBox extends React.Component {
       }
     }
     const newlines = this.rebuildLines(this.state.lines, hook, id)
-    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: newlines,
       reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
@@ -843,7 +865,7 @@ class EditBox extends React.Component {
 
   handleLineDeleteButtonClick(id) {
     const newlines = this.state.lines.filter(line => { return line.id !== id })
-    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, newlines, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: newlines,
       reportText: this.buildReportText(state.questname, state.runcount, newlines, additionalLines),
@@ -934,7 +956,7 @@ class EditBox extends React.Component {
     }
 
     this.changeLineOrder(linesCopy, target[0], 'up')
-    const additionalLines = this.buildAdditionalLines(this.state.questname, linesCopy)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, linesCopy, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: linesCopy,
       additionalLines: additionalLines,
@@ -955,7 +977,7 @@ class EditBox extends React.Component {
     }
 
     this.changeLineOrder(linesCopy, target[0], 'down')
-    const additionalLines = this.buildAdditionalLines(this.state.questname, linesCopy)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, linesCopy, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: linesCopy,
       additionalLines: additionalLines,
@@ -976,11 +998,22 @@ class EditBox extends React.Component {
       report: 0,
     }
     lines.push(newline)
-    const additionalLines = this.buildAdditionalLines(this.state.questname, lines)
+    const additionalLines = this.buildAdditionalLines(this.state.questname, lines, this.state.supportFGO1HRun)
     this.setState((state) => ({
       lines: lines,
       additionalLines: additionalLines,
       reportText: this.buildReportText(state.questname, state.runcount, lines, additionalLines),
+    }))
+  }
+
+  handleSupportFGO1HRunCheckboxChange(checked) {
+    const additionalLines = this.buildAdditionalLines(questname, this.state.lines, checked)
+    this.setState((state) => ({
+        questname: questname,
+        additionalLines: additionalLines,
+        reportText: this.buildReportText(questname, state.runcount, state.lines, additionalLines),
+        canTweet: false,
+        supportFGO1HRun: checked,
     }))
   }
 
@@ -1019,7 +1052,7 @@ class EditBox extends React.Component {
     return `${targetMaterial}泥UP %`
   }
 
-  buildAdditionalLines(questname, lines) {
+  buildAdditionalLines(questname, lines, supportFGO1HRun) {
     const suffixPattern = /\(x[0-9]\)$/
     const addedMaterialsText = lines
         .filter(line => { return line.add != 0})
@@ -1032,13 +1065,17 @@ class EditBox extends React.Component {
     const materials = lines
         .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '')})
 
-    const additionalLines = []
     const dropRateUpTargetMaterials = [
       '根', '逆鱗', '心臓', '涙石',
       '勲章', '貝殻', '蛇玉', '羽根', '蹄鉄', 'ホムベビ', '頁', '歯車', '八連', 'ランタン', '種', '毒針',
       '塵', '牙', '火薬', '鉄杭', '髄液', '鎖', '骨', '証',
     ]
 
+    const additionalLines = []
+
+    if (supportFGO1HRun) {
+      additionalLines.push('#FGO_1H_run')
+    }
     if (this.questHasAdditionalEnemy(questname, materials)) {
       additionalLines.push('追加出現率 %')
     }
@@ -1071,12 +1108,12 @@ ${reportText}
 #FGO周回カウンタ ${reportSiteURL}`
 
     if (additionalLines.length > 0) {
-      value += '\n\n' + additionalLines.join('\n')
+      value += '\n' + additionalLines.join('\n')
     }
     return value + '\n'
   }
 
-  makeToggleButton() {
+  createEditModeToggleButton() {
     if (this.state.runcount <= 0) {
       return <button className="button is-small" disabled={true}>報告素材を編集</button>
     }
@@ -1086,7 +1123,7 @@ ${reportText}
     return <button className="button is-small is-link" onClick={this.handleEditClick}>報告素材を編集</button>
   }
 
-  makeTable() {
+  createEditModeTable() {
     if (!this.state.editMode) {
       return <></>
     }
@@ -1113,10 +1150,12 @@ ${reportText}
         <RunCountEditor runcount={this.state.runcount} editModeEnabled={this.state.editMode}
           onRunCountChange={this.handleRunCountChange} />
         <div style={{marginTop: 1 + 'rem'}}>
-          {this.makeToggleButton()}
+          {this.createEditModeToggleButton()}
           <span className="tag is-info is-light" style={{marginLeft: 0.6 + 'rem'}}>スマホの場合は横向きを強く推奨</span>
-          {this.makeTable()}
+          {this.createEditModeTable()}
         </div>
+        <AdvancedArea supportFGO1HRun={this.state.supportFGO1HRun}
+          onSupportFGO1HRunCheckboxChange={this.handleSupportFGO1HRunCheckboxChange} />
         <div style={{marginTop: 1 + 'rem'}}>
           <ReportViewer {...this.state} />
         </div>
