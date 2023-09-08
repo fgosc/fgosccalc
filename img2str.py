@@ -429,7 +429,7 @@ class ScreenShot:
             elif math.floor(quest["id"] / 100) * 100 == ID_SYURENJYO_TMP:
                 # 2022/01/01 修練場極級追加につき平常時のIDが未搭載のため臨時に追加
                 output = quest["chapter"] + " " + quest["place"]
-            elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET:
+            elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET and quest["id"] not in [94086601, 94086602]:
                 output = quest["shortname"]
             else:
                 # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
