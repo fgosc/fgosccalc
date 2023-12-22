@@ -141,6 +141,8 @@ class ChunkMaterialCountCell extends React.Component {
       "金メダル",
       "銀メダル",
       "銅メダル",
+      // 雪原のメリークリスマス 2023
+      "くじ",
     ]
   }
 
