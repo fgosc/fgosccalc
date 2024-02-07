@@ -416,6 +416,7 @@ class ScreenShot:
         return quest_list
 
     def make_quest_output(self, quest, debug=False):
+        ordeal_call_quest_list = [94086601, 94086602, 94089601, 94089602, 94090701, 94090702, 94093201, 94093202]
         output = ""
         if quest != "":
             quest_list = [
@@ -429,7 +430,7 @@ class ScreenShot:
             elif math.floor(quest["id"] / 100) * 100 == ID_SYURENJYO_TMP:
                 # 2022/01/01 修練場極級追加につき平常時のIDが未搭載のため臨時に追加
                 output = quest["chapter"] + " " + quest["place"]
-            elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET and quest["id"] not in [94086601, 94086602, 94089601, 94089602, 94090701, 94090702]:
+            elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET and quest["id"] not in ordeal_call_quest_list:
                 output = quest["shortname"]
             else:
                 # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
