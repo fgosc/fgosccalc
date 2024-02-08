@@ -417,6 +417,7 @@ class ScreenShot:
 
     def make_quest_output(self, quest, debug=False):
         ordeal_call_quest_list = [94086601, 94086602, 94089601, 94089602, 94090701, 94090702, 94093201, 94093202]
+        ordeal_call_dual_quest_place = [94093201, 94093202]
         output = ""
         if quest != "":
             quest_list = [
@@ -434,7 +435,7 @@ class ScreenShot:
                 output = quest["shortname"]
             else:
                 # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-                if quest_list.index(quest["name"]) == 0:
+                if quest_list.index(quest["name"]) == 0 and quest["id"] not in ordeal_call_dual_quest_place:
                     output = quest["chapter"] + " " + quest["place"]
                 else:
                     output = quest["chapter"] + " " + quest["name"]
