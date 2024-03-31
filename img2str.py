@@ -397,7 +397,7 @@ class ScreenShot:
             exclude = len([
                         {"id": i["id"], "name": i["name"]}
                         for i in quest["drop"]
-                        if i["type"] in ["Point", "Exp. UP"]
+                        if i["type"] in ["Point"]
                         or i["name"] == "QP"
                        ])
             # ポイント分数から除外する
