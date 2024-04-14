@@ -416,7 +416,7 @@ class ScreenShot:
         return quest_list
 
     def make_quest_output(self, quest, debug=False):
-        ordeal_call_quest_list = [94086601, 94086602, 94089601, 94089602, 94090701, 94090702, 94093201, 94093202]
+        ordeal_call_quest_list = [94086601, 94086602, 94089601, 94089602, 94090701, 94090702, 94093201, 94093202, 94095301]
         ordeal_call_dual_quest_place = [94093201, 94093202]
         output = ""
         if quest != "":
