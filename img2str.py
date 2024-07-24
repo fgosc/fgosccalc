@@ -427,10 +427,15 @@ class ScreenShot:
                 output = quest["chapter"] + " " + quest["place"]
             elif "scName" in quest.keys():
                 output = quest["chapter"] + " " + quest["scName"]
+                print("mohe3")
             elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET:
                 output = quest["shortname"]
+                print("mohe4")
             else:
-                output = quest["chapter"] + " " + quest["name"]
+                if quest["chapter"] == "":
+                    output = quest["name"]
+                else:  
+                    output = quest["chapter"] + " " + quest["name"]
         return output
 
     def detect_enemy_tab(self, debug=False):
