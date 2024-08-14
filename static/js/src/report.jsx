@@ -1057,7 +1057,7 @@ class EditBox extends React.Component {
         .map(line => { return cutIfStartsWith(line.material, '!').replace(suffixPattern, '')})
 
     const dropRateUpTargetMaterials = [
-      '根', '逆鱗', '心臓', '涙石',
+      '根', '逆鱗', '心臓', '産毛', '脂', '涙石',
       '勲章', '貝殻', '蛇玉', '羽根', '蹄鉄', 'ホムベビ', '頁', '歯車', '八連', 'ランタン', '種', '毒針',
       '塵', '牙', '火薬', '鉄杭', '髄液', '鎖', '骨', '証',
     ]
