@@ -430,7 +430,6 @@ class ScreenShot:
                 print("mohe3")
             elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET:
                 output = quest["shortname"]
-                print("mohe4")
             else:
                 if quest["chapter"] == "":
                     output = quest["name"]
