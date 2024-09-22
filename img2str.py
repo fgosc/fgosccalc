@@ -427,7 +427,6 @@ class ScreenShot:
                 output = quest["chapter"] + " " + quest["place"]
             elif "scName" in quest.keys():
                 output = quest["chapter"] + " " + quest["scName"]
-                print("mohe3")
             elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET:
                 output = quest["shortname"]
             else:
