@@ -147,6 +147,8 @@ class ChunkMaterialCountCell extends React.Component {
       "宝箱金",
       "宝箱銀",
       "宝箱銅",
+      // インドラの大試練
+      "砕片",
     ]
   }
 
