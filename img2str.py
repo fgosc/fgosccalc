@@ -1331,7 +1331,7 @@ def main(file, csv_output, debug=False):
     if file.stem.isdecimal():
         questid = int(file.stem)
         if not (93000001 < questid < 94999999):
-            if not (4000801 < questid < 4000842):
+            if not (4000801 < questid < 4000843):
                 logger.critical("無効な questid です: %d", questid)
                 sys.exit(1)
         # r_get = requests.get(url_quest + str(questid) + "/1")
