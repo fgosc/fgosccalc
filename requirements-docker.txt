@@ -19,6 +19,6 @@ idna==3.11
 numpy==1.25.2
     # via opencv-contrib-python
 opencv-contrib-python==4.8.0.76
-requests==2.32.5
+requests==2.33.0
 urllib3==2.6.3
     # via requests
