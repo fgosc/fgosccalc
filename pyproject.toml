@@ -7,7 +7,7 @@ authors = [
 ]
 dependencies = [
     "numpy==1.25.2",
-    "opencv-contrib-python==4.8.0.76",
+    "opencv-contrib-python==4.8.1.78",
     "bottle>=0.13.4",
     "requests>=2.32.5",
 ]
