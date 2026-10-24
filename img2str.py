@@ -46,6 +46,11 @@ ID_GHOST_LANTERN_ALT = 95100000
 ID_GREEN_TEA = 94074504
 ID_YELLOW_TEA = 94074505
 ID_RED_TEA = 94074506
+ID_EXTRA1_CRYSTAL = 62
+ID_EXTRA2_CRYSTAL = 63
+ID_EXTRA1_FOOTPRINT = 2108
+ID_EXTRA2_FOOTPRINT = 2109
+
 
 # アイテム下部の文字認証用
 training = Path(__file__).resolve().parent / Path("property.xml")
@@ -992,6 +997,48 @@ class Item:
             return ID_YELLOW_TEA
         return ID_GREEN_TEA
 
+    def classify_crystal(self, img):
+        crystal_dict = {
+            62: "8dca6388a1cc8747",
+            63: "2d8acb40814c36ff",
+        }
+        hash_crystal = self.compute_crystal_hash(img)
+        hash_hex = ""
+        for h in hash_crystal[0]:
+            hash_hex = hash_hex + f"{h:02x}"
+        logger.info(hash_hex)
+
+        crystals = {}
+        for i in crystal_dict:
+            d2 = Item.hasher.compare(hash_crystal, hex2hash(crystal_dict[i]))
+            if d2 <= 20:
+                crystals[i] = d2
+        crystals = sorted(crystals.items(), key=lambda x: x[1])
+        try:
+            crystal = next(iter(crystals))
+            return crystal[0]
+        except StopIteration:
+            return ""
+
+    def classify_footprint(self, img):
+        footprint_dict = {
+            2108: "cd9d37a8f0d8f08e",
+            2109: "359ddf88c10921be",
+        }
+
+        hash_footprint = self.compute_crystal_hash(img)
+        footprints = {}
+        for i in footprint_dict:
+            d2 = Item.hasher.compare(hash_footprint, hex2hash(footprint_dict[i]))
+            if d2 <= 20:
+                footprints[i] = d2
+        footprints = sorted(footprints.items(), key=lambda x: x[1])
+        try:
+            footprint = next(iter(footprints))
+            return footprint[0]
+        except StopIteration:
+            return ""
+
     def classify_standard_item(self, img, debug=False):
         """imgとの距離を比較して近いアイテムを求める"""
         hash_item = self.dropitems.compute_hash(img)  # 画像の距離
@@ -1038,6 +1085,10 @@ class Item:
                 id = self.zorodice2id(img)
             elif ID_GREEN_TEA <= id <= ID_RED_TEA:
                 id = self.tea2id(img)
+            elif id == ID_EXTRA1_CRYSTAL or id == ID_EXTRA2_CRYSTAL:
+                id = self.classify_crystal(img)
+            elif id == ID_EXTRA1_FOOTPRINT or id == ID_EXTRA2_FOOTPRINT:
+                id = self.classify_footprint(img)
 
             if id == ID_GHOST_LANTERN_ALT:
                 id = ID_GHOST_LANTERN
@@ -1120,6 +1171,20 @@ class Item:
         #  cv2.imshow("img", cv2.resize(img, dsize=None, fx=4.5, fy=4.5))
         #  cv2.waitKey(0)
         #  cv2.destroyAllWindows()
+
+        return Item.hasher.compute(img)
+
+    def compute_crystal_hash(self, img_rgb):
+        """結晶判別器"""
+        height, width = img_rgb.shape[:2]
+
+        img = img_rgb[
+            141:235,
+            168:256,
+        ]
+        # cv2.imshow("img", cv2.resize(img, dsize=None, fx=4.5, fy=4.5))
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         return Item.hasher.compute(img)
 
@@ -1359,7 +1424,7 @@ def main(file, csv_output, debug=False):
         logger.warning("sc.quest_list: %s", sc.quest_list)
     logger.debug("sc.itemlist: %s", sc.itemlist)
     if csv_output:
-        csv_data = [questid if questid else ""]
+        csv_data = [questid or ""]
         if len(sc.quest_list) == 1 or questName != "":
             # short name 用に2回加える
             if questid:
