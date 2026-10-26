@@ -10,15 +10,15 @@
 #   universal: false
 
 bottle==0.13.4
-certifi==2026.1.4
+certifi==2026.10.23
     # via requests
-charset-normalizer==3.4.4
+charset-normalizer==3.5.2
     # via requests
-idna==3.11
+idna==3.20
     # via requests
 numpy==1.25.2
     # via opencv-contrib-python
 opencv-contrib-python==4.8.0.76
-requests==2.32.5
-urllib3==2.6.3
+requests==2.34.2
+urllib3==2.8.0
     # via requests

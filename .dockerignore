@@ -6,8 +6,10 @@ __pycache__/
 
 # js
 node_modules/
+static/js/dist/
 
 venv/
+.venv/
 .mypy_cache/
 image/
 Pipfile
