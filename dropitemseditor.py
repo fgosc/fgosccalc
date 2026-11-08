@@ -1,29 +1,28 @@
-"""
-    解析結果を編集して投稿しやすい形に整えるモジュール
+"""解析結果を編集して投稿しやすい形に整えるモジュール
 
-    web, CLI の両方から参照される想定。
+web, CLI の両方から参照される想定。
 """
+
 import copy
 import dataclasses
 from itertools import zip_longest
 from logging import getLogger
-from typing import List, Dict
 
 import cv2
 import numpy as np
 
 import img2str
 from img2str import (
-    ID_UNDROPPED,
-    ID_NO_POSESSION,
-    ID_STANDARD_ITEM_MIN,
-    ID_STANDARD_ITEM_MAX,
-    ID_GEM_MIN,
-    ID_SECRET_GEM_MAX,
-    ID_PIECE_MIN,
-    ID_MONUMENT_MAX,
-    ID_EXP_MIN,
     ID_EXP_MAX,
+    ID_EXP_MIN,
+    ID_GEM_MIN,
+    ID_MONUMENT_MAX,
+    ID_NO_POSESSION,
+    ID_PIECE_MIN,
+    ID_SECRET_GEM_MAX,
+    ID_STANDARD_ITEM_MAX,
+    ID_STANDARD_ITEM_MIN,
+    ID_UNDROPPED,
 )
 
 logger = getLogger(__name__)
@@ -51,7 +50,7 @@ def make_diff(itemlist1, itemlist2, owned=None):
             diff["dropnum"] = "NaN"
             if owned is not None:
                 owned_dic = {item["id"]: item["dropnum"] for item in owned}
-                if after["id"] in owned_dic.keys():
+                if after["id"] in owned_dic:
                     diff["dropnum"] = after["dropnum"] - owned_dic[after["id"]]
             tmplist.append(diff)
         elif before["id"] > 0 and after["id"] == ID_NO_POSESSION:
@@ -70,52 +69,53 @@ def make_diff(itemlist1, itemlist2, owned=None):
 
 def out_name(id, dropitems):
     d = dropitems.item_name[id]
-    logger.debug('out_name before: %s', d)
-    if d[-1] == '_':
+    logger.debug("out_name before: %s", d)
+    if d[-1] == "_":
         d = d[:-1]
     if id in dropitems.item_shortname.keys():
         d = dropitems.item_shortname[id]
     if d[-1].isdigit():
-        d = d + '_'
-    logger.debug('out_name after: %s', d)
+        d = d + "_"
+    logger.debug("out_name after: %s", d)
     return d
 
 
 @dataclasses.dataclass
 class ParsedDropsDiff:
+    """DropsDiff を
+     - 礼装 craft_essence
+     - 素材 materials
+     - スキル石 gems
+     - ピースモニュメント pieces
+     - 種火 wisdoms
+     - 非恒常アイテム non_standards
+    に分解したもの。
     """
-        DropsDiff を
-         - 礼装 craft_essence
-         - 素材 materials
-         - スキル石 gems
-         - ピースモニュメント pieces
-         - 種火 wisdoms
-         - 非恒常アイテム non_standards
-        に分解したもの。
-    """
+
     questname: str
-    craft_essence: List[Dict[str, int]]
-    materials: List[Dict[str, int]]
-    gems: List[Dict[str, int]]
-    pieces: List[Dict[str, int]]
-    wisdoms: List[Dict[str, str]]
-    non_standards: List[Dict[str, int]]
+    craft_essence: list[dict[str, int]]
+    status_up: list[dict[str, int]]
+    materials: list[dict[str, int]]
+    gems: list[dict[str, int]]
+    pieces: list[dict[str, int]]
+    wisdoms: list[dict[str, str]]
+    non_standards: list[dict[str, int]]
 
-    def as_json_data(self) -> List[Dict[str, str]]:
-        """
-            Web 出力に最適化された JSON like なデータを返す。
-            つまり辞書のリスト。
-            素材のデータのみで、クエスト名は含まない。
+    def as_json_data(self) -> list[dict[str, str]]:
+        """Web 出力に最適化された JSON like なデータを返す。
+        つまり辞書のリスト。
+        素材のデータのみで、クエスト名は含まない。
 
-            出力例:
-            [
-                { "id": 1, "material": "爪", "report": 10, "item_id": ... },
-                { "id": 2, "material": "羽根", "report": 25, "item_id": ... },
-                { "id": 3, "material": "!弓モニュ", "report": 3, "item_id": ... }
-            ]
+        出力例:
+        [
+            { "id": 1, "material": "爪", "report": 10, "item_id": ... },
+            { "id": 2, "material": "羽根", "report": 25, "item_id": ... },
+            { "id": 3, "material": "!弓モニュ", "report": 3, "item_id": ... }
+        ]
         """
         categories = [
             self.craft_essence,
+            self.status_up,
             self.materials,
             self.gems,
             self.pieces,
@@ -141,27 +141,28 @@ class ParsedDropsDiff:
                 elif category_head:
                     # Web 上で報告フォーマットを編集するときの改行表現
                     # (FGO 周回カウンタサイト互換)
-                    item_name = f'!{name}'
+                    item_name = f"!{name}"
                     category_head = False
                 else:
                     item_name = name
 
                 d = {
-                    'id': index,
-                    'material': item_name,
-                    'report': str(count),
-                    'item_id': item["item_id"],
+                    "id": index,
+                    "material": item_name,
+                    "report": str(count),
+                    "item_id": item["item_id"],
                 }
                 data.append(d)
                 index += 1
         return data
 
     def as_syukai_counter(self, url):
-        """
-            周回カウンタ報告形式の文字列を返す
-        """
+        """周回カウンタ報告形式の文字列を返す"""
+
         def format(item_list):
-            return '-'.join(['{}{}'.format(item["name"], item["dropnum"]) for item in item_list])
+            return "-".join(
+                ["{}{}".format(item["name"], item["dropnum"]) for item in item_list],
+            )
 
         def add_line(item_list, lines):
             line = format(item_list)
@@ -170,6 +171,7 @@ class ParsedDropsDiff:
 
         lines = []
         add_line(self.craft_essence, lines)
+        add_line(self.status_up, lines)
         add_line(self.materials, lines)
         add_line(self.gems, lines)
         add_line(self.pieces, lines)
@@ -178,10 +180,12 @@ class ParsedDropsDiff:
 
         questname = self.questname
         if not questname:
-            questname = '(クエスト名)'
-        body = '\n'.join(lines)
+            questname = "(クエスト名)"
+        if len(self.status_up) > 0:  # 2026/11/08 暫定対応
+            questname = "【24時間限定】全世界1億DL突破記念クエスト"
+        body = "\n".join(lines)
         if url != "":
-            url = '\n' + url
+            url = "\n" + url
 
         return f"""
 【{questname}】000周
@@ -192,10 +196,9 @@ class ParsedDropsDiff:
 
 class DropsDiff:
     def __init__(self, item_list, questname, questdrops):
-        """
-            item_list: make_diff() で求めたドロップ差分情報の辞書のリスト
-            questname: get_questinfo() で求めたフリークエスト名
-            questdrops: get_questinfo() で求めたフリークエストのドロップリスト
+        """item_list: make_diff() で求めたドロップ差分情報の辞書のリスト
+        questname: get_questinfo() で求めたフリークエスト名
+        questdrops: get_questinfo() で求めたフリークエストのドロップリスト
         """
         self.item_list = item_list
         self.questname = questname
@@ -209,46 +212,95 @@ class DropsDiff:
         return True
 
     def parse(self, dropitems):
-        """
-            素材、スキル石、モニュピ、種火に分解した結果を返す。
-        """
-
+        """素材、スキル石、モニュピ、種火に分解した結果を返す。"""
         craft_essence = []
         non_standards = []
         materials = []
         gems = []
         pieces = []
         wisdoms = []
+        status_up = []
 
         for i, item in enumerate(self.item_list):
             if item["id"] == ID_UNDROPPED:
                 if len(self.questdrops) > 0:
-                    item_id = [k for k, v in dropitems.item_name.items() if v == self.questdrops[i]][0]
+                    item_id = [
+                        k
+                        for k, v in dropitems.item_name.items()
+                        if v == self.questdrops[i]
+                    ][0]
                     if dropitems.item_type[item_id] == "Craft Essence":
-                        craft_essence.append({"name": out_name(item_id, dropitems), "dropnum": 0, "item_id": item_id})
+                        craft_essence.append(
+                            {
+                                "name": out_name(item_id, dropitems),
+                                "dropnum": 0,
+                                "item_id": item_id,
+                            },
+                        )
             elif dropitems.item_type[item["id"]] == "Craft Essence":
-                craft_essence.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
+                craft_essence.append(
+                    {
+                        "name": out_name(item["id"], dropitems),
+                        "dropnum": item["dropnum"],
+                        "item_id": item["id"],
+                    },
+                )
+            elif dropitems.item_type[item["id"]] == "Status UP":
+                status_up.append(
+                    {
+                        "name": out_name(item["id"], dropitems),
+                        "dropnum": item["dropnum"],
+                        "item_id": item["id"],
+                    },
+                )
             elif ID_STANDARD_ITEM_MIN <= item["id"] <= ID_STANDARD_ITEM_MAX:
-                materials.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
+                materials.append(
+                    {
+                        "name": out_name(item["id"], dropitems),
+                        "dropnum": item["dropnum"],
+                        "item_id": item["id"],
+                    },
+                )
             elif ID_GEM_MIN <= item["id"] <= ID_SECRET_GEM_MAX:
-                gems.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
+                gems.append(
+                    {
+                        "name": out_name(item["id"], dropitems),
+                        "dropnum": item["dropnum"],
+                        "item_id": item["id"],
+                    },
+                )
             elif ID_PIECE_MIN <= item["id"] <= ID_MONUMENT_MAX:
-                pieces.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
+                pieces.append(
+                    {
+                        "name": out_name(item["id"], dropitems),
+                        "dropnum": item["dropnum"],
+                        "item_id": item["id"],
+                    },
+                )
             elif ID_EXP_MIN <= item["id"] <= ID_EXP_MAX:
-                raise ValueError('item_dict should not have wisdoms')
+                raise ValueError("item_dict should not have wisdoms")
             else:
-                non_standards.append({"name": out_name(item["id"], dropitems), "dropnum": item["dropnum"], "item_id": item["id"]})
+                non_standards.append(
+                    {
+                        "name": out_name(item["id"], dropitems),
+                        "dropnum": item["dropnum"],
+                        "item_id": item["id"],
+                    },
+                )
 
         if self.is_freequest:
             for questdrop in self.questdrops:
                 if questdrop in dropitems.exp_list:
                     # 種火はスクリーンショットから個数計算できないため常に
                     # NaN (N/A の意味。FGO周回カウンタ互換) を設定する
-                    wisdoms.append({"name": questdrop, "dropnum": 'NaN', "item_id": None})
+                    wisdoms.append(
+                        {"name": questdrop, "dropnum": "NaN", "item_id": None},
+                    )
 
         return ParsedDropsDiff(
             self.questname,
             craft_essence,
+            status_up,
             materials,
             gems,
             pieces,
@@ -260,31 +312,29 @@ class DropsDiff:
 def get_questinfo(sc1, sc2):
     sc1qname = sc1.quest_output
     sc2qname = sc2.quest_output
-    logger.debug('sc1 quest: %s %s', sc1qname, getattr(sc1, 'droplist', None))
-    logger.debug('sc2 quest: %s %s', sc2qname, getattr(sc2, 'droplist', None))
+    logger.debug("sc1 quest: %s %s", sc1qname, getattr(sc1, "droplist", None))
+    logger.debug("sc2 quest: %s %s", sc2qname, getattr(sc2, "droplist", None))
     if not sc1qname and not sc2qname:
-        return '', ''
+        return "", ""
     if (sc1qname and sc2qname) and sc1qname != sc2qname:
-        return '', ''
+        return "", ""
     if sc2qname:
-        return sc2qname, getattr(sc2, 'droplist', [])
-    else:
-        return sc1qname, getattr(sc1, 'droplist', [])
+        return sc2qname, getattr(sc2, "droplist", [])
+    return sc1qname, getattr(sc1, "droplist", [])
 
 
 def get_questnames(sc1, sc2):
     sc1qnames = sc1.quest_list
     sc2qnames = sc2.quest_list
-    logger.debug('sc1 quests: %s', sc1qnames)
-    logger.debug('sc2 quests: %s', sc2qnames)
+    logger.debug("sc1 quests: %s", sc1qnames)
+    logger.debug("sc2 quests: %s", sc2qnames)
     if (len(sc1qnames) > 0 and len(sc2qnames) > 0) and sc1qnames != sc2qnames:
         return [""]
     if len(sc2qnames) > 0:
         return sc2qnames
-    elif len(sc1qnames) > 0:
+    if len(sc1qnames) > 0:
         return sc1qnames
-    else:
-        return [""]
+    return [""]
 
 
 class OwnedItem(img2str.Item):
@@ -298,15 +348,17 @@ class OwnedItem(img2str.Item):
 class OwnedNumber(img2str.Item):
     def __init__(self, img_gray, svm, debug=False):
 
-        pts9 = [[112, 44, 140, 85],
-                [140, 44, 168, 85],
-                [168, 44, 196, 85],
-                [207, 44, 235, 85],
-                [235, 44, 263, 85],
-                [263, 44, 291, 85],
-                [302, 44, 330, 85],
-                [330, 44, 358, 85],
-                [358, 44, 386, 85]]
+        pts9 = [
+            [112, 44, 140, 85],
+            [140, 44, 168, 85],
+            [168, 44, 196, 85],
+            [207, 44, 235, 85],
+            [235, 44, 263, 85],
+            [263, 44, 291, 85],
+            [302, 44, 330, 85],
+            [330, 44, 358, 85],
+            [358, 44, 386, 85],
+        ]
         self.svm = svm
         num = self.read_item(img_gray, pts9)
         if num == "":
@@ -318,11 +370,11 @@ class OwnedNumber(img2str.Item):
 
 def calc_pts(img_rgb):
     height, width = img_rgb.shape[:2]
-    hsvLower = np.array([50, 0, 0])    # 抽出する色の下限(HSV)
-    hsvUpper = np.array([200, 60, 255])    # 抽出する色の上限(HSV)
+    hsvLower = np.array([50, 0, 0])  # 抽出する色の下限(HSV)
+    hsvUpper = np.array([200, 60, 255])  # 抽出する色の上限(HSV)
 
     hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)  # 画像をHSVに変換
-    hsv_mask = cv2.inRange(hsv, hsvLower, hsvUpper)    # HSVからマスクを作成
+    hsv_mask = cv2.inRange(hsv, hsvLower, hsvUpper)  # HSVからマスクを作成
 
     contours = cv2.findContours(hsv_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
     item_pts_l = []
@@ -353,7 +405,9 @@ def calc_pts(img_rgb):
         return []
     # リスト中央のやつの面積と比較して明らかに面積がおかしいものは除外する
     center = int(len(item_pts) / 2)
-    teacher_area = (item_pts[center][2] - item_pts[center][0]) * (item_pts[center][3] - item_pts[center][1])
+    teacher_area = (item_pts[center][2] - item_pts[center][0]) * (
+        item_pts[center][3] - item_pts[center][1]
+    )
     new_item_pts = []
     for pts in item_pts:
         area = (pts[2] - pts[0]) * (pts[3] - pts[1])
@@ -364,18 +418,16 @@ def calc_pts(img_rgb):
 
 
 def read_owned_ss(owned_files, dropitems, svm, miss_item):
-    """
-        owned_files の要素は file object であること。
-        file-like object だと imread() に失敗するので注意。
+    """owned_files の要素は file object であること。
+    file-like object だと imread() に失敗するので注意。
     """
     owned_images = [img2str.imread(f) for f in owned_files]
     return read_owned_objects(owned_images, dropitems, svm, miss_item)
 
 
 def read_owned_objects(owned_images, dropitems, svm, miss_item):
-    """
-        owned_images の要素は np.array であること。
-        file であれば先に imread() して np.array 形式にしておく。
+    """owned_images の要素は np.array であること。
+    file であれば先に imread() して np.array 形式にしておく。
     """
     TRAINING_IMG_WIDTH = 1152
 
@@ -395,31 +447,44 @@ def read_owned_objects(owned_images, dropitems, svm, miss_item):
         resizeScale = 1 / wscale
 
         if resizeScale > 1:
-            game_screen = cv2.resize(img_rgb, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
+            game_screen = cv2.resize(
+                img_rgb,
+                (0, 0),
+                fx=resizeScale,
+                fy=resizeScale,
+                interpolation=cv2.INTER_CUBIC,
+            )
         else:
-            game_screen = cv2.resize(img_rgb, (0, 0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+            game_screen = cv2.resize(
+                img_rgb,
+                (0, 0),
+                fx=resizeScale,
+                fy=resizeScale,
+                interpolation=cv2.INTER_AREA,
+            )
 
         item_pts = calc_pts(game_screen)
         offset_x = 506 - item_pts[0][0]
         offset_y = 451 - item_pts[0][1]
         g_height, g_width = game_screen.shape[:2]
 
-        pts = [[294 - offset_x, 369 - offset_y, 481 - offset_x, 572 - offset_y],
-               [1004 - offset_x, 369 - offset_y, 1191 - offset_x, 572 - offset_y],
-               [294 - offset_x, 599 - offset_y, 481 - offset_x, 802 - offset_y],
-               [1004 - offset_x, 599 - offset_y, 1191 - offset_x, 802 - offset_y],
-               [294 - offset_x, 829 - offset_y, 481 - offset_x, 1032 - offset_y],
-               [1004 - offset_x, 829 - offset_y, 1191 - offset_x, 1032 - offset_y],
-               [294 - offset_x, 1059 - offset_y, 481 - offset_x, 1262 - offset_y],
-               [1004 - offset_x, 1059 - offset_y, 1191 - offset_x, 1262 - offset_y],
-               ]
+        pts = [
+            [294 - offset_x, 369 - offset_y, 481 - offset_x, 572 - offset_y],
+            [1004 - offset_x, 369 - offset_y, 1191 - offset_x, 572 - offset_y],
+            [294 - offset_x, 599 - offset_y, 481 - offset_x, 802 - offset_y],
+            [1004 - offset_x, 599 - offset_y, 1191 - offset_x, 802 - offset_y],
+            [294 - offset_x, 829 - offset_y, 481 - offset_x, 1032 - offset_y],
+            [1004 - offset_x, 829 - offset_y, 1191 - offset_x, 1032 - offset_y],
+            [294 - offset_x, 1059 - offset_y, 481 - offset_x, 1262 - offset_y],
+            [1004 - offset_x, 1059 - offset_y, 1191 - offset_x, 1262 - offset_y],
+        ]
 
         item_ids = []
         # miss_item が全て見つかったらループを抜ける
         for i, pt in enumerate(pts):
             if pt[2] > g_width or pt[3] > g_height:
                 break
-            item = OwnedItem(game_screen[pt[1]: pt[3], pt[0]: pt[2]], dropitems)
+            item = OwnedItem(game_screen[pt[1] : pt[3], pt[0] : pt[2]], dropitems)
             item_ids.append(item.id)
             if item.id in remain_items:
                 remain_items.remove(item.id)
@@ -430,7 +495,7 @@ def read_owned_objects(owned_images, dropitems, svm, miss_item):
         item_nums = []
         img_gray = cv2.cvtColor(game_screen, cv2.COLOR_BGR2GRAY)
         for j, pt in enumerate(item_pts):
-            numitem = OwnedNumber(img_gray[pt[1]: pt[3], pt[0]: pt[2]], svm)
+            numitem = OwnedNumber(img_gray[pt[1] : pt[3], pt[0] : pt[2]], svm)
             item_nums.append(numitem.num)
             if i == j:
                 break
@@ -445,7 +510,7 @@ def read_owned_objects(owned_images, dropitems, svm, miss_item):
             ownitem["dropnum"] = num
             if num >= 0:
                 ownitems.append(ownitem)
-    ownitems = sorted(ownitems, key=lambda x: x['id'])
+    ownitems = sorted(ownitems, key=lambda x: x["id"])
     code = 0
     prev_id = -1
     output_items = []
@@ -471,23 +536,20 @@ def make_owned_diff(itemlist1, itemlist2, owned_list):
 
 
 def merge_list(upper, bottom):
-    """
-    上下スクロールのアイテムリストを結合する
-    """
+    """上下スクロールのアイテムリストを結合する"""
     detect_flag = False
     for i in range(len(bottom.itemlist)):
         if bottom.itemlist[i]["id"] < 0:
             continue
-        else:
-            b_candidate = i
-            break
-    logger.debug('b_candidate: %s', b_candidate)
-    
+        b_candidate = i
+        break
+    logger.debug("b_candidate: %s", b_candidate)
+
     for j in range(len(upper.itemlist)):
         if upper.itemlist[j] == bottom.itemlist[b_candidate]:
             break
-    logger.debug('u_candidate: %s', j)
-    if j == len(upper.itemlist) -1:
+    logger.debug("u_candidate: %s", j)
+    if j == len(upper.itemlist) - 1:
         lower_start = 0
     else:
         lower_start = 12 - (j - b_candidate)
@@ -495,39 +557,42 @@ def merge_list(upper, bottom):
 
 
 def merge_sc(sc_list):
-    """
-    list内のスクロール上下を決め、内容をマージする
-    """
+    """list内のスクロール上下を決め、内容をマージする"""
     if len(sc_list) == 1:
         return sc_list[0].itemlist
 
     for i in range(len(sc_list[0].itemlist)):
         if sc_list[0].itemlist[i]["id"] <= 0 or sc_list[1].itemlist[i]["id"] <= 0:
             continue
-        if sc_list[0].itemlist[i]["dropPriority"] > sc_list[1].itemlist[i]["dropPriority"]:
-            logger.debug('use sc_list[0] → sc_list[1] on item %s', i)
+        if (
+            sc_list[0].itemlist[i]["dropPriority"]
+            > sc_list[1].itemlist[i]["dropPriority"]
+        ):
+            logger.debug("use sc_list[0] → sc_list[1] on item %s", i)
             return merge_list(sc_list[0], sc_list[1])
-        else:
-            return merge_list(sc_list[1], sc_list[0])
+        return merge_list(sc_list[1], sc_list[0])
 
 
 def detect_upper(sc_list):
-    """
-    list内のスクロール上下を決め上のオブジェクトを返す
-    """
+    """list内のスクロール上下を決め上のオブジェクトを返す"""
     if len(sc_list) == 1:
         return sc_list[0]
 
     for i in range(len(sc_list[0].itemlist)):
         if sc_list[0].itemlist[i]["id"] <= 0 or sc_list[1].itemlist[i]["id"] <= 0:
             continue
-        if sc_list[0].itemlist[i]["dropPriority"] == sc_list[1].itemlist[i]["dropPriority"]:
+        if (
+            sc_list[0].itemlist[i]["dropPriority"]
+            == sc_list[1].itemlist[i]["dropPriority"]
+        ):
             logger.critical("Same Scroll Position Image Detected")
             raise ScrollPositionError("Same Scroll Position Image Detected")
-        elif sc_list[0].itemlist[i]["dropPriority"] > sc_list[1].itemlist[i]["dropPriority"]:
+        if (
+            sc_list[0].itemlist[i]["dropPriority"]
+            > sc_list[1].itemlist[i]["dropPriority"]
+        ):
             return sc_list[0]
-        else:
-            return sc_list[1]
+        return sc_list[1]
 
 
 def detect_missing_item(sc_after, sc_before):
@@ -535,6 +600,6 @@ def detect_missing_item(sc_after, sc_before):
     for after, before in zip(sc_after, sc_before):
         if after["id"] == before["id"]:
             continue
-        elif after["id"] != ID_UNDROPPED and after["id"] != ID_NO_POSESSION:
+        if after["id"] != ID_UNDROPPED and after["id"] != ID_NO_POSESSION:
             miss_item.append(after)
     return miss_item

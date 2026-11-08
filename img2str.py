@@ -80,8 +80,8 @@ class DropItems:
 
     # JSONファイルから各辞書を作成
     item_name = {item["id"]: item["name"] for item in drop_item}
-    item_name[ID_HP3STAR] = "星3HP"
-    item_name[ID_ATK3STAR] = "星3ATK"
+    item_name[ID_HP3STAR] = "★3HP"
+    item_name[ID_ATK3STAR] = "★3ATK"
     item_shortname = {
         item["id"]: item["shortname"]
         for item in drop_item
@@ -90,9 +90,11 @@ class DropItems:
     item_type = {
         item["id"]: item["type"] for item in drop_item if "type" in item.keys()
     }
+    item_type[ID_HP3STAR] = "Status UP"
+    item_type[ID_ATK3STAR] = "Status UP"
     item_dropPriority = {item["id"]: item["dropPriority"] for item in drop_item}
-    item_dropPriority[ID_HP3STAR] = 0
-    item_dropPriority[ID_ATK3STAR] = 0
+    item_dropPriority[ID_HP3STAR] = 10010
+    item_dropPriority[ID_ATK3STAR] = 10000
     item_background = {
         item["id"]: item["background"]
         for item in drop_item
@@ -103,7 +105,7 @@ class DropItems:
     }
     # ゴーストランタンが誤認識しやすいので
     dist_item[ID_GHOST_LANTERN_ALT] = "6e3a89b3121c6cc5"
-    # 星3フォウくん認識
+    # ★3フォウくん認識
     dist_item[ID_HP3STAR] = "81f1ee5835fd5a65"
     dist_item[ID_ATK3STAR] = "2738e2c9e97c3931"
 
