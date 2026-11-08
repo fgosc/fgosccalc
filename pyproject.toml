@@ -9,10 +9,10 @@ dependencies = [
     "numpy==1.25.2",
     "opencv-contrib-python==4.8.0.76",
     "bottle>=0.13.4",
-    "requests>=2.32.5",
+    "requests>=2.34.2",
 ]
 readme = "README.md"
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 
 [tool.rye]
 managed = true
